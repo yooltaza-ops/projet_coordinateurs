@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Connexion — Yool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Poppins', sans-serif; background: #f0f4f8;
+               display: flex; align-items: center; justify-content: center;
+               min-height: 100vh; }
+        .login-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 8px 40px rgba(26,58,107,0.12);
+            padding: 40px 42px;
+            width: 100%;
+            max-width: 420px;
+        }
+        .logo-wrap {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .logo-wrap img { height: 44px; }
+        h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a3a6b;
+            text-align: center;
+            margin-bottom: 6px;
+        }
+        .subtitle {
+            font-size: 13px;
+            color: #999;
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #1a3a6b;
+            margin-bottom: 6px;
+        }
+        input[type="email"], input[type="password"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e8edf5;
+            border-radius: 11px;
+            margin-bottom: 18px;
+            font-size: 13px;
+            font-family: 'Poppins', sans-serif;
+            transition: border 0.2s;
+            outline: none;
+            color: #333;
+        }
+        input:focus { border-color: #f5a623; }
+        .btn-login {
+            width: 100%;
+            padding: 13px;
+            background: #1a3a6b;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-login:hover { background: #2a5298; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(26,58,107,0.25); }
+        .error-msg {
+            background: #fdecea;
+            color: #e74c3c;
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 13px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1.5px solid #f5c6c2;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="logo-wrap">
+            <img src="{{ url_for('static', filename='logo_yool.png') }}" alt="Yool">
+        </div>
+        <h2>Bienvenue 👋</h2>
+        <p class="subtitle">Connectez-vous à votre espace</p>
+
+        {% if error %}
+        <div class="error-msg">⚠️ {{ error }}</div>
+        {% endif %}
+
+        <form method="POST">
+            <label>Email</label>
+            <input type="email" name="email" placeholder="votre@email.com" required autofocus>
+            <label>Mot de passe</label>
+            <input type="password" name="password" placeholder="••••••••" required>
+            <button type="submit" class="btn-login">🔐 Se connecter</button>
+        </form>
+    </div>
+</body>
+</html>

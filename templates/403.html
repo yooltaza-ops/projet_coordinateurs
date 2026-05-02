@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>403 — Accès refusé | Yool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Poppins', sans-serif; background: #f0f4f8;
+               display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+        .box {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 8px 40px rgba(26,58,107,0.1);
+            padding: 50px 48px;
+            text-align: center;
+            max-width: 420px;
+            width: 100%;
+        }
+        .icon { font-size: 64px; margin-bottom: 16px; }
+        h1 { font-size: 28px; font-weight: 700; color: #1a3a6b; margin-bottom: 10px; }
+        p { font-size: 14px; color: #888; margin-bottom: 28px; line-height: 1.6; }
+        a {
+            display: inline-block;
+            padding: 12px 28px;
+            background: #1a3a6b;
+            color: white;
+            border-radius: 25px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        a:hover { background: #2a5298; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(26,58,107,0.2); }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <div class="icon">🚫</div>
+        <h1>Accès refusé</h1>
+        <p>Machi 3andek l permission bach twsel l had la page.<br>Contactez l'administrateur ila kant 3andek mochkila.</p>
+        <a href="{{ url_for('index') }}">⬅️ Retour au Dashboard</a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+
+{% block title %}Ajouter Coordinateur — Yool{% endblock %}
+
+{% block extra_css %}
+        .dashboard-layout {
+            display: flex;
+            min-height: calc(100vh - 65px);
+            background: #f0f4f8;
+        }
+        .sidebar {
+            width: 270px; flex-shrink: 0; background: white;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.06);
+            display: flex; flex-direction: column;
+            position: sticky; top: 65px;
+            height: calc(100vh - 65px);
+            overflow-y: auto; overflow-x: hidden;
+            transition: width 0.3s cubic-bezier(0.4,0,0.2,1);
+        }
+        .sidebar.collapsed { width: 68px; }
+        .sidebar-toggle {
+            position: absolute; top: 16px; right: -13px;
+            width: 26px; height: 26px; background: white;
+            border: 2px solid #e8edf5; border-radius: 50%;
+            cursor: pointer; display: flex; align-items: center;
+            justify-content: center; font-size: 11px; color: #1a3a6b;
+            z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s;
+        }
+        .sidebar-toggle:hover { background: #1a3a6b; color: white; border-color: #1a3a6b; }
+        .sidebar-profile {
+            padding: 28px 20px 18px; display: flex; flex-direction: column;
+            align-items: center; text-align: center;
+            border-bottom: 1.5px solid #f0f4f8; overflow: hidden;
+        }
+        .profile-avatar {
+            width: 82px; height: 82px; border-radius: 50%; background: #1a3a6b;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 30px; color: white; font-weight: 700; overflow: hidden;
+            flex-shrink: 0; border: 3px solid #f5a623;
+            box-shadow: 0 4px 16px rgba(245,166,35,0.25); transition: all 0.3s;
+        }
+        .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .sidebar.collapsed .profile-avatar { width: 40px; height: 40px; font-size: 15px; border-width: 2px; }
+        .profile-name {
+            font-size: 14px; font-weight: 700; color: #1a3a6b; margin-top: 11px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            max-width: 210px; transition: all 0.2s;
+        }
+        .profile-role { font-size: 12px; color: #888; margin-top: 3px; transition: all 0.2s; }
+        .sidebar.collapsed .profile-name,
+        .sidebar.collapsed .profile-role { opacity: 0; height: 0; margin: 0; overflow: hidden; }
+        .social-links { display: flex; gap: 8px; margin-top: 12px; transition: all 0.2s; }
+        .sidebar.collapsed .social-links { opacity: 0; height: 0; margin: 0; overflow: hidden; }
+        .social-link {
+            width: 30px; height: 30px; border-radius: 50%; display: flex;
+            align-items: center; justify-content: center; color: #f5a623;
+            font-size: 12px; font-weight: 700; text-decoration: none;
+            border: 1.5px solid #f0f4f8; transition: all 0.2s; background: #fafbfc;
+        }
+        .social-link:hover { background: #f5a623; color: white; border-color: #f5a623; transform: translateY(-2px); }
+        .sidebar-nav { padding: 14px 10px; flex: 1; }
+        .nav-section-label {
+            font-size: 10px; font-weight: 700; color: #ccc;
+            text-transform: uppercase; letter-spacing: 1px;
+            padding: 0 12px; margin-bottom: 5px; margin-top: 10px;
+            white-space: nowrap; overflow: hidden; transition: opacity 0.2s;
+        }
+        .sidebar.collapsed .nav-section-label { opacity: 0; }
+        .nav-item {
+            display: flex; align-items: center; gap: 11px; padding: 10px 12px;
+            border-radius: 11px; text-decoration: none; color: #555;
+            font-size: 13px; font-weight: 600; margin-bottom: 3px;
+            transition: all 0.2s; white-space: nowrap; overflow: hidden;
+            cursor: pointer; border: none; background: none;
+            font-family: 'Poppins', sans-serif; width: 100%; text-align: left;
+        }
+        .nav-item:hover { background: #f0f4f8; color: #1a3a6b; }
+        .nav-item.active {
+            background: linear-gradient(135deg, #1a3a6b, #2a5298);
+            color: white; box-shadow: 0 4px 12px rgba(26,58,107,0.3);
+        }
+        .nav-item.red { color: #e74c3c; }
+        .nav-item.red:hover { background: #fdecea; }
+        .nav-icon { font-size: 16px; flex-shrink: 0; width: 22px; text-align: center; }
+        .nav-label { transition: opacity 0.15s; }
+        .sidebar.collapsed .nav-label { opacity: 0; width: 0; overflow: hidden; }
+        .nav-divider { height: 1.5px; background: #f0f4f8; margin: 8px 10px; }
+
+        .main-content { flex: 1; padding: 28px; overflow-x: hidden; }
+        .page-title {
+            font-size: 21px; font-weight: 700; color: #1a3a6b;
+            margin-bottom: 22px; display: flex; align-items: center; gap: 10px;
+        }
+        .alert { padding: 13px 18px; background: #27ae60; color: white;
+                 border-radius: 10px; margin-bottom: 18px; font-size: 13px;
+                 display: flex; align-items: center; gap: 10px;
+                 box-shadow: 0 4px 12px rgba(39,174,96,0.25); }
+        .alert-error { background: #e74c3c; box-shadow: 0 4px 12px rgba(231,76,60,0.25); }
+
+        .form-wrapper { max-width: 560px; }
+        .form-card {
+            background: white; border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.07); overflow: hidden;
+        }
+        .form-card-header {
+            background: linear-gradient(135deg, #1a3a6b, #2a5298);
+            padding: 20px 28px; display: flex; align-items: center; gap: 10px;
+        }
+        .form-card-header h2 { color: white; font-size: 16px; font-weight: 600; }
+        .form-card-body { padding: 26px 28px; }
+        .form-card-body label {
+            display: block; margin-bottom: 5px;
+            color: #1a3a6b; font-size: 12px; font-weight: 600;
+        }
+        .form-card-body input,
+        .form-card-body select {
+            width: 100%; padding: 10px 13px;
+            border: 2px solid #e8edf5; border-radius: 10px; margin-bottom: 16px;
+            font-size: 13px; font-family: 'Poppins', sans-serif;
+            transition: border 0.2s; outline: none; color: #333;
+        }
+        .form-card-body input:focus,
+        .form-card-body select:focus { border-color: #f5a623; }
+        .multi-select { height: auto !important; padding: 5px !important; }
+        .multi-select option { padding: 7px 9px; margin: 2px; border-radius: 5px; }
+        .multi-select option:checked { background: #1a3a6b; color: white; }
+        .hint { font-size: 11px; color: #aaa; margin-top: -13px; margin-bottom: 16px; }
+        .form-actions { display: flex; gap: 12px; margin-top: 6px; }
+        .submit-btn {
+            flex: 1; padding: 12px; border: none; border-radius: 25px;
+            font-size: 13px; font-weight: 600; cursor: pointer; color: white;
+            font-family: 'Poppins', sans-serif; transition: all 0.2s;
+        }
+        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
+        .back-btn {
+            padding: 12px 20px; border: 2px solid #e8edf5; border-radius: 25px;
+            font-size: 13px; font-weight: 600; cursor: pointer; color: #888;
+            font-family: 'Poppins', sans-serif; background: white;
+            text-decoration: none; display: flex; align-items: center; gap: 6px; transition: all 0.2s;
+        }
+        .back-btn:hover { border-color: #1a3a6b; color: #1a3a6b; }
+        @media (max-width: 768px) {
+            .sidebar { width: 68px; }
+            .sidebar .profile-name, .sidebar .profile-role,
+            .sidebar .social-links, .sidebar .nav-label,
+            .sidebar .nav-section-label { opacity: 0; width: 0; height: 0; overflow: hidden; margin: 0; }
+            .sidebar .profile-avatar { width: 40px; height: 40px; font-size: 15px; }
+        }
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+
+    <aside class="sidebar" id="sidebar">
+        <button class="sidebar-toggle" onclick="toggleSidebar()" id="toggle-btn">‹</button>
+        <div class="sidebar-profile">
+            <div class="profile-avatar">
+                {% if current_user.avatar %}
+                    <img src="{{ url_for('static', filename='avatars/' + current_user.avatar) }}" alt="avatar">
+                {% else %}
+                    {{ (current_user.prenom or current_user.email)[0].upper() }}
+                {% endif %}
+            </div>
+            <div class="profile-name">
+                {{ current_user.prenom or '' }} {{ current_user.nom or current_user.email.split('@')[0] }}
+            </div>
+            <div class="profile-role">
+                {{ 'Administrateur' if current_user.is_admin else 'Responsable' }}
+            </div>
+            <div class="social-links">
+                <a href="#" class="social-link">f</a>
+                <a href="#" class="social-link" style="font-size:10px;">𝕏</a>
+                <a href="#" class="social-link">📷</a>
+                <a href="#" class="social-link" style="font-size:10px;">in</a>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Navigation</div>
+            <a href="{{ url_for('index') }}" class="nav-item">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">Tableau de bord</span>
+            </a>
+            <div class="nav-section-label">Gestion</div>
+            {% if current_user.is_admin %}
+            <a href="{{ url_for('ajouter_responsable_page') }}" class="nav-item">
+                <span class="nav-icon">👤</span>
+                <span class="nav-label">Ajouter Responsable</span>
+            </a>
+            {% endif %}
+            <a href="{{ url_for('ajouter_coordinateur_page') }}" class="nav-item active">
+                <span class="nav-icon">➕</span>
+                <span class="nav-label">Ajouter Coordinateur</span>
+            </a>
+            {% if current_user.is_admin %}
+            <a href="{{ url_for('gerer_dours_page') }}#dours" class="nav-item">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">Gérer les Dours</span>
+            </a>
+            {% endif %}
+            <a href="{{ url_for('gerer_coordinateurs') }}" class="nav-item">
+                <span class="nav-icon">👥</span>
+                <span class="nav-label">Gérer Coordinateurs</span>
+            </a>
+            <div class="nav-divider"></div>
+            <div class="nav-section-label">Compte</div>
+            <a href="{{ url_for('parametres') }}" class="nav-item">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-label">Paramètres</span>
+            </a>
+            <a href="{{ url_for('logout') }}" class="nav-item red">
+                <span class="nav-icon">🚪</span>
+                <span class="nav-label">Déconnexion</span>
+            </a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="alert {% if category == 'error' %}alert-error{% endif %}">
+                    {% if category == 'error' %}⚠️{% else %}✅{% endif %} {{ message }}
+                </div>
+            {% endfor %}
+        {% endwith %}
+
+        <div class="page-title">➕ Ajouter un Coordinateur</div>
+
+        <div class="form-wrapper">
+            <div class="form-card">
+                <div class="form-card-header">
+                    <span style="font-size:20px;">👤</span>
+                    <h2>Nouveau Coordinateur</h2>
+                </div>
+                <div class="form-card-body">
+                    <form method="POST" action="{{ url_for('ajouter_coordinateur') }}">
+                        <label>Nom</label>
+                        <input type="text" name="nom" placeholder="Ex: Idrissi" required>
+
+                        <label>Prénom</label>
+                        <input type="text" name="prenom" placeholder="Ex: Karim" required>
+
+                        <label>Genre</label>
+                        <select name="genre" required>
+                            <option value="">-- Choisir --</option>
+                            <option value="M">👨 Coordinateur (Homme)</option>
+                            <option value="F">👩 Coordinatrice (Femme)</option>
+                        </select>
+
+                        <label>Responsable</label>
+                        <select name="responsable_id" required>
+                            <option value="">-- Choisir un responsable --</option>
+                            {% if current_user.is_admin %}
+                                {% for r in responsables %}
+                                <option value="{{ r.id }}">{{ r.prenom }} {{ r.nom }}</option>
+                                {% endfor %}
+                            {% else %}
+                                {% if current_user.responsable %}
+                                <option value="{{ current_user.responsable.id }}" selected>
+                                    {{ current_user.responsable.prenom }} {{ current_user.responsable.nom }}
+                                </option>
+                                {% endif %}
+                            {% endif %}
+                        </select>
+
+                        <label>🏠 Dours</label>
+                        <select name="dours" multiple class="multi-select" size="5">
+                            {% for d in dours %}
+                            <option value="{{ d.id }}">
+                                {% if d.type == 'talib' %}🧒{% elif d.type == 'taliba' %}👧{% else %}👩{% endif %}
+                                {{ d.nom }} ({{ d.type }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <p class="hint">💡 Ctrl + Click bach tzid aktar men wahda</p>
+
+                        <div class="form-actions">
+                            <a href="{{ url_for('index') }}" class="back-btn">← Retour</a>
+                            <button type="submit" class="submit-btn" style="background:#27ae60;">💾 Enregistrer</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+function toggleSidebar() {
+    const sb = document.getElementById('sidebar');
+    const btn = document.getElementById('toggle-btn');
+    sb.classList.toggle('collapsed');
+    btn.textContent = sb.classList.contains('collapsed') ? '›' : '‹';
+    try { localStorage.setItem('sb_collapsed', sb.classList.contains('collapsed')); } catch(e) {}
+}
+(function() {
+    try {
+        if (localStorage.getItem('sb_collapsed') === 'true') {
+            document.getElementById('sidebar').classList.add('collapsed');
+            document.getElementById('toggle-btn').textContent = '›';
+        }
+    } catch(e) {}
+})();
+{% endblock %}

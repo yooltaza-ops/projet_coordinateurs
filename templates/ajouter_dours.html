@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Ajouter Dours</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial; background: #f0f2f5; padding: 40px; }
+        .card { background: white; padding: 30px; border-radius: 10px;
+                max-width: 550px; margin: auto;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h2 { color: #2c3e50; margin-bottom: 5px; }
+        .sub { color: #888; font-size: 13px; margin-bottom: 25px; }
+        label { display: block; margin-bottom: 5px; color: #555; font-size: 14px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ddd;
+                border-radius: 6px; margin-bottom: 15px; font-size: 14px; }
+        input:focus, select:focus { outline: none; border-color: #8e44ad; }
+        .btns { display: flex; gap: 10px; }
+        .btn { flex: 1; padding: 11px; border: none; border-radius: 6px;
+               font-size: 14px; cursor: pointer; color: white; }
+        .btn-add { background: #8e44ad; }
+        .btn-add:hover { background: #7d3c98; }
+        .btn-end { background: #27ae60; }
+        .btn-end:hover { background: #229954; }
+        .list { margin-top: 25px; }
+        .list h3 { color: #2c3e50; margin-bottom: 10px; font-size: 15px; }
+        .dar-item { display: flex; justify-content: space-between;
+                    padding: 10px 14px; background: #f9f9f9;
+                    border-radius: 6px; margin-bottom: 8px;
+                    border-left: 4px solid #8e44ad; }
+        .type-badge { font-size: 12px; padding: 3px 10px; border-radius: 20px;
+                      color: white; }
+        .talib { background: #2980b9; }
+        .taliba { background: #e91e8c; }
+        .fatat { background: #f39c12; }
+        .empty { color: #aaa; font-size: 13px; text-align: center; padding: 15px; }
+        .alert { padding: 10px 15px; background: #2ecc71; color: white;
+                 border-radius: 6px; margin-bottom: 15px; font-size: 13px; }
+        .back { display: block; text-align: center; margin-top: 15px;
+                color: #888; text-decoration: none; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>🏠 Dours de {{ coordinateur.prenom }} {{ coordinateur.nom }}</h2>
+        <p class="sub">Zid les dours dyal had coordinateur, mn b3d click "Terminer"</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="alert">✅ {{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <form method="POST">
+            <label>Nom de la dar</label>
+            <input type="text" name="nom_dar" placeholder="Ex: Dar Al Amal" required>
+
+            <label>Type</label>
+            <select name="type_dar" required>
+                <option value="">-- Choisir --</option>
+                <option value="talib">🧒 Dar Talib</option>
+                <option value="taliba">👧 Dar Taliba</option>
+                <option value="fatat">👩 Dar Fatat</option>
+            </select>
+
+            <div class="btns">
+                <button type="submit" name="action" value="ajouter" class="btn btn-add">
+                    ➕ Ajouter Dar
+                </button>
+                <button type="submit" name="action" value="terminer" class="btn btn-end">
+                    ✅ Terminer
+                </button>
+            </div>
+        </form>
+
+        <div class="list">
+            <h3>📋 Dours ajoutées ({{ coordinateur.dours|length }})</h3>
+            {% if coordinateur.dours %}
+                {% for d in coordinateur.dours %}
+                <div class="dar-item">
+                    <span>🏠 {{ d.nom }}</span>
+                    <span class="type-badge {{ d.type }}">{{ d.type }}</span>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="empty">Mazal ma zidti hta dar</p>
+            {% endif %}
+        </div>
+
+        <a href="/" class="back">← Retour au tableau de bord</a>
+    </div>
+</body>
+</html>

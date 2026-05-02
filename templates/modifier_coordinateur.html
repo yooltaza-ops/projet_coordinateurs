@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Modifier Coordinateur</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial; background: #f0f2f5; padding: 40px; }
+        .card { background: white; padding: 30px; border-radius: 10px;
+                max-width: 500px; margin: auto;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h2 { color: #2c3e50; margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; color: #555; font-size: 14px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ddd;
+                border-radius: 6px; margin-bottom: 15px; font-size: 14px; }
+        .multi-select { height: auto; padding: 5px; }
+        .multi-select option { padding: 8px 10px; margin: 2px; border-radius: 4px; }
+        .multi-select option:checked { background: #f39c12; color: white; }
+        .hint { font-size: 11px; color: #aaa; margin-top: -12px; margin-bottom: 15px; }
+        .btn { width: 100%; padding: 12px; background: #f39c12; color: white;
+               border: none; border-radius: 6px; font-size: 15px; cursor: pointer; }
+        .btn:hover { background: #e67e22; }
+        .back { display: block; text-align: center; margin-top: 15px;
+                color: #888; text-decoration: none; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>✏️ Modifier Coordinateur</h2>
+        <form method="POST">
+            <label>Nom</label>
+            <input type="text" name="nom" value="{{ coordinateur.nom }}" required>
+
+            <label>Prénom</label>
+            <input type="text" name="prenom" value="{{ coordinateur.prenom }}" required>
+
+            <label>Genre</label>
+            <select name="genre" required>
+                <option value="M" {% if coordinateur.genre == 'M' %}selected{% endif %}>
+                    👨 Coordinateur (Homme)</option>
+                <option value="F" {% if coordinateur.genre == 'F' %}selected{% endif %}>
+                    👩 Coordinatrice (Femme)</option>
+            </select>
+
+            <label>Responsable</label>
+            <select name="responsable_id" required>
+                {% for r in responsables %}
+                <option value="{{ r.id }}"
+                    {% if r.id == coordinateur.responsable_id %}selected{% endif %}>
+                    {{ r.prenom }} {{ r.nom }}
+                </option>
+                {% endfor %}
+            </select>
+
+            <label>🏠 Dours</label>
+            <select name="dours" multiple class="multi-select" size="6">
+                {% for d in dours %}
+                <option value="{{ d.id }}"
+                    {% if d in coordinateur.dours %}selected{% endif %}>
+                    {% if d.type == 'talib' %}🧒{% elif d.type == 'taliba' %}👧{% else %}👩{% endif %}
+                    {{ d.nom }} ({{ d.type }})
+                </option>
+                {% endfor %}
+            </select>
+            <p class="hint">💡 Ctrl + Click bach tzid aktar men wahda</p>
+
+            <button type="submit" class="btn">💾 Enregistrer modifications</button>
+        </form>
+        <a href="/" class="back">← Retour au tableau de bord</a>
+    </div>
+</body>
+</html>
