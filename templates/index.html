@@ -75,12 +75,16 @@
         .recap-seances-table tr:hover td { background:#fafbfc; }
         .coord-av { width:34px; height:34px; border-radius:50%; color:white; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; }
 
-        /* Admin table */
+        /* Admin table — desktop */
         .admin-table { width:100%; border-collapse:collapse; }
         .admin-table th { background:#fff8ee; color:#b8740a; padding:12px 16px; text-align:left; font-size:12px; font-weight:700; border-bottom:2px solid #fce8c3; }
         .admin-table td { padding:12px 16px; border-bottom:1px solid #fef5e4; vertical-align:middle; font-size:13px; }
         .admin-table tr:last-child td { border-bottom:none; }
         .admin-table tr:hover td { background:#fffdf7; }
+
+        /* Admin responsive */
+        .admin-desktop { display:block; overflow-x:auto; }
+        .admin-mobile  { display:none; }
 
         /* Role selector inside panel */
         .role-cards-panel { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
@@ -112,6 +116,70 @@
             .panel { width:100%; right:-100%; }
             .desktop-table { display:none; }
             .resp-card { display:block; }
+
+            /* Admin mobile cards */
+            .admin-desktop { display:none; }
+            .admin-mobile  { display:block; padding:10px; }
+
+            .admin-mob-card {
+                background:white;
+                border-radius:12px;
+                border:1.5px solid #fce8c3;
+                overflow:hidden;
+                margin-bottom:10px;
+            }
+            .admin-mob-card-header {
+                display:flex;
+                align-items:center;
+                gap:10px;
+                padding:13px 14px;
+                background:#fff8ee;
+                border-bottom:1px solid #fce8c3;
+            }
+            .admin-mob-avatar {
+                width:42px; height:42px; border-radius:50%;
+                background:linear-gradient(135deg,#f5a623,#e8941a);
+                color:white; display:flex; align-items:center;
+                justify-content:center; font-size:17px; font-weight:700;
+                flex-shrink:0; box-shadow:0 3px 8px rgba(245,166,35,0.3);
+            }
+            .admin-mob-info { flex:1; min-width:0; }
+            .admin-mob-name { font-weight:700; color:#1a3a6b; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+            .admin-mob-email { font-size:11px; color:#999; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+            .admin-mob-vous {
+                font-size:10px; background:#e8f5e9; color:#27ae60;
+                padding:2px 8px; border-radius:10px; font-weight:600;
+                display:inline-block; margin-top:3px;
+            }
+            .admin-mob-badge {
+                background:linear-gradient(135deg,#f5a623,#e8941a);
+                color:white; padding:4px 10px; border-radius:20px;
+                font-size:10px; font-weight:700; white-space:nowrap;
+                box-shadow:0 2px 6px rgba(245,166,35,0.3); flex-shrink:0;
+            }
+            .admin-mob-actions {
+                display:flex; gap:8px; padding:10px 14px;
+                flex-wrap:nowrap; align-items:center;
+            }
+            .admin-mob-edit {
+                background:#f5a623; color:white; font-size:11px;
+                padding:8px 0; border-radius:10px; border:none;
+                cursor:pointer; font-weight:600; font-family:'Poppins',sans-serif;
+                flex:1; text-align:center; transition:background 0.2s;
+            }
+            .admin-mob-edit:hover { background:#e8941a; }
+            .admin-mob-del {
+                background:#e74c3c; color:white; font-size:11px;
+                padding:8px 0; border-radius:10px;
+                text-decoration:none; font-weight:600;
+                flex:1; text-align:center; transition:background 0.2s;
+                display:block;
+            }
+            .admin-mob-del:hover { background:#c0392b; }
+            .admin-mob-self {
+                color:#ccc; font-size:11px; font-style:italic;
+                text-align:center; width:100%; padding:6px 0;
+            }
         }
 {% endblock %}
 
@@ -234,7 +302,6 @@
 
     <!-- ══════════ STATS ══════════ -->
     <div class="stats-row">
-        <!-- ✅ FIX: nb_responsables au lieu de data|length -->
         <div class="stat-card blue">
             <div class="stat-number">{{ nb_responsables }}</div>
             <div class="stat-label">👤 Responsables</div>
@@ -283,7 +350,9 @@
                 + Ajouter Admin
             </button>
         </div>
-        <div style="overflow-x:auto;">
+
+        <!-- ══ Desktop table ══ -->
+        <div class="admin-desktop">
             <table class="admin-table">
                 <thead>
                     <tr>
@@ -360,6 +429,51 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- ══ Mobile cards ══ -->
+        <div class="admin-mobile">
+            {% for u in admins %}
+            <div class="admin-mob-card">
+                <div class="admin-mob-card-header">
+                    <div class="admin-mob-avatar">{{ (u.prenom or u.email)[0].upper() }}</div>
+                    <div class="admin-mob-info">
+                        <div class="admin-mob-name">
+                            {% if u.prenom and u.nom %}{{ u.prenom }} {{ u.nom }}
+                            {% else %}{{ u.email.split('@')[0] }}{% endif %}
+                        </div>
+                        <div class="admin-mob-email">{{ u.email }}</div>
+                        {% if u.id == current_user.id %}
+                        <span class="admin-mob-vous">Vous</span>
+                        {% endif %}
+                    </div>
+                    <span class="admin-mob-badge">👑 Admin</span>
+                </div>
+                {% if u.id != current_user.id %}
+                <div class="admin-mob-actions">
+                    <button class="admin-mob-edit"
+                        onclick="openModifierAdmin({{ u.id }}, '{{ u.nom or '' }}', '{{ u.prenom or '' }}', '{{ u.email }}', '{{ u.role }}')">
+                        ✏️ Modifier
+                    </button>
+                    <a href="{{ url_for('supprimer_admin', id=u.id) }}"
+                       class="admin-mob-del"
+                       onclick="return confirm('Wash bghi thda had admin?')">
+                        🗑️ Supprimer
+                    </a>
+                </div>
+                {% else %}
+                <div class="admin-mob-actions">
+                    <span class="admin-mob-self">— compte actuel —</span>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+            {% if not admins %}
+            <div style="text-align:center; color:#bbb; padding:24px; font-size:13px;">
+                Aucun administrateur trouvé
+            </div>
+            {% endif %}
+        </div>
+
     </div>
     {% endif %}
 
