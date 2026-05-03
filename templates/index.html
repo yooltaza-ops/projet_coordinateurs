@@ -74,6 +74,13 @@
         .recap-seances-table tr:hover td { background:#fafbfc; }
         .coord-av { width:34px; height:34px; border-radius:50%; color:white; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; }
 
+        /* Admin table */
+        .admin-table { width:100%; border-collapse:collapse; }
+        .admin-table th { background:#fff8ee; color:#b8740a; padding:12px 16px; text-align:left; font-size:12px; font-weight:700; border-bottom:2px solid #fce8c3; }
+        .admin-table td { padding:12px 16px; border-bottom:1px solid #fef5e4; vertical-align:middle; font-size:13px; }
+        .admin-table tr:last-child td { border-bottom:none; }
+        .admin-table tr:hover td { background:#fffdf7; }
+
         .desktop-table { display:block; }
         .resp-card { display:none; }
 
@@ -98,9 +105,10 @@
 
 {% block content %}
 
-<!-- Overlay + Panel Modifier -->
+<!-- Overlay -->
 <div class="overlay" id="overlay" onclick="closeAllPanels()"></div>
 
+<!-- ══════════ PANEL : Modifier Coordinateur ══════════ -->
 <div class="panel" id="panel-modifier">
     <div class="panel-top">
         <h2>✏️ Modifier Coordinateur</h2>
@@ -136,7 +144,58 @@
     </div>
 </div>
 
-<!-- Main Content -->
+<!-- ══════════ PANEL : Ajouter Admin ══════════ -->
+{% if current_user.is_admin %}
+<div class="panel" id="panel-add-admin">
+    <div class="panel-top" style="background:linear-gradient(135deg,#f5a623,#e8941a);">
+        <h2>👑 Ajouter Administrateur</h2>
+        <button class="close-btn" onclick="closeAllPanels()">✕</button>
+    </div>
+    <div class="panel-body">
+        <form method="POST" action="{{ url_for('ajouter_admin') }}">
+            <label>Prénom</label>
+            <input type="text" name="prenom" placeholder="Prénom" required>
+            <label>Nom</label>
+            <input type="text" name="nom" placeholder="Nom" required>
+            <label>Email</label>
+            <input type="email" name="email" placeholder="admin@example.com" required>
+            <label>Mot de passe</label>
+            <input type="password" name="password" placeholder="••••••••" required minlength="6">
+            <button type="submit" class="submit-btn" style="background:linear-gradient(135deg,#f5a623,#e8941a);">
+                👑 Créer Administrateur
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- ══════════ PANEL : Modifier Admin ══════════ -->
+<div class="panel" id="panel-modifier-admin">
+    <div class="panel-top" style="background:linear-gradient(135deg,#f5a623,#e8941a);">
+        <h2>✏️ Modifier Administrateur</h2>
+        <button class="close-btn" onclick="closeAllPanels()">✕</button>
+    </div>
+    <div class="panel-body">
+        <form method="POST" id="form-modifier-admin">
+            <label>Prénom</label>
+            <input type="text" name="prenom" id="madm-prenom" placeholder="Prénom">
+            <label>Nom</label>
+            <input type="text" name="nom" id="madm-nom" placeholder="Nom">
+            <label>Email</label>
+            <input type="email" name="email" id="madm-email" placeholder="admin@example.com" required>
+            <label>
+                Nouveau mot de passe
+                <span style="color:#aaa; font-weight:400; font-size:11px;">(laisser vide = inchangé)</span>
+            </label>
+            <input type="password" name="password" placeholder="••••••••" minlength="6">
+            <button type="submit" class="submit-btn" style="background:linear-gradient(135deg,#f5a623,#e8941a);">
+                💾 Enregistrer modifications
+            </button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<!-- ══════════ MAIN CONTENT ══════════ -->
 <main class="main-content">
 
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -149,7 +208,7 @@
 
     <div class="page-title">📊 Tableau de bord</div>
 
-    <!-- Stats -->
+    <!-- ══════════ STATS ══════════ -->
     <div class="stats-row">
         <div class="stat-card blue">
             <div class="stat-number">{{ data|length }}</div>
@@ -177,7 +236,101 @@
         </div>
     </div>
 
-    <!-- Quick Actions -->
+    <!-- ══════════ GÉRER ADMINS ══════════ -->
+    {% if current_user.is_admin %}
+    <div class="card">
+        <div class="card-header" style="background:linear-gradient(135deg,#f5a623,#e8941a); padding:14px 22px; display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="color:white; font-size:14px;">👑 Gérer Administrateurs</h3>
+            <button onclick="openPanel('panel-add-admin')"
+                style="background:rgba(255,255,255,0.25); border:1.5px solid rgba(255,255,255,0.4); color:white;
+                       padding:6px 16px; border-radius:20px; font-size:12px; font-weight:700;
+                       cursor:pointer; font-family:'Poppins',sans-serif; transition:all 0.2s;"
+                onmouseover="this.style.background='rgba(255,255,255,0.4)'"
+                onmouseout="this.style.background='rgba(255,255,255,0.25)'">
+                + Ajouter Admin
+            </button>
+        </div>
+        <div style="overflow-x:auto;">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Administrateur</th>
+                        <th>Email</th>
+                        <th style="text-align:center;">Statut</th>
+                        <th style="text-align:center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in admins %}
+                    <tr>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <div style="width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg,#f5a623,#e8941a);
+                                            color:white; display:flex; align-items:center; justify-content:center;
+                                            font-size:14px; font-weight:700; flex-shrink:0; box-shadow:0 3px 8px rgba(245,166,35,0.3);">
+                                    {{ (u.prenom or u.email)[0].upper() }}
+                                </div>
+                                <div>
+                                    <div style="font-weight:700; color:#1a3a6b; font-size:13px;">
+                                        {% if u.prenom and u.nom %}{{ u.prenom }} {{ u.nom }}
+                                        {% else %}{{ u.email.split('@')[0] }}{% endif %}
+                                    </div>
+                                    {% if u.id == current_user.id %}
+                                    <span style="font-size:10px; background:#e8f5e9; color:#27ae60;
+                                                 padding:2px 8px; border-radius:10px; font-weight:600;">
+                                        Vous
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td style="color:#888; font-size:12px;">{{ u.email }}</td>
+                        <td style="text-align:center;">
+                            <span style="background:linear-gradient(135deg,#f5a623,#e8941a); color:white;
+                                         padding:3px 14px; border-radius:20px; font-size:11px; font-weight:700;
+                                         box-shadow:0 2px 6px rgba(245,166,35,0.3);">
+                                👑 Admin
+                            </span>
+                        </td>
+                        <td style="text-align:center;">
+                            {% if u.id != current_user.id %}
+                            <button
+                                onclick="openModifierAdmin({{ u.id }}, '{{ u.nom or '' }}', '{{ u.prenom or '' }}', '{{ u.email }}')"
+                                style="background:#f5a623; color:white; font-size:10px; padding:4px 12px;
+                                       border-radius:10px; border:none; cursor:pointer; font-weight:600;
+                                       font-family:'Poppins',sans-serif; margin-right:5px; transition:all 0.2s;"
+                                onmouseover="this.style.background='#e8941a'"
+                                onmouseout="this.style.background='#f5a623'">
+                                ✏️ Modifier
+                            </button>
+                            <a href="{{ url_for('supprimer_admin', id=u.id) }}"
+                               style="background:#e74c3c; color:white; font-size:10px; padding:4px 12px;
+                                      border-radius:10px; text-decoration:none; font-weight:600; transition:all 0.2s;"
+                               onmouseover="this.style.background='#c0392b'"
+                               onmouseout="this.style.background='#e74c3c'"
+                               onclick="return confirm('Wash bghi thda had admin?')">
+                                🗑️ Supprimer
+                            </a>
+                            {% else %}
+                            <span style="color:#ccc; font-size:11px; font-style:italic;">— compte actuel —</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if not admins %}
+                    <tr>
+                        <td colspan="4" style="text-align:center; color:#bbb; padding:24px; font-size:13px;">
+                            Aucun administrateur trouvé
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ══════════ QUICK ACTIONS ══════════ -->
     <div class="card">
         <div class="card-header"><h3>⚡ Actions rapides</h3></div>
         <div class="card-body">
@@ -218,7 +371,7 @@
         </div>
     </div>
 
-    <!-- Recap séances -->
+    <!-- ══════════ RECAP SÉANCES ══════════ -->
     <div class="card">
         <div class="card-header" style="background:linear-gradient(135deg,#9b59b6,#8e44ad); padding:14px 22px;">
             <h3 style="color:white;">📚 Récap Séances — {{ mois_nom_actuel }} {{ annee_actuel }}</h3>
@@ -280,7 +433,7 @@
         {% endif %}
     </div>
 
-    <!-- Table coordinateurs par responsable -->
+    <!-- ══════════ COORDINATEURS PAR RESPONSABLE ══════════ -->
     <div class="card">
         <div class="card-header" style="background:#1a3a6b;">
             <h3 style="color:white;">📋 Coordinateurs par Responsable</h3>
@@ -394,12 +547,17 @@
 function openPanel(id) {
     closeAllPanels();
     const panel = document.getElementById(id);
-    if (panel) { panel.classList.add('active'); document.getElementById('overlay').classList.add('active'); }
+    if (panel) {
+        panel.classList.add('active');
+        document.getElementById('overlay').classList.add('active');
+    }
 }
 function closeAllPanels() {
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     document.getElementById('overlay').classList.remove('active');
 }
+
+// Modifier coordinateur
 function openModifier(id, nom, prenom, genre, respId, dourIds) {
     document.getElementById('form-modifier').action = '/modifier_coordinateur/' + id;
     document.getElementById('mod-nom').value    = nom;
@@ -407,7 +565,18 @@ function openModifier(id, nom, prenom, genre, respId, dourIds) {
     document.getElementById('mod-genre').value  = genre;
     document.getElementById('mod-resp').value   = respId;
     const sel = document.getElementById('mod-dours');
-    for (let opt of sel.options) { opt.selected = dourIds.includes(parseInt(opt.value)); }
+    for (let opt of sel.options) {
+        opt.selected = dourIds.includes(parseInt(opt.value));
+    }
     openPanel('panel-modifier');
+}
+
+// Modifier admin
+function openModifierAdmin(id, nom, prenom, email) {
+    document.getElementById('form-modifier-admin').action = '/modifier_admin/' + id;
+    document.getElementById('madm-nom').value    = nom;
+    document.getElementById('madm-prenom').value = prenom;
+    document.getElementById('madm-email').value  = email;
+    openPanel('panel-modifier-admin');
 }
 {% endblock %}

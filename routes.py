@@ -75,13 +75,41 @@ def index():
     total_heures_mois  = sum(s.nb_heures for s in all_seances_mois)
     total_seances_mois = len(all_seances_mois)
 
+    # Recap séances par coordinateur
+    recap_seances = []
+    if current_user.is_admin:
+        all_coords = Coordinateur.query.all()
+    else:
+        resp = current_user.responsable
+        all_coords = resp.coordinateurs if resp else []
+
+    for coord in all_coords:
+        seances = Seance.query.filter_by(coordinateur_id=coord.id, mois=mois, annee=annee).all()
+        nb_s = len(seances)
+        nb_h = sum(s.nb_heures for s in seances)
+        if nb_s > 0:
+            recap_seances.append({
+                'nom': f"{coord.prenom} {coord.nom}",
+                'initiales': (coord.prenom[0] + coord.nom[0]).upper() if coord.prenom and coord.nom else '?',
+                'genre': coord.genre,
+                'responsable': f"{coord.responsable.prenom} {coord.responsable.nom}" if coord.responsable else '',
+                'nb_seances': nb_s,
+                'nb_heures': nb_h,
+            })
+
+    # Liste admins (pour la section gérer admins)
+    admins = User.query.filter_by(role='admin').all() if current_user.is_admin else []
+
     return render_template('index.html',
                            data=data,
                            responsables=responsables,
                            dours=dours,
                            total_heures_mois=total_heures_mois,
                            total_seances_mois=total_seances_mois,
-                           mois_nom_actuel=mois_noms[mois])
+                           mois_nom_actuel=mois_noms[mois],
+                           annee_actuel=annee,
+                           recap_seances=recap_seances,
+                           admins=admins)
 
 
 # ─── Pages dédiées ────────────────────────────────────────────────────────────
@@ -126,7 +154,6 @@ def gerer_coordinateurs():
     return render_template('gerer_coordinateurs.html',
                            coordinateurs=coordinateurs,
                            responsables=responsables, dours=dours)
-
 
 
 @app.route('/heures')
@@ -352,7 +379,6 @@ def modifier_responsable(id):
     if new_role not in ('admin', 'responsable'):
         new_role = 'responsable'
 
-    # Update user lié
     if r.user:
         existing = User.query.filter_by(email=new_email).first()
         if existing and existing.id != r.user.id:
@@ -363,15 +389,12 @@ def modifier_responsable(id):
         pwd = request.form.get('password', '').strip()
         if pwd:
             r.user.set_password(pwd)
-        # Si rôle admin, détacher du responsable
         r.user.responsable_id = r.id if new_role == 'responsable' else None
 
     r.email = new_email
     db.session.commit()
     flash(f'{r.prenom} {r.nom} modifié avec succès!', 'success')
     return redirect(url_for('gerer_responsables'))
-
-
 
 
 @app.route('/supprimer_responsable/<int:id>')
@@ -387,6 +410,63 @@ def supprimer_responsable(id):
     db.session.delete(r)
     db.session.commit()
     flash('Responsable supprimé!', 'success')
+    return redirect(url_for('index'))
+
+
+# ─── Admins ───────────────────────────────────────────────────────────────────
+@app.route('/ajouter_admin', methods=['POST'])
+@login_required
+@admin_required
+def ajouter_admin():
+    email = request.form['email'].strip().lower()
+    if User.query.filter_by(email=email).first():
+        flash('Cet email est déjà utilisé.', 'error')
+        return redirect(url_for('index'))
+    u = User(email=email, role='admin')
+    u.nom    = request.form.get('nom', '').strip()
+    u.prenom = request.form.get('prenom', '').strip()
+    u.set_password(request.form['password'])
+    db.session.add(u)
+    db.session.commit()
+    flash(f'Administrateur {u.prenom} {u.nom} ajouté!', 'success')
+    return redirect(url_for('index'))
+
+
+@app.route('/modifier_admin/<int:id>', methods=['POST'])
+@login_required
+@admin_required
+def modifier_admin(id):
+    u = User.query.get_or_404(id)
+    new_email = request.form['email'].strip().lower()
+    existing = User.query.filter_by(email=new_email).first()
+    if existing and existing.id != u.id:
+        flash('Email déjà utilisé.', 'error')
+        return redirect(url_for('index'))
+    u.email  = new_email
+    u.nom    = request.form.get('nom', '').strip()
+    u.prenom = request.form.get('prenom', '').strip()
+    pwd = request.form.get('password', '').strip()
+    if pwd:
+        if len(pwd) < 6:
+            flash('Le mot de passe doit contenir au moins 6 caractères.', 'error')
+            return redirect(url_for('index'))
+        u.set_password(pwd)
+    db.session.commit()
+    flash('Admin modifié avec succès!', 'success')
+    return redirect(url_for('index'))
+
+
+@app.route('/supprimer_admin/<int:id>')
+@login_required
+@admin_required
+def supprimer_admin(id):
+    if id == current_user.id:
+        flash('Impossible de supprimer votre propre compte.', 'error')
+        return redirect(url_for('index'))
+    u = User.query.get_or_404(id)
+    db.session.delete(u)
+    db.session.commit()
+    flash('Admin supprimé!', 'success')
     return redirect(url_for('index'))
 
 

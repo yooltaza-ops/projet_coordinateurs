@@ -434,7 +434,7 @@ function toggleSidebar() {
 
 // Restore sidebar state — desktop only
 (function() {
-    if (window.innerWidth <= 768) return; // mobile: ignore localStorage
+    if (window.innerWidth <= 768) return;
     try {
         if (localStorage.getItem('sb_collapsed') === 'true') {
             document.getElementById('sidebar').classList.add('collapsed');
@@ -459,7 +459,7 @@ function closeMobSidebar() {
     document.getElementById('mob-menu-btn').textContent = '☰';
 }
 
-// Panel helpers (used by gerer_coordinateurs etc.)
+// Panel helpers
 function openPanel(id) {
     closeAllPanels();
     const el = document.getElementById(id);
