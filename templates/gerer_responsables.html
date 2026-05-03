@@ -1,0 +1,377 @@
+{% extends "base.html" %}
+{% block title %}Gérer Responsables — Yool{% endblock %}
+
+{% block extra_css %}
+        .page-title { font-size:21px; font-weight:700; color:#1a3a6b; margin-bottom:22px; display:flex; align-items:center; gap:10px; }
+        .alert { padding:13px 18px; background:#27ae60; color:white; border-radius:10px; margin-bottom:18px; font-size:13px; display:flex; align-items:center; gap:10px; }
+        .alert-error { background:#e74c3c; }
+
+        .stats-row { display:flex; gap:14px; margin-bottom:22px; flex-wrap:wrap; }
+        .stat-card { flex:1; min-width:130px; background:white; border-radius:13px; padding:16px 20px; box-shadow:0 4px 15px rgba(0,0,0,0.07); border-left:5px solid; display:flex; flex-direction:column; gap:3px; }
+        .stat-number { font-size:28px; font-weight:700; color:#1a3a6b; }
+        .stat-label  { font-size:12px; color:#888; font-weight:500; }
+
+        /* Section title */
+        .section-title {
+            display:flex; align-items:center; gap:10px;
+            font-size:15px; font-weight:700; color:#1a3a6b;
+            margin:26px 0 14px; padding-bottom:10px;
+            border-bottom:2px solid #e8edf5;
+        }
+        .section-count {
+            background:#1a3a6b; color:white;
+            font-size:11px; font-weight:700;
+            padding:2px 9px; border-radius:20px;
+        }
+        .section-count.orange { background:#f5a623; }
+
+        /* Grid */
+        .resp-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px,1fr)); gap:16px; }
+
+        .resp-card { background:white; border-radius:16px; box-shadow:0 4px 15px rgba(0,0,0,0.07); overflow:hidden; transition:transform 0.2s, box-shadow 0.2s; }
+        .resp-card:hover { transform:translateY(-3px); box-shadow:0 8px 25px rgba(0,0,0,0.1); }
+        .resp-card-header { padding:16px 18px; display:flex; align-items:center; gap:12px; }
+        .resp-avatar { width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:700; color:white; flex-shrink:0; }
+        .resp-info { flex:1; min-width:0; }
+        .resp-name  { font-size:14px; font-weight:700; color:#1a3a6b; }
+        .resp-email { font-size:11px; color:#aaa; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .role-badge { font-size:10px; padding:3px 9px; border-radius:10px; font-weight:600; color:white; flex-shrink:0; }
+        .role-badge.admin       { background:#f5a623; }
+        .role-badge.responsable { background:#1a3a6b; }
+
+        .resp-card-body  { padding:0 18px 14px; }
+        .resp-stats      { display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+        .resp-stat       { display:flex; align-items:center; gap:4px; font-size:11px; color:#555; font-weight:600; background:#f8fafc; padding:4px 9px; border-radius:7px; }
+        .coord-tags      { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:12px; min-height:20px; }
+        .coord-tag       { padding:2px 8px; border-radius:7px; font-size:10px; font-weight:600; color:white; }
+        .resp-actions    { display:flex; gap:7px; flex-wrap:wrap; }
+
+        .btn-edit { padding:6px 14px; background:#f0f4f8; border:1.5px solid #e8edf5; border-radius:20px; font-size:12px; font-weight:600; color:#1a3a6b; cursor:pointer; font-family:'Poppins',sans-serif; text-decoration:none; transition:all 0.2s; }
+        .btn-edit:hover { border-color:#1a3a6b; background:#e8edf5; }
+        .btn-del  { padding:6px 14px; background:#fdecea; border:none; border-radius:20px; font-size:12px; font-weight:600; color:#e74c3c; cursor:pointer; font-family:'Poppins',sans-serif; text-decoration:none; transition:all 0.2s; }
+        .btn-del:hover { background:#e74c3c; color:white; }
+        .btn-add  { padding:10px 20px; background:#1a3a6b; color:white; border:none; border-radius:25px; font-size:13px; font-weight:600; cursor:pointer; font-family:'Poppins',sans-serif; text-decoration:none; transition:all 0.2s; display:inline-flex; align-items:center; gap:6px; }
+        .btn-add:hover { background:#15305c; transform:translateY(-1px); box-shadow:0 4px 14px rgba(26,58,107,0.3); }
+
+        /* Admin pur card (sans coordinateurs) */
+        .admin-pur-card {
+            background:white; border-radius:14px;
+            box-shadow:0 4px 15px rgba(0,0,0,0.07);
+            padding:14px 18px;
+            display:flex; align-items:center; gap:14px;
+            border-left:4px solid #f5a623;
+            transition:transform 0.2s;
+        }
+        .admin-pur-card:hover { transform:translateY(-2px); }
+        .admin-purs-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap:12px; }
+
+        /* Empty */
+        .empty-state { text-align:center; padding:40px 20px; color:#bbb; }
+        .empty-state .big-icon { font-size:40px; margin-bottom:10px; }
+
+        /* ── MODAL ── */
+        .mod-overlay {
+            display:none; position:fixed; inset:0;
+            background:rgba(26,58,107,0.5); z-index:9000;
+            backdrop-filter:blur(3px);
+            align-items:center; justify-content:center;
+        }
+        .mod-overlay.active { display:flex; }
+        .mod-box {
+            background:white; border-radius:18px;
+            width:480px; max-width:95vw; max-height:92vh; overflow-y:auto;
+            box-shadow:0 20px 60px rgba(26,58,107,0.3);
+            transform:scale(0.93); opacity:0;
+            transition:all 0.28s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        .mod-overlay.active .mod-box { transform:scale(1); opacity:1; }
+        .mod-top {
+            background:#1a3a6b; padding:18px 24px;
+            display:flex; justify-content:space-between; align-items:center;
+            border-radius:18px 18px 0 0; position:sticky; top:0; z-index:1;
+        }
+        .mod-top h2 { color:white; font-size:15px; font-weight:600; }
+        .mod-close {
+            background:rgba(255,255,255,0.2); border:none; color:white;
+            width:30px; height:30px; border-radius:50%; cursor:pointer;
+            font-size:15px; display:flex; align-items:center; justify-content:center;
+        }
+        .mod-close:hover { background:rgba(255,255,255,0.35); }
+        .mod-body { padding:22px 26px; }
+        .mod-body label { display:block; margin-bottom:5px; color:#1a3a6b; font-size:12px; font-weight:600; }
+        .mod-body input {
+            width:100%; padding:10px 13px; border:2px solid #e8edf5;
+            border-radius:10px; margin-bottom:14px; font-size:13px;
+            font-family:'Poppins',sans-serif; outline:none;
+            transition:border 0.2s; box-sizing:border-box;
+        }
+        .mod-body input:focus { border-color:#f5a623; }
+        .role-cards { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+        .role-card {
+            padding:12px; border:2px solid #e8edf5; border-radius:12px;
+            cursor:pointer; transition:all 0.2s; text-align:center; display:block;
+        }
+        .role-card:hover { border-color:#f5a623; }
+        .role-card.selected { border-color:#1a3a6b; background:#e8f0ff; }
+        .role-card input[type="radio"] { display:none; }
+        .role-card-icon  { font-size:20px; margin-bottom:4px; }
+        .role-card-title { font-size:12px; font-weight:700; color:#1a3a6b; }
+        .mod-submit {
+            width:100%; padding:12px; border:none; border-radius:25px;
+            font-size:13px; font-weight:600; cursor:pointer; color:white;
+            background:#f5a623; font-family:'Poppins',sans-serif; transition:all 0.2s;
+        }
+        .mod-submit:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(245,166,35,0.35); }
+
+        @media (max-width:768px) {
+            .resp-grid, .admin-purs-grid { grid-template-columns:1fr; }
+            .stats-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+            .stat-card { min-width:unset; padding:12px; }
+            .stat-number { font-size:22px; }
+        }
+{% endblock %}
+
+{% block content %}
+
+<!-- ══ MODAL ══ -->
+<div class="mod-overlay" id="mod-overlay" onclick="handleOverlayClick(event)">
+    <div class="mod-box" id="mod-box">
+        <div class="mod-top">
+            <h2>✏️ Modifier Responsable</h2>
+            <button class="mod-close" onclick="closeModal()">✕</button>
+        </div>
+        <div class="mod-body">
+            <form method="POST" action="" id="form-modifier">
+                <label>Nom</label>
+                <input type="text" name="nom" id="mod-nom" required placeholder="Nom">
+                <label>Prénom</label>
+                <input type="text" name="prenom" id="mod-prenom" required placeholder="Prénom">
+                <label>Email</label>
+                <input type="email" name="email" id="mod-email" required placeholder="email@exemple.com">
+                <label>Rôle</label>
+                <div class="role-cards">
+                    <label class="role-card" id="mod-card-responsable" onclick="selectModRole('responsable')">
+                        <input type="radio" name="role" value="responsable" id="mod-role-responsable">
+                        <div class="role-card-icon">👤</div>
+                        <div class="role-card-title">Responsable</div>
+                    </label>
+                    <label class="role-card" id="mod-card-admin" onclick="selectModRole('admin')">
+                        <input type="radio" name="role" value="admin" id="mod-role-admin">
+                        <div class="role-card-icon">🛡️</div>
+                        <div class="role-card-title">Admin</div>
+                    </label>
+                </div>
+                <label>Nouveau mot de passe <span style="color:#aaa;font-weight:400;">(laisser vide = inchangé)</span></label>
+                <input type="password" name="password" placeholder="••••••••">
+                <button type="submit" class="mod-submit">💾 Enregistrer</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ══ PAGE ══ -->
+<div style="padding:28px; min-width:0;">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="alert {% if category == 'error' %}alert-error{% endif %}">
+                {% if category == 'error' %}⚠️{% else %}✅{% endif %} {{ message }}
+            </div>
+        {% endfor %}
+    {% endwith %}
+
+    <!-- Header -->
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; flex-wrap:wrap; gap:12px;">
+        <div class="page-title" style="margin-bottom:0;">👥 Gérer les Comptes</div>
+        <a href="{{ url_for('ajouter_responsable_page') }}" class="btn-add">➕ Ajouter</a>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+        <div class="stat-card" style="border-color:#1a3a6b;">
+            <div class="stat-number">{{ responsables_only|length }}</div>
+            <div class="stat-label">👤 Responsables</div>
+        </div>
+        <div class="stat-card" style="border-color:#f5a623;">
+            <div class="stat-number">{{ admins_only|length + admins_purs|length }}</div>
+            <div class="stat-label">🛡️ Admins</div>
+        </div>
+        <div class="stat-card" style="border-color:#27ae60;">
+            <div class="stat-number">{{ total_coordinateurs }}</div>
+            <div class="stat-label">👥 Coordinateurs</div>
+        </div>
+    </div>
+
+    <!-- ══ SECTION 1: RESPONSABLES ══ -->
+    <div class="section-title">
+        👤 Responsables
+        <span class="section-count">{{ responsables_only|length }}</span>
+    </div>
+
+    {% if responsables_only %}
+    <div class="resp-grid">
+        {% for r in responsables_only %}
+        {% set colors = ['#1a3a6b','#27ae60','#9b59b6','#e67e22','#16a085','#e91e8c'] %}
+        {% set color = colors[loop.index0 % colors|length] %}
+        <div class="resp-card">
+            <div class="resp-card-header">
+                <div class="resp-avatar" style="background:{{ color }};">
+                    {{ r.prenom[0].upper() }}{{ r.nom[0].upper() }}
+                </div>
+                <div class="resp-info">
+                    <div class="resp-name">{{ r.prenom }} {{ r.nom }}</div>
+                    <div class="resp-email">{{ r.email or '—' }}</div>
+                </div>
+                <span class="role-badge responsable">👤 Resp.</span>
+            </div>
+            <div class="resp-card-body">
+                <div class="resp-stats">
+                    <div class="resp-stat">👨 {{ r.count_coordinateurs() }}</div>
+                    <div class="resp-stat">👩 {{ r.count_coordinatrices() }}</div>
+                    <div class="resp-stat">📊 {{ r.coordinateurs|length }} total</div>
+                </div>
+                <div class="coord-tags">
+                    {% for c in r.coordinateurs[:4] %}
+                    <span class="coord-tag" style="background:{% if c.genre == 'M' %}#1a3a6b{% else %}#e91e8c{% endif %};">
+                        {{ c.prenom }} {{ c.nom }}
+                    </span>
+                    {% endfor %}
+                    {% if r.coordinateurs|length > 4 %}
+                    <span class="coord-tag" style="background:#95a5a6;">+{{ r.coordinateurs|length - 4 }}</span>
+                    {% endif %}
+                    {% if not r.coordinateurs %}
+                    <span style="color:#ddd; font-size:11px; font-style:italic;">Aucun coordinateur</span>
+                    {% endif %}
+                </div>
+                <div class="resp-actions">
+                    <button class="btn-edit"
+                        onclick="openModifier({{ r.id }}, '{{ r.nom|replace("'", "\\'") }}', '{{ r.prenom|replace("'", "\\'") }}', '{{ (r.email or '')|replace("'", "\\'") }}', 'responsable')">
+                        ✏️ Modifier
+                    </button>
+                    <a href="{{ url_for('supprimer_responsable', id=r.id) }}" class="btn-del"
+                       onclick="return confirm('Wash bghi thda {{ r.prenom }} {{ r.nom }} w kol coordinateurs dyalo?')">
+                        🗑️ Supprimer
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="big-icon">👤</div>
+        <p style="font-size:13px;">Mazal ma kayn hta responsable</p>
+    </div>
+    {% endif %}
+
+
+    <!-- ══ SECTION 2: ADMINS (liés à un Responsable) ══ -->
+    {% if admins_only %}
+    <div class="section-title">
+        🛡️ Admins — avec compte Responsable
+        <span class="section-count orange">{{ admins_only|length }}</span>
+    </div>
+    <div class="resp-grid">
+        {% for r in admins_only %}
+        {% set colors = ['#e67e22','#9b59b6','#16a085','#e74c3c','#1a3a6b','#27ae60'] %}
+        {% set color = colors[loop.index0 % colors|length] %}
+        <div class="resp-card" style="border-top:3px solid #f5a623;">
+            <div class="resp-card-header">
+                <div class="resp-avatar" style="background:{{ color }};">
+                    {{ r.prenom[0].upper() }}{{ r.nom[0].upper() }}
+                </div>
+                <div class="resp-info">
+                    <div class="resp-name">{{ r.prenom }} {{ r.nom }}</div>
+                    <div class="resp-email">{{ r.email or '—' }}</div>
+                </div>
+                <span class="role-badge admin">🛡️ Admin</span>
+            </div>
+            <div class="resp-card-body">
+                <div class="resp-stats">
+                    <div class="resp-stat">👨 {{ r.count_coordinateurs() }}</div>
+                    <div class="resp-stat">👩 {{ r.count_coordinatrices() }}</div>
+                    <div class="resp-stat">📊 {{ r.coordinateurs|length }} total</div>
+                </div>
+                <div class="coord-tags">
+                    {% for c in r.coordinateurs[:4] %}
+                    <span class="coord-tag" style="background:{% if c.genre == 'M' %}#1a3a6b{% else %}#e91e8c{% endif %};">
+                        {{ c.prenom }} {{ c.nom }}
+                    </span>
+                    {% endfor %}
+                    {% if r.coordinateurs|length > 4 %}
+                    <span class="coord-tag" style="background:#95a5a6;">+{{ r.coordinateurs|length - 4 }}</span>
+                    {% endif %}
+                    {% if not r.coordinateurs %}
+                    <span style="color:#ddd; font-size:11px; font-style:italic;">Aucun coordinateur</span>
+                    {% endif %}
+                </div>
+                <div class="resp-actions">
+                    <button class="btn-edit"
+                        onclick="openModifier({{ r.id }}, '{{ r.nom|replace("'", "\\'") }}', '{{ r.prenom|replace("'", "\\'") }}', '{{ (r.email or '')|replace("'", "\\'") }}', 'admin')">
+                        ✏️ Modifier
+                    </button>
+                    <a href="{{ url_for('supprimer_responsable', id=r.id) }}" class="btn-del"
+                       onclick="return confirm('Wash bghi thda {{ r.prenom }} {{ r.nom }}?')">
+                        🗑️ Supprimer
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+
+    <!-- ══ SECTION 3: ADMINS PURS (sans lien Responsable) ══ -->
+    {% if admins_purs %}
+    <div class="section-title">
+        🛡️ Admins purs
+        <span class="section-count orange">{{ admins_purs|length }}</span>
+    </div>
+    <div class="admin-purs-grid">
+        {% for u in admins_purs %}
+        <div class="admin-pur-card">
+            <div class="resp-avatar" style="background:#f5a623; width:42px; height:42px; font-size:15px; flex-shrink:0;">
+                {{ (u.prenom or u.email)[0].upper() }}
+            </div>
+            <div style="flex:1; min-width:0;">
+                <div style="font-weight:700; color:#1a3a6b; font-size:13px;">
+                    {% if u.prenom and u.nom %}{{ u.prenom }} {{ u.nom }}{% else %}{{ u.email.split('@')[0] }}{% endif %}
+                </div>
+                <div style="font-size:11px; color:#aaa; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ u.email }}</div>
+            </div>
+            <span class="role-badge admin">🛡️ Admin</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+function openModifier(id, nom, prenom, email, role) {
+    document.getElementById('form-modifier').action = '/modifier_responsable/' + id;
+    document.getElementById('mod-nom').value    = nom;
+    document.getElementById('mod-prenom').value = prenom;
+    document.getElementById('mod-email').value  = email;
+    selectModRole(role);
+    document.getElementById('mod-overlay').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+function closeModal() {
+    document.getElementById('mod-overlay').classList.remove('active');
+    document.body.style.overflow = '';
+}
+function handleOverlayClick(e) {
+    if (e.target === document.getElementById('mod-overlay')) closeModal();
+}
+function selectModRole(role) {
+    document.getElementById('mod-card-responsable').classList.toggle('selected', role === 'responsable');
+    document.getElementById('mod-card-admin').classList.toggle('selected', role === 'admin');
+    document.getElementById('mod-role-' + role).checked = true;
+}
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeModal();
+});
+{% endblock %}

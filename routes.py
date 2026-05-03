@@ -49,12 +49,19 @@ def logout():
 @app.route('/')
 @login_required
 def index():
+    now   = datetime.now()
+    mois  = now.month
+    annee = now.year
+    mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin',
+                 'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
+
     dours = Dour.query.all()
     if current_user.is_admin:
         responsables = Responsable.query.all()
     else:
         resp = current_user.responsable
         responsables = [resp] if resp else []
+
     data = []
     for r in responsables:
         data.append({
@@ -63,27 +70,28 @@ def index():
             'nb_coordinatrices': r.count_coordinatrices(),
             'total': len(r.coordinateurs)
         })
-    mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre']
-    now = datetime.now()
-    all_s = Seance.query.filter_by(mois=now.month, annee=now.year).all()
-    total_seances_mois = len(all_s)
-    total_heures_mois  = sum(s.nb_heures for s in all_s)
-    recap_seances = []
-    for coord in Coordinateur.query.order_by(Coordinateur.nom).all():
-        nb_s = coord.total_seances_mois(now.month, now.year)
-        nb_h = coord.total_heures_mois(now.month, now.year)
-        if nb_s > 0:
-            recap_seances.append({'nom': coord.prenom+' '+coord.nom, 'genre': coord.genre, 'initiales': coord.prenom[0].upper()+coord.nom[0].upper(), 'responsable': (coord.responsable.prenom+' '+coord.responsable.nom) if coord.responsable else '', 'nb_seances': nb_s, 'nb_heures': nb_h})
-    return render_template('index.html', data=data,
-                           responsables=responsables, dours=dours,
-                           total_seances_mois=total_seances_mois,
+
+    all_seances_mois   = Seance.query.filter_by(mois=mois, annee=annee).all()
+    total_heures_mois  = sum(s.nb_heures for s in all_seances_mois)
+    total_seances_mois = len(all_seances_mois)
+
+    return render_template('index.html',
+                           data=data,
+                           responsables=responsables,
+                           dours=dours,
                            total_heures_mois=total_heures_mois,
-                           mois_nom_actuel=mois_noms[now.month],
-                           annee_actuel=now.year,
-                           recap_seances=recap_seances)
+                           total_seances_mois=total_seances_mois,
+                           mois_nom_actuel=mois_noms[mois])
 
 
 # ─── Pages dédiées ────────────────────────────────────────────────────────────
+@app.route('/ajouter_responsable_page')
+@login_required
+@admin_required
+def ajouter_responsable_page():
+    return render_template('ajouter_responsable.html')
+
+
 @app.route('/ajouter_coordinateur_page')
 @login_required
 def ajouter_coordinateur_page():
@@ -94,13 +102,6 @@ def ajouter_coordinateur_page():
         resp = current_user.responsable
         responsables = [resp] if resp else []
     return render_template('ajouter_coordinateur.html', dours=dours, responsables=responsables)
-
-
-@app.route('/ajouter_responsable_page')
-@login_required
-@admin_required
-def ajouter_responsable_page():
-    return render_template('ajouter_responsable.html')
 
 
 @app.route('/gerer_dours_page')
@@ -127,13 +128,13 @@ def gerer_coordinateurs():
                            responsables=responsables, dours=dours)
 
 
-# ─── Séances / Heures ─────────────────────────────────────────────────────────
+
 @app.route('/heures')
 @login_required
 def heures():
-    now   = datetime.now()
-    mois  = request.args.get('mois',  now.month, type=int)
-    annee = request.args.get('annee', now.year,  type=int)
+    now      = datetime.now()
+    mois     = request.args.get('mois',  now.month, type=int)
+    annee    = request.args.get('annee', now.year,  type=int)
     coord_id = request.args.get('coord_id', type=int)
 
     if current_user.is_admin:
@@ -154,10 +155,7 @@ def heures():
     if coord_id:
         coord_selected = Coordinateur.query.get(coord_id)
         if coord_selected:
-            seances_coord = sorted(
-                coord_selected.seances_mois(mois, annee),
-                key=lambda s: s.date
-            )
+            seances_coord = sorted(coord_selected.seances_mois(mois, annee), key=lambda s: s.date)
 
     return render_template('heures.html',
         coordinateurs=coordinateurs,
@@ -179,21 +177,14 @@ def ajouter_seance():
     date_str  = request.form['date']
     nb_heures = float(request.form['nb_heures'])
     note      = request.form.get('note', '').strip()
-
     coord = Coordinateur.query.get_or_404(coord_id)
     if not current_user.is_admin:
         if not current_user.responsable or coord.responsable_id != current_user.responsable.id:
             abort(403)
-
     date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
-    s = Seance(
-        coordinateur_id=coord_id,
-        date=date_obj,
-        mois=date_obj.month,
-        annee=date_obj.year,
-        nb_heures=nb_heures,
-        note=note
-    )
+    s = Seance(coordinateur_id=coord_id, date=date_obj,
+               mois=date_obj.month, annee=date_obj.year,
+               nb_heures=nb_heures, note=note)
     db.session.add(s)
     db.session.commit()
     flash(f'Séance ajoutée pour {coord.prenom} {coord.nom}!', 'success')
@@ -250,13 +241,13 @@ def update_profile():
     existing = User.query.filter_by(email=email).first()
     if existing and existing.id != current_user.id:
         flash('Cet email est déjà utilisé.', 'error')
-        return redirect(url_for('parametres'))
+        return redirect(url_for('index'))
     current_user.nom    = nom
     current_user.prenom = prenom
     current_user.email  = email
     db.session.commit()
     flash('Informations mises à jour avec succès!', 'success')
-    return redirect(url_for('parametres'))
+    return redirect(url_for('index'))
 
 
 @app.route('/update_password', methods=['POST'])
@@ -267,17 +258,17 @@ def update_password():
     confirm_pwd = request.form.get('confirm_password', '')
     if not current_user.check_password(current_pwd):
         flash('Mot de passe actuel incorrect.', 'error')
-        return redirect(url_for('parametres'))
+        return redirect(url_for('index'))
     if new_pwd != confirm_pwd:
         flash('Les mots de passe ne correspondent pas.', 'error')
-        return redirect(url_for('parametres'))
+        return redirect(url_for('index'))
     if len(new_pwd) < 6:
         flash('Le mot de passe doit contenir au moins 6 caractères.', 'error')
-        return redirect(url_for('parametres'))
+        return redirect(url_for('index'))
     current_user.set_password(new_pwd)
     db.session.commit()
     flash('Mot de passe changé avec succès!', 'success')
-    return redirect(url_for('parametres'))
+    return redirect(url_for('index'))
 
 
 @app.route('/update_avatar', methods=['POST'])
@@ -286,10 +277,10 @@ def update_avatar():
     file = request.files.get('avatar')
     if not file or file.filename == '':
         flash('Aucun fichier sélectionné.', 'error')
-        return redirect(url_for('parametres'))
+        return redirect(url_for('index'))
     if not allowed_file(file.filename):
         flash('Format non supporté.', 'error')
-        return redirect(url_for('parametres'))
+        return redirect(url_for('index'))
     avatar_dir = os.path.join(app.root_path, 'static', 'avatars')
     os.makedirs(avatar_dir, exist_ok=True)
     if current_user.avatar:
@@ -302,7 +293,7 @@ def update_avatar():
     current_user.avatar = filename
     db.session.commit()
     flash('Photo de profil mise à jour!', 'success')
-    return redirect(url_for('parametres'))
+    return redirect(url_for('index'))
 
 
 # ─── Responsables ─────────────────────────────────────────────────────────────
@@ -312,15 +303,75 @@ def update_avatar():
 def ajouter_responsable():
     email_resp = request.form['email'].strip().lower()
     pwd        = request.form['password']
+    role       = request.form.get('role', 'responsable')
+    if role not in ('admin', 'responsable'):
+        role = 'responsable'
     r = Responsable(nom=request.form['nom'], prenom=request.form['prenom'], email=email_resp)
     db.session.add(r)
     db.session.flush()
-    u = User(email=email_resp, role='responsable', responsable_id=r.id)
+    u = User(email=email_resp, role=role,
+             responsable_id=r.id if role == 'responsable' else None)
     u.set_password(pwd)
     db.session.add(u)
     db.session.commit()
-    flash(f'Responsable {r.prenom} {r.nom} ajouté!', 'success')
-    return redirect(url_for('index'))
+    flash(f'Responsable {r.prenom} {r.nom} ajouté avec rôle {role}!', 'success')
+    return redirect(url_for('gerer_responsables'))
+
+
+@app.route('/gerer_responsables')
+@login_required
+@admin_required
+def gerer_responsables():
+    all_resp = Responsable.query.order_by(Responsable.nom).all()
+
+    responsables_only = [r for r in all_resp
+                         if r.user and r.user.role == 'responsable']
+    admins_only       = [r for r in all_resp
+                         if r.user and r.user.role == 'admin']
+    admins_purs       = User.query.filter_by(role='admin').filter(
+                            User.responsable_id == None
+                        ).order_by(User.nom).all()
+
+    total_coordinateurs = Coordinateur.query.count()
+    return render_template('gerer_responsables.html',
+                           responsables_only=responsables_only,
+                           admins_only=admins_only,
+                           admins_purs=admins_purs,
+                           total_coordinateurs=total_coordinateurs)
+
+
+@app.route('/modifier_responsable/<int:id>', methods=['POST'])
+@login_required
+@admin_required
+def modifier_responsable(id):
+    r = Responsable.query.get_or_404(id)
+    r.nom    = request.form['nom'].strip()
+    r.prenom = request.form['prenom'].strip()
+    new_email = request.form['email'].strip().lower()
+    new_role  = request.form.get('role', 'responsable')
+    if new_role not in ('admin', 'responsable'):
+        new_role = 'responsable'
+
+    # Update user lié
+    if r.user:
+        existing = User.query.filter_by(email=new_email).first()
+        if existing and existing.id != r.user.id:
+            flash('Cet email est déjà utilisé.', 'error')
+            return redirect(url_for('gerer_responsables'))
+        r.user.email = new_email
+        r.user.role  = new_role
+        pwd = request.form.get('password', '').strip()
+        if pwd:
+            r.user.set_password(pwd)
+        # Si rôle admin, détacher du responsable
+        r.user.responsable_id = r.id if new_role == 'responsable' else None
+
+    r.email = new_email
+    db.session.commit()
+    flash(f'{r.prenom} {r.nom} modifié avec succès!', 'success')
+    return redirect(url_for('gerer_responsables'))
+
+
 
 
 @app.route('/supprimer_responsable/<int:id>')
@@ -402,17 +453,18 @@ def gerer_dours():
     db.session.add(d)
     db.session.commit()
     flash('Dour ajoutée!', 'success')
-    return redirect(url_for('gerer_dours_page'))
+    return redirect(url_for('index'))
 
 
 @app.route('/supprimer_dour/<int:id>')
 @login_required
+@admin_required
 def supprimer_dour(id):
     d = Dour.query.get_or_404(id)
     db.session.delete(d)
     db.session.commit()
     flash('Dour supprimée!', 'success')
-    return redirect(url_for('gerer_dours_page'))
+    return redirect(url_for('index'))
 
 
 # ─── Erreurs ──────────────────────────────────────────────────────────────────
