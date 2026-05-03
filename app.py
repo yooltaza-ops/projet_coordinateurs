@@ -21,11 +21,19 @@ def load_user(user_id):
 with app.app_context():
     db.create_all()
     if not User.query.filter_by(role='admin').first():
-        admin = User(email='admin@yool.ma', role='admin')
+        admin = User(email='admin@yool.ma', role='admin', nom='Admin', prenom='Yool')
         admin.set_password('admin123')
         db.session.add(admin)
         db.session.commit()
         print("✅ Admin créé: admin@yool.ma / admin123")
+    else:
+        # Zid nom/prenom l admin existant ila makanych
+        admin = User.query.filter_by(role='admin').first()
+        if not admin.nom:
+            admin.nom = 'Admin'
+        if not admin.prenom:
+            admin.prenom = 'Yool'
+        db.session.commit()
 
 from routes import *
 

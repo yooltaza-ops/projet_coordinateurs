@@ -63,8 +63,24 @@ def index():
             'nb_coordinatrices': r.count_coordinatrices(),
             'total': len(r.coordinateurs)
         })
+    mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre']
+    now = datetime.now()
+    all_s = Seance.query.filter_by(mois=now.month, annee=now.year).all()
+    total_seances_mois = len(all_s)
+    total_heures_mois  = sum(s.nb_heures for s in all_s)
+    recap_seances = []
+    for coord in Coordinateur.query.order_by(Coordinateur.nom).all():
+        nb_s = coord.total_seances_mois(now.month, now.year)
+        nb_h = coord.total_heures_mois(now.month, now.year)
+        if nb_s > 0:
+            recap_seances.append({'nom': coord.prenom+' '+coord.nom, 'genre': coord.genre, 'initiales': coord.prenom[0].upper()+coord.nom[0].upper(), 'responsable': (coord.responsable.prenom+' '+coord.responsable.nom) if coord.responsable else '', 'nb_seances': nb_s, 'nb_heures': nb_h})
     return render_template('index.html', data=data,
-                        responsables=responsables, dours=dours)
+                           responsables=responsables, dours=dours,
+                           total_seances_mois=total_seances_mois,
+                           total_heures_mois=total_heures_mois,
+                           mois_nom_actuel=mois_noms[now.month],
+                           annee_actuel=now.year,
+                           recap_seances=recap_seances)
 
 
 # ─── Pages dédiées ────────────────────────────────────────────────────────────
@@ -107,8 +123,8 @@ def gerer_coordinateurs():
         responsables = [resp] if resp else []
         coordinateurs = resp.coordinateurs if resp else []
     return render_template('gerer_coordinateurs.html',
-                        coordinateurs=coordinateurs,
-                        responsables=responsables, dours=dours)
+                           coordinateurs=coordinateurs,
+                           responsables=responsables, dours=dours)
 
 
 # ─── Séances / Heures ─────────────────────────────────────────────────────────
@@ -120,7 +136,6 @@ def heures():
     annee = request.args.get('annee', now.year,  type=int)
     coord_id = request.args.get('coord_id', type=int)
 
-    # ── Coordinateurs: ghi dyal resp dyalo (machi admin) ──
     if current_user.is_admin:
         coordinateurs = Coordinateur.query.order_by(Coordinateur.nom).all()
     else:
@@ -128,32 +143,16 @@ def heures():
         coordinateurs = sorted(resp.coordinateurs, key=lambda c: c.nom) if resp else []
 
     mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin',
-                'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
+                 'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
 
-    # ── FIX: total stats scoped l coordinateurs dyal resp ──
-    coord_ids = [c.id for c in coordinateurs]
-    if coord_ids:
-        all_seances_mois = Seance.query.filter(
-            Seance.mois == mois,
-            Seance.annee == annee,
-            Seance.coordinateur_id.in_(coord_ids)
-        ).all()
-    else:
-        all_seances_mois = []
-
+    all_seances_mois = Seance.query.filter_by(mois=mois, annee=annee).all()
     total_heures  = sum(s.nb_heures for s in all_seances_mois)
     total_seances = len(all_seances_mois)
 
-    # ── Coordinateur sélectionné ──
     coord_selected = None
     seances_coord  = []
     if coord_id:
         coord_selected = Coordinateur.query.get(coord_id)
-        # Sécurité: resp ma ychoufch coord d resp akhor
-        if coord_selected and not current_user.is_admin:
-            resp = current_user.responsable
-            if not resp or coord_selected.responsable_id != resp.id:
-                abort(403)
         if coord_selected:
             seances_coord = sorted(
                 coord_selected.seances_mois(mois, annee),
