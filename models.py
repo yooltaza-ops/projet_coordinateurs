@@ -1,10 +1,10 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
 
 db = SQLAlchemy()
 
-# Table de liaison
 coordinateur_dour = db.Table('coordinateur_dour',
     db.Column('coordinateur_id', db.Integer, db.ForeignKey('coordinateur.id')),
     db.Column('dour_id', db.Integer, db.ForeignKey('dour.id'))
@@ -24,10 +24,8 @@ class User(db.Model, UserMixin):
 
     def set_password(self, pwd):
         self.password = generate_password_hash(pwd)
-
     def check_password(self, pwd):
         return check_password_hash(self.password, pwd)
-
     @property
     def is_admin(self):
         return self.role == 'admin'
@@ -43,7 +41,6 @@ class Responsable(db.Model):
 
     def count_coordinateurs(self):
         return sum(1 for c in self.coordinateurs if c.genre == 'M')
-
     def count_coordinatrices(self):
         return sum(1 for c in self.coordinateurs if c.genre == 'F')
 
@@ -63,3 +60,25 @@ class Coordinateur(db.Model):
     genre          = db.Column(db.Enum('M', 'F'), nullable=False)
     responsable_id = db.Column(db.Integer, db.ForeignKey('responsable.id'))
     dours          = db.relationship('Dour', secondary=coordinateur_dour, lazy=True)
+    seances        = db.relationship('Seance', backref='coordinateur', lazy=True, cascade='all, delete-orphan')
+
+    def seances_mois(self, mois, annee):
+        return sorted([s for s in self.seances if s.mois == mois and s.annee == annee], key=lambda s: s.date)
+
+    def total_heures_mois(self, mois, annee):
+        return sum(s.nb_heures for s in self.seances_mois(mois, annee))
+
+    def total_seances_mois(self, mois, annee):
+        return len(self.seances_mois(mois, annee))
+
+
+class Seance(db.Model):
+    __tablename__ = 'seance'
+    id              = db.Column(db.Integer, primary_key=True)
+    coordinateur_id = db.Column(db.Integer, db.ForeignKey('coordinateur.id'), nullable=False)
+    date            = db.Column(db.Date, nullable=False)
+    mois            = db.Column(db.Integer, nullable=False)
+    annee           = db.Column(db.Integer, nullable=False)
+    nb_heures       = db.Column(db.Float, nullable=False, default=0)
+    note            = db.Column(db.String(300), nullable=True)
+    created_at      = db.Column(db.DateTime, default=datetime.utcnow)

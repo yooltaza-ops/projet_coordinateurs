@@ -1,9 +1,10 @@
 from flask import render_template, request, redirect, url_for, flash, abort
 from flask_login import login_user, logout_user, login_required, current_user
 from app import app
-from models import db, Responsable, Coordinateur, Dour, User
+from models import db, Responsable, Coordinateur, Dour, User, Seance
 from functools import wraps
 import os, uuid
+from datetime import datetime, date
 from werkzeug.utils import secure_filename
 
 
@@ -63,10 +64,10 @@ def index():
             'total': len(r.coordinateurs)
         })
     return render_template('index.html', data=data,
-                           responsables=responsables, dours=dours)
+                        responsables=responsables, dours=dours)
 
 
-# ─── Pages dédiées (GET) ──────────────────────────────────────────────────────
+# ─── Pages dédiées ────────────────────────────────────────────────────────────
 @app.route('/ajouter_coordinateur_page')
 @login_required
 def ajouter_coordinateur_page():
@@ -76,8 +77,7 @@ def ajouter_coordinateur_page():
     else:
         resp = current_user.responsable
         responsables = [resp] if resp else []
-    return render_template('ajouter_coordinateur.html',
-                           dours=dours, responsables=responsables)
+    return render_template('ajouter_coordinateur.html', dours=dours, responsables=responsables)
 
 
 @app.route('/ajouter_responsable_page')
@@ -107,9 +107,132 @@ def gerer_coordinateurs():
         responsables = [resp] if resp else []
         coordinateurs = resp.coordinateurs if resp else []
     return render_template('gerer_coordinateurs.html',
-                           coordinateurs=coordinateurs,
-                           responsables=responsables,
-                           dours=dours)
+                        coordinateurs=coordinateurs,
+                        responsables=responsables, dours=dours)
+
+
+# ─── Séances / Heures ─────────────────────────────────────────────────────────
+@app.route('/heures')
+@login_required
+def heures():
+    now   = datetime.now()
+    mois  = request.args.get('mois',  now.month, type=int)
+    annee = request.args.get('annee', now.year,  type=int)
+    coord_id = request.args.get('coord_id', type=int)
+
+    # ── Coordinateurs: ghi dyal resp dyalo (machi admin) ──
+    if current_user.is_admin:
+        coordinateurs = Coordinateur.query.order_by(Coordinateur.nom).all()
+    else:
+        resp = current_user.responsable
+        coordinateurs = sorted(resp.coordinateurs, key=lambda c: c.nom) if resp else []
+
+    mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin',
+                'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
+
+    # ── FIX: total stats scoped l coordinateurs dyal resp ──
+    coord_ids = [c.id for c in coordinateurs]
+    if coord_ids:
+        all_seances_mois = Seance.query.filter(
+            Seance.mois == mois,
+            Seance.annee == annee,
+            Seance.coordinateur_id.in_(coord_ids)
+        ).all()
+    else:
+        all_seances_mois = []
+
+    total_heures  = sum(s.nb_heures for s in all_seances_mois)
+    total_seances = len(all_seances_mois)
+
+    # ── Coordinateur sélectionné ──
+    coord_selected = None
+    seances_coord  = []
+    if coord_id:
+        coord_selected = Coordinateur.query.get(coord_id)
+        # Sécurité: resp ma ychoufch coord d resp akhor
+        if coord_selected and not current_user.is_admin:
+            resp = current_user.responsable
+            if not resp or coord_selected.responsable_id != resp.id:
+                abort(403)
+        if coord_selected:
+            seances_coord = sorted(
+                coord_selected.seances_mois(mois, annee),
+                key=lambda s: s.date
+            )
+
+    return render_template('heures.html',
+        coordinateurs=coordinateurs,
+        coord_selected=coord_selected,
+        seances_coord=seances_coord,
+        mois=mois, annee=annee,
+        mois_noms=mois_noms,
+        total_heures=total_heures,
+        total_seances=total_seances,
+        annees=list(range(now.year - 2, now.year + 2)),
+        today=date.today().isoformat()
+    )
+
+
+@app.route('/heures/ajouter', methods=['POST'])
+@login_required
+def ajouter_seance():
+    coord_id  = int(request.form['coordinateur_id'])
+    date_str  = request.form['date']
+    nb_heures = float(request.form['nb_heures'])
+    note      = request.form.get('note', '').strip()
+
+    coord = Coordinateur.query.get_or_404(coord_id)
+    if not current_user.is_admin:
+        if not current_user.responsable or coord.responsable_id != current_user.responsable.id:
+            abort(403)
+
+    date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+    s = Seance(
+        coordinateur_id=coord_id,
+        date=date_obj,
+        mois=date_obj.month,
+        annee=date_obj.year,
+        nb_heures=nb_heures,
+        note=note
+    )
+    db.session.add(s)
+    db.session.commit()
+    flash(f'Séance ajoutée pour {coord.prenom} {coord.nom}!', 'success')
+    return redirect(url_for('heures', mois=date_obj.month, annee=date_obj.year, coord_id=coord_id))
+
+
+@app.route('/heures/modifier/<int:id>', methods=['POST'])
+@login_required
+def modifier_seance(id):
+    s = Seance.query.get_or_404(id)
+    coord = s.coordinateur
+    if not current_user.is_admin:
+        if not current_user.responsable or coord.responsable_id != current_user.responsable.id:
+            abort(403)
+    date_obj    = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
+    s.date      = date_obj
+    s.mois      = date_obj.month
+    s.annee     = date_obj.year
+    s.nb_heures = float(request.form['nb_heures'])
+    s.note      = request.form.get('note', '').strip()
+    db.session.commit()
+    flash('Séance modifiée!', 'success')
+    return redirect(url_for('heures', mois=s.mois, annee=s.annee, coord_id=coord.id))
+
+
+@app.route('/heures/supprimer/<int:id>')
+@login_required
+def supprimer_seance(id):
+    s = Seance.query.get_or_404(id)
+    mois, annee, coord_id = s.mois, s.annee, s.coordinateur_id
+    coord = s.coordinateur
+    if not current_user.is_admin:
+        if not current_user.responsable or coord.responsable_id != current_user.responsable.id:
+            abort(403)
+    db.session.delete(s)
+    db.session.commit()
+    flash('Séance supprimée!', 'success')
+    return redirect(url_for('heures', mois=mois, annee=annee, coord_id=coord_id))
 
 
 # ─── Paramètres ───────────────────────────────────────────────────────────────
@@ -166,7 +289,7 @@ def update_avatar():
         flash('Aucun fichier sélectionné.', 'error')
         return redirect(url_for('parametres'))
     if not allowed_file(file.filename):
-        flash('Format non supporté. Utilise JPG, PNG ou GIF.', 'error')
+        flash('Format non supporté.', 'error')
         return redirect(url_for('parametres'))
     avatar_dir = os.path.join(app.root_path, 'static', 'avatars')
     os.makedirs(avatar_dir, exist_ok=True)
@@ -190,18 +313,14 @@ def update_avatar():
 def ajouter_responsable():
     email_resp = request.form['email'].strip().lower()
     pwd        = request.form['password']
-    r = Responsable(
-        nom=request.form['nom'],
-        prenom=request.form['prenom'],
-        email=email_resp
-    )
+    r = Responsable(nom=request.form['nom'], prenom=request.form['prenom'], email=email_resp)
     db.session.add(r)
     db.session.flush()
     u = User(email=email_resp, role='responsable', responsable_id=r.id)
     u.set_password(pwd)
     db.session.add(u)
     db.session.commit()
-    flash(f'Responsable {r.prenom} {r.nom} ajouté avec son compte!', 'success')
+    flash(f'Responsable {r.prenom} {r.nom} ajouté!', 'success')
     return redirect(url_for('index'))
 
 
@@ -230,16 +349,11 @@ def ajouter_coordinateur():
         if not current_user.responsable or str(current_user.responsable.id) != str(resp_id):
             abort(403)
     dour_ids = request.form.getlist('dours')
-    c = Coordinateur(
-        nom=request.form['nom'],
-        prenom=request.form['prenom'],
-        genre=request.form['genre'],
-        responsable_id=resp_id
-    )
+    c = Coordinateur(nom=request.form['nom'], prenom=request.form['prenom'],
+                     genre=request.form['genre'], responsable_id=resp_id)
     for did in dour_ids:
         d = Dour.query.get(int(did))
-        if d:
-            c.dours.append(d)
+        if d: c.dours.append(d)
     db.session.add(c)
     db.session.commit()
     flash('Coordinateur ajouté avec succès!', 'success')
@@ -253,17 +367,16 @@ def modifier_coordinateur(id):
     if not current_user.is_admin:
         if not current_user.responsable or c.responsable_id != current_user.responsable.id:
             abort(403)
-    c.nom            = request.form['nom']
-    c.prenom         = request.form['prenom']
-    c.genre          = request.form['genre']
+    c.nom = request.form['nom']
+    c.prenom = request.form['prenom']
+    c.genre = request.form['genre']
     c.responsable_id = request.form['responsable_id']
     c.dours = []
     for did in request.form.getlist('dours'):
         d = Dour.query.get(int(did))
-        if d:
-            c.dours.append(d)
+        if d: c.dours.append(d)
     db.session.commit()
-    flash('Coordinateur modifié avec succès!', 'success')
+    flash('Coordinateur modifié!', 'success')
     return redirect(url_for('index'))
 
 

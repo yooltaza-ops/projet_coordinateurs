@@ -1,181 +1,66 @@
 {% extends "base.html" %}
-
 {% block title %}Gérer les Dours — Yool{% endblock %}
 
 {% block extra_css %}
-        .dashboard-layout {
-            display: flex;
-            min-height: calc(100vh - 65px);
-            background: #f0f4f8;
-        }
-        .sidebar {
-            width: 270px; flex-shrink: 0; background: white;
-            box-shadow: 4px 0 20px rgba(0,0,0,0.06);
-            display: flex; flex-direction: column;
-            position: sticky; top: 65px;
-            height: calc(100vh - 65px);
-            overflow-y: auto; overflow-x: hidden;
-            transition: width 0.3s cubic-bezier(0.4,0,0.2,1);
-        }
-        .sidebar.collapsed { width: 68px; }
-        .sidebar-toggle {
-            position: absolute; top: 16px; right: -13px;
-            width: 26px; height: 26px; background: white;
-            border: 2px solid #e8edf5; border-radius: 50%;
-            cursor: pointer; display: flex; align-items: center;
-            justify-content: center; font-size: 11px; color: #1a3a6b;
-            z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s;
-        }
-        .sidebar-toggle:hover { background: #1a3a6b; color: white; border-color: #1a3a6b; }
-        .sidebar-profile {
-            padding: 28px 20px 18px; display: flex; flex-direction: column;
-            align-items: center; text-align: center;
-            border-bottom: 1.5px solid #f0f4f8; overflow: hidden;
-        }
-        .profile-avatar {
-            width: 82px; height: 82px; border-radius: 50%; background: #1a3a6b;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 30px; color: white; font-weight: 700; overflow: hidden;
-            flex-shrink: 0; border: 3px solid #f5a623;
-            box-shadow: 0 4px 16px rgba(245,166,35,0.25); transition: all 0.3s;
-        }
-        .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .sidebar.collapsed .profile-avatar { width: 40px; height: 40px; font-size: 15px; border-width: 2px; }
-        .profile-name {
-            font-size: 14px; font-weight: 700; color: #1a3a6b; margin-top: 11px;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            max-width: 210px; transition: all 0.2s;
-        }
-        .profile-role { font-size: 12px; color: #888; margin-top: 3px; transition: all 0.2s; }
-        .sidebar.collapsed .profile-name,
-        .sidebar.collapsed .profile-role { opacity: 0; height: 0; margin: 0; overflow: hidden; }
-        .social-links { display: flex; gap: 8px; margin-top: 12px; transition: all 0.2s; }
-        .sidebar.collapsed .social-links { opacity: 0; height: 0; margin: 0; overflow: hidden; }
-        .social-link {
-            width: 30px; height: 30px; border-radius: 50%; display: flex;
-            align-items: center; justify-content: center; color: #f5a623;
-            font-size: 12px; font-weight: 700; text-decoration: none;
-            border: 1.5px solid #f0f4f8; transition: all 0.2s; background: #fafbfc;
-        }
-        .social-link:hover { background: #f5a623; color: white; border-color: #f5a623; transform: translateY(-2px); }
-        .sidebar-nav { padding: 14px 10px; flex: 1; }
-        .nav-section-label {
-            font-size: 10px; font-weight: 700; color: #ccc;
-            text-transform: uppercase; letter-spacing: 1px;
-            padding: 0 12px; margin-bottom: 5px; margin-top: 10px;
-            white-space: nowrap; overflow: hidden; transition: opacity 0.2s;
-        }
-        .sidebar.collapsed .nav-section-label { opacity: 0; }
-        .nav-item {
-            display: flex; align-items: center; gap: 11px; padding: 10px 12px;
-            border-radius: 11px; text-decoration: none; color: #555;
-            font-size: 13px; font-weight: 600; margin-bottom: 3px;
-            transition: all 0.2s; white-space: nowrap; overflow: hidden;
-            cursor: pointer; border: none; background: none;
-            font-family: 'Poppins', sans-serif; width: 100%; text-align: left;
-        }
-        .nav-item:hover { background: #f0f4f8; color: #1a3a6b; }
-        .nav-item.active {
-            background: linear-gradient(135deg, #1a3a6b, #2a5298);
-            color: white; box-shadow: 0 4px 12px rgba(26,58,107,0.3);
-        }
-        .nav-item.red { color: #e74c3c; }
-        .nav-item.red:hover { background: #fdecea; }
-        .nav-icon { font-size: 16px; flex-shrink: 0; width: 22px; text-align: center; }
-        .nav-label { transition: opacity 0.15s; }
-        .sidebar.collapsed .nav-label { opacity: 0; width: 0; overflow: hidden; }
-        .nav-divider { height: 1.5px; background: #f0f4f8; margin: 8px 10px; }
-
-        .main-content { flex: 1; padding: 28px; overflow-x: hidden; }
-        .page-title {
-            font-size: 21px; font-weight: 700; color: #1a3a6b;
-            margin-bottom: 22px; display: flex; align-items: center; gap: 10px;
-        }
-        .alert { padding: 13px 18px; background: #27ae60; color: white;
-                 border-radius: 10px; margin-bottom: 18px; font-size: 13px;
-                 display: flex; align-items: center; gap: 10px;
-                 box-shadow: 0 4px 12px rgba(39,174,96,0.25); }
-        .alert-error { background: #e74c3c; box-shadow: 0 4px 12px rgba(231,76,60,0.25); }
-
-        .content-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 22px;
-            max-width: 900px;
-        }
-        @media (max-width: 800px) { .content-grid { grid-template-columns: 1fr; } }
-
-        .card {
-            background: white; border-radius: 16px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.07); overflow: hidden;
-        }
-        .card-header {
-            padding: 20px 28px; display: flex; align-items: center; gap: 10px;
-        }
-        .card-header h2 { color: white; font-size: 16px; font-weight: 600; }
-        .card-body { padding: 24px 28px; }
-        .card-body label {
-            display: block; margin-bottom: 5px;
-            color: #1a3a6b; font-size: 12px; font-weight: 600;
-        }
-        .card-body input,
-        .card-body select {
-            width: 100%; padding: 10px 13px;
-            border: 2px solid #e8edf5; border-radius: 10px; margin-bottom: 16px;
-            font-size: 13px; font-family: 'Poppins', sans-serif;
-            transition: border 0.2s; outline: none; color: #333;
-        }
-        .card-body input:focus,
-        .card-body select:focus { border-color: #f5a623; }
-
-        .submit-btn {
-            width: 100%; padding: 12px; border: none; border-radius: 25px;
-            font-size: 13px; font-weight: 600; cursor: pointer; color: white;
-            font-family: 'Poppins', sans-serif; transition: all 0.2s;
-        }
-        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
-
-        .dour-item {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 11px 14px; background: #f8fafc; border-radius: 10px;
-            margin-bottom: 7px; border-left: 4px solid #1a3a6b;
-            transition: all 0.2s;
-        }
-        .dour-item:hover { background: #f0f4f8; transform: translateX(2px); }
-        .dour-info { display: flex; align-items: center; gap: 10px; }
-        .dour-name { font-size: 13px; font-weight: 600; color: #1a3a6b; }
-        .dar-tag {
-            display: inline-block; padding: 2px 10px;
-            border-radius: 10px; font-size: 10px; color: white; font-weight: 600;
-        }
-        .talib  { background: #1a3a6b; border-left-color: #1a3a6b; }
-        .taliba { background: #e91e8c; }
-        .fatat  { background: #f5a623; }
-        .dour-item.type-taliba { border-left-color: #e91e8c; }
-        .dour-item.type-fatat  { border-left-color: #f5a623; }
-
-        .empty-state {
-            text-align: center; padding: 30px 20px;
-            color: #bbb; font-size: 13px; font-style: italic;
-        }
-        .dours-count {
-            font-size: 12px; color: #888; font-weight: 500;
-            margin-bottom: 14px;
-            padding-bottom: 10px;
-            border-bottom: 1.5px solid #f0f4f8;
-        }
-        @media (max-width: 768px) {
-            .sidebar { width: 68px; }
-            .sidebar .profile-name, .sidebar .profile-role,
-            .sidebar .social-links, .sidebar .nav-label,
-            .sidebar .nav-section-label { opacity: 0; width: 0; height: 0; overflow: hidden; margin: 0; }
-            .sidebar .profile-avatar { width: 40px; height: 40px; font-size: 15px; }
-        }
+        .dashboard-layout { display:flex; min-height:calc(100vh - 65px); background:#f0f4f8; }
+        .sidebar { width:270px; flex-shrink:0; background:white; box-shadow:4px 0 20px rgba(0,0,0,0.06); display:flex; flex-direction:column; position:sticky; top:65px; height:calc(100vh - 65px); overflow-y:auto; overflow-x:hidden; transition:width 0.3s cubic-bezier(0.4,0,0.2,1); }
+        .sidebar.collapsed { width:68px; }
+        .sidebar-toggle { position:absolute; top:16px; right:-13px; width:26px; height:26px; background:white; border:2px solid #e8edf5; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:11px; color:#1a3a6b; z-index:10; box-shadow:0 2px 8px rgba(0,0,0,0.1); transition:all 0.2s; }
+        .sidebar-toggle:hover { background:#1a3a6b; color:white; border-color:#1a3a6b; }
+        .sidebar-profile { padding:28px 20px 18px; display:flex; flex-direction:column; align-items:center; text-align:center; border-bottom:1.5px solid #f0f4f8; overflow:hidden; }
+        .profile-avatar { width:82px; height:82px; border-radius:50%; background:#1a3a6b; display:flex; align-items:center; justify-content:center; font-size:30px; color:white; font-weight:700; overflow:hidden; flex-shrink:0; border:3px solid #f5a623; box-shadow:0 4px 16px rgba(245,166,35,0.25); transition:all 0.3s; }
+        .profile-avatar img { width:100%; height:100%; object-fit:cover; }
+        .sidebar.collapsed .profile-avatar { width:40px; height:40px; font-size:15px; border-width:2px; }
+        .profile-name { font-size:14px; font-weight:700; color:#1a3a6b; margin-top:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:210px; transition:all 0.2s; }
+        .profile-role { font-size:12px; color:#888; margin-top:3px; transition:all 0.2s; }
+        .sidebar.collapsed .profile-name, .sidebar.collapsed .profile-role { opacity:0; height:0; margin:0; overflow:hidden; }
+        .social-links { display:flex; gap:8px; margin-top:12px; transition:all 0.2s; }
+        .sidebar.collapsed .social-links { opacity:0; height:0; margin:0; overflow:hidden; }
+        .social-link { width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#f5a623; font-size:12px; font-weight:700; text-decoration:none; border:1.5px solid #f0f4f8; transition:all 0.2s; background:#fafbfc; }
+        .social-link:hover { background:#f5a623; color:white; border-color:#f5a623; transform:translateY(-2px); }
+        .sidebar-nav { padding:14px 10px; flex:1; }
+        .nav-section-label { font-size:10px; font-weight:700; color:#ccc; text-transform:uppercase; letter-spacing:1px; padding:0 12px; margin-bottom:5px; margin-top:10px; white-space:nowrap; overflow:hidden; transition:opacity 0.2s; }
+        .sidebar.collapsed .nav-section-label { opacity:0; }
+        .nav-item { display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:11px; text-decoration:none; color:#555; font-size:13px; font-weight:600; margin-bottom:3px; transition:all 0.2s; white-space:nowrap; overflow:hidden; cursor:pointer; border:none; background:none; font-family:'Poppins',sans-serif; width:100%; text-align:left; }
+        .nav-item:hover { background:#f0f4f8; color:#1a3a6b; }
+        .nav-item.active { background:linear-gradient(135deg,#1a3a6b,#2a5298); color:white; box-shadow:0 4px 12px rgba(26,58,107,0.3); }
+        .nav-item.red { color:#e74c3c; }
+        .nav-item.red:hover { background:#fdecea; }
+        .nav-icon { font-size:16px; flex-shrink:0; width:22px; text-align:center; }
+        .nav-label { transition:opacity 0.15s; }
+        .sidebar.collapsed .nav-label { opacity:0; width:0; overflow:hidden; }
+        .nav-divider { height:1.5px; background:#f0f4f8; margin:8px 10px; }
+        .main-content { flex:1; padding:28px; overflow-x:hidden; }
+        .page-title { font-size:21px; font-weight:700; color:#1a3a6b; margin-bottom:22px; display:flex; align-items:center; gap:10px; }
+        .alert { padding:13px 18px; background:#27ae60; color:white; border-radius:10px; margin-bottom:18px; font-size:13px; display:flex; align-items:center; gap:10px; box-shadow:0 4px 12px rgba(39,174,96,0.25); }
+        .alert-error { background:#e74c3c; box-shadow:0 4px 12px rgba(231,76,60,0.25); }
+        .content-grid { display:grid; grid-template-columns:1fr 1fr; gap:22px; max-width:900px; }
+        @media (max-width:800px) { .content-grid { grid-template-columns:1fr; } }
+        .card { background:white; border-radius:16px; box-shadow:0 4px 15px rgba(0,0,0,0.07); overflow:hidden; }
+        .card-header { padding:20px 28px; display:flex; align-items:center; gap:10px; }
+        .card-header h2 { color:white; font-size:16px; font-weight:600; }
+        .card-body { padding:24px 28px; }
+        .card-body label { display:block; margin-bottom:5px; color:#1a3a6b; font-size:12px; font-weight:600; }
+        .card-body input, .card-body select { width:100%; padding:10px 13px; border:2px solid #e8edf5; border-radius:10px; margin-bottom:16px; font-size:13px; font-family:'Poppins',sans-serif; transition:border 0.2s; outline:none; color:#333; }
+        .card-body input:focus, .card-body select:focus { border-color:#f5a623; }
+        .submit-btn { width:100%; padding:12px; border:none; border-radius:25px; font-size:13px; font-weight:600; cursor:pointer; color:white; font-family:'Poppins',sans-serif; transition:all 0.2s; }
+        .submit-btn:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.15); }
+        .dour-item { display:flex; justify-content:space-between; align-items:center; padding:11px 14px; background:#f8fafc; border-radius:10px; margin-bottom:7px; border-left:4px solid #1a3a6b; transition:all 0.2s; }
+        .dour-item:hover { background:#f0f4f8; transform:translateX(2px); }
+        .dour-item.type-taliba { border-left-color:#e91e8c; }
+        .dour-item.type-fatat  { border-left-color:#f5a623; }
+        .dour-name { font-size:13px; font-weight:600; color:#1a3a6b; }
+        .dar-tag { display:inline-block; padding:2px 10px; border-radius:10px; font-size:10px; color:white; font-weight:600; }
+        .talib  { background:#1a3a6b; }
+        .taliba { background:#e91e8c; }
+        .fatat  { background:#f5a623; }
+        .dours-count { font-size:12px; color:#888; font-weight:500; margin-bottom:14px; padding-bottom:10px; border-bottom:1.5px solid #f0f4f8; }
+        .empty-state { text-align:center; padding:30px 20px; color:#bbb; font-size:13px; font-style:italic; }
+        @media (max-width:768px) { .sidebar { width:68px; } .sidebar .profile-name, .sidebar .profile-role, .sidebar .social-links, .sidebar .nav-label, .sidebar .nav-section-label { opacity:0; width:0; height:0; overflow:hidden; margin:0; } .sidebar .profile-avatar { width:40px; height:40px; font-size:15px; } }
 {% endblock %}
 
 {% block content %}
 <div class="dashboard-layout">
-
     <aside class="sidebar" id="sidebar">
         <button class="sidebar-toggle" onclick="toggleSidebar()" id="toggle-btn">‹</button>
         <div class="sidebar-profile">
@@ -187,7 +72,11 @@
                 {% endif %}
             </div>
             <div class="profile-name">
-                {{ current_user.prenom or '' }} {{ current_user.nom or current_user.email.split('@')[0] }}
+                {% if current_user.prenom and current_user.nom %}
+                    {{ current_user.prenom }} {{ current_user.nom }}
+                {% else %}
+                    {{ current_user.email.split('@')[0] }}
+                {% endif %}
             </div>
             <div class="profile-role">{{ 'Administrateur' if current_user.is_admin else 'Responsable' }}</div>
             <div class="social-links">
@@ -200,45 +89,38 @@
         <nav class="sidebar-nav">
             <div class="nav-section-label">Navigation</div>
             <a href="{{ url_for('index') }}" class="nav-item">
-                <span class="nav-icon">🏠</span>
-                <span class="nav-label">Tableau de bord</span>
+                <span class="nav-icon">🏠</span><span class="nav-label">Tableau de bord</span>
             </a>
             <div class="nav-section-label">Gestion</div>
             {% if current_user.is_admin %}
             <a href="{{ url_for('ajouter_responsable_page') }}" class="nav-item">
-                <span class="nav-icon">👤</span>
-                <span class="nav-label">Ajouter Responsable</span>
+                <span class="nav-icon">👤</span><span class="nav-label">Ajouter Responsable</span>
             </a>
             {% endif %}
             <a href="{{ url_for('ajouter_coordinateur_page') }}" class="nav-item">
-                <span class="nav-icon">➕</span>
-                <span class="nav-label">Ajouter Coordinateur</span>
+                <span class="nav-icon">➕</span><span class="nav-label">Ajouter Coordinateur</span>
             </a>
             {% if current_user.is_admin %}
             <a href="{{ url_for('gerer_dours_page') }}" class="nav-item active">
-                <span class="nav-icon">🏠</span>
-                <span class="nav-label">Gérer les Dours</span>
-            </a>
-            <a href="{{ url_for('gerer_coordinateurs') }}" class="nav-item">
-                <span class="nav-icon">👥</span>
-                <span class="nav-label">Gérer Coordinateurs</span>
+                <span class="nav-icon">🏠</span><span class="nav-label">Gérer les Dours</span>
             </a>
             {% endif %}
+            <a href="{{ url_for('gerer_coordinateurs') }}" class="nav-item">
+                <span class="nav-icon">👥</span><span class="nav-label">Gérer Coordinateurs</span>
+            </a>
+            <a href="{{ url_for('heures') }}" class="nav-item">
+                <span class="nav-icon">⏱️</span><span class="nav-label">Séances</span>
+            </a>
             <div class="nav-divider"></div>
             <div class="nav-section-label">Compte</div>
-            {% if current_user.is_admin %}
             <a href="{{ url_for('parametres') }}" class="nav-item">
-                <span class="nav-icon">⚙️</span>
-                <span class="nav-label">Paramètres</span>
+                <span class="nav-icon">⚙️</span><span class="nav-label">Paramètres</span>
             </a>
-            {% endif %}
             <a href="{{ url_for('logout') }}" class="nav-item red">
-                <span class="nav-icon">🚪</span>
-                <span class="nav-label">Déconnexion</span>
+                <span class="nav-icon">🚪</span><span class="nav-label">Déconnexion</span>
             </a>
         </nav>
     </aside>
-
     <main class="main-content">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% for category, message in messages %}
@@ -247,14 +129,10 @@
                 </div>
             {% endfor %}
         {% endwith %}
-
         <div class="page-title">🏠 Gérer les Dours</div>
-
         <div class="content-grid">
-
-            <!-- Formulaire ajout -->
             <div class="card">
-                <div class="card-header" style="background: linear-gradient(135deg, #e67e22, #f5a623);">
+                <div class="card-header" style="background:linear-gradient(135deg,#e67e22,#f5a623);">
                     <span style="font-size:20px;">➕</span>
                     <h2>Ajouter une Dour</h2>
                 </div>
@@ -262,7 +140,6 @@
                     <form method="POST" action="{{ url_for('gerer_dours') }}">
                         <label>Nom de la dour</label>
                         <input type="text" name="nom" placeholder="Ex: Dar Al Amal" required>
-
                         <label>Type</label>
                         <select name="type" required>
                             <option value="">-- Choisir --</option>
@@ -270,15 +147,12 @@
                             <option value="taliba">👧 Dar Taliba</option>
                             <option value="fatat">👩 Dar Fatat</option>
                         </select>
-
                         <button type="submit" class="submit-btn" style="background:#f5a623;">➕ Ajouter Dour</button>
                     </form>
                 </div>
             </div>
-
-            <!-- Liste dours -->
             <div class="card">
-                <div class="card-header" style="background: linear-gradient(135deg, #1a3a6b, #2a5298);">
+                <div class="card-header" style="background:linear-gradient(135deg,#1a3a6b,#2a5298);">
                     <span style="font-size:20px;">📋</span>
                     <h2>Liste des Dours</h2>
                 </div>
@@ -287,7 +161,7 @@
                     {% if dours %}
                         {% for d in dours %}
                         <div class="dour-item type-{{ d.type }}">
-                            <div class="dour-info">
+                            <div style="display:flex; align-items:center; gap:10px;">
                                 <span style="font-size:18px;">{% if d.type == 'talib' %}🧒{% elif d.type == 'taliba' %}👧{% else %}👩{% endif %}</span>
                                 <div>
                                     <div class="dour-name">{{ d.nom }}</div>
@@ -295,19 +169,15 @@
                                 </div>
                             </div>
                             <a href="{{ url_for('supprimer_dour', id=d.id) }}"
-                               style="background:#e74c3c; color:white; font-size:11px; padding:4px 12px; border-radius:12px; text-decoration:none; font-weight:600; white-space:nowrap;"
-                               onclick="return confirm('Wash bghi thda had dour?')">🗑️ Supprimer</a>
+                               style="background:#e74c3c; color:white; font-size:11px; padding:4px 12px; border-radius:12px; text-decoration:none; font-weight:600;"
+                               onclick="return confirm('Wash bghi thda had dour?')">🗑️</a>
                         </div>
                         {% endfor %}
                     {% else %}
-                        <div class="empty-state">
-                            <div style="font-size:36px; margin-bottom:10px;">🏠</div>
-                            Mazal ma zidti aucune dour
-                        </div>
+                        <div class="empty-state"><div style="font-size:36px; margin-bottom:10px;">🏠</div>Mazal ma zidti aucune dour</div>
                     {% endif %}
                 </div>
             </div>
-
         </div>
     </main>
 </div>

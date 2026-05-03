@@ -11,10 +11,10 @@
         .profile-avatar { width:82px; height:82px; border-radius:50%; background:#1a3a6b; display:flex; align-items:center; justify-content:center; font-size:30px; color:white; font-weight:700; overflow:hidden; flex-shrink:0; border:3px solid #f5a623; box-shadow:0 4px 16px rgba(245,166,35,0.25); transition:all 0.3s; }
         .profile-avatar img { width:100%; height:100%; object-fit:cover; }
         .sidebar.collapsed .profile-avatar { width:40px; height:40px; font-size:15px; border-width:2px; }
-        .profile-name { font-size:14px; font-weight:700; color:#1a3a6b; margin-top:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:210px; }
-        .profile-role { font-size:12px; color:#888; margin-top:3px; }
+        .profile-name { font-size:14px; font-weight:700; color:#1a3a6b; margin-top:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:210px; transition:all 0.2s; }
+        .profile-role { font-size:12px; color:#888; margin-top:3px; transition:all 0.2s; }
         .sidebar.collapsed .profile-name, .sidebar.collapsed .profile-role { opacity:0; height:0; margin:0; overflow:hidden; }
-        .social-links { display:flex; gap:8px; margin-top:12px; }
+        .social-links { display:flex; gap:8px; margin-top:12px; transition:all 0.2s; }
         .sidebar.collapsed .social-links { opacity:0; height:0; margin:0; overflow:hidden; }
         .social-link { width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#f5a623; font-size:12px; font-weight:700; text-decoration:none; border:1.5px solid #f0f4f8; transition:all 0.2s; background:#fafbfc; }
         .social-link:hover { background:#f5a623; color:white; border-color:#f5a623; transform:translateY(-2px); }
@@ -33,37 +33,8 @@
         .main-content { flex:1; padding:28px; overflow-x:hidden; }
         .page-title { font-size:21px; font-weight:700; color:#1a3a6b; margin-bottom:22px; display:flex; align-items:center; gap:10px; }
         .alert { padding:13px 18px; background:#27ae60; color:white; border-radius:10px; margin-bottom:18px; font-size:13px; display:flex; align-items:center; gap:10px; box-shadow:0 4px 12px rgba(39,174,96,0.25); }
-        .alert-error { background:#e74c3c; }
-        .mini-stats { display:flex; gap:14px; margin-bottom:22px; flex-wrap:wrap; }
-        .mini-stat { background:white; border-radius:12px; padding:14px 20px; box-shadow:0 3px 12px rgba(0,0,0,0.07); display:flex; align-items:center; gap:12px; flex:1; min-width:140px; }
-        .mini-stat-icon { font-size:24px; }
-        .mini-stat-num { font-size:22px; font-weight:700; color:#1a3a6b; line-height:1; }
-        .mini-stat-lbl { font-size:11px; color:#888; font-weight:500; }
-        .filters { display:flex; gap:12px; margin-bottom:22px; flex-wrap:wrap; align-items:center; }
-        .search-box { flex:1; min-width:220px; position:relative; }
-        .search-box input { width:100%; padding:11px 16px 11px 40px; border:2px solid #e8edf5; border-radius:25px; font-size:13px; font-family:'Poppins',sans-serif; outline:none; transition:border 0.2s; background:white; }
-        .search-box input:focus { border-color:#f5a623; }
-        .search-icon { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#aaa; font-size:15px; }
-        .filter-select { padding:11px 16px; border:2px solid #e8edf5; border-radius:25px; font-size:13px; font-family:'Poppins',sans-serif; outline:none; background:white; color:#555; cursor:pointer; transition:border 0.2s; }
-        .filter-select:focus { border-color:#f5a623; }
-        .card { background:white; border-radius:14px; box-shadow:0 4px 15px rgba(0,0,0,0.07); overflow:hidden; }
-        .card-header { padding:16px 22px; border-bottom:1.5px solid #f0f4f8; display:flex; align-items:center; justify-content:space-between; }
-        .card-header h3 { font-size:14px; font-weight:700; color:#1a3a6b; }
-        table { width:100%; border-collapse:collapse; }
-        th { background:#f8fafc; color:#1a3a6b; padding:13px 16px; text-align:left; font-size:12px; font-weight:700; border-bottom:2px solid #e8edf5; }
-        td { padding:13px 16px; border-bottom:1px solid #f0f4f8; font-size:13px; vertical-align:middle; }
-        tr:last-child td { border-bottom:none; }
-        tr:hover td { background:#fafbff; }
-        .genre-badge { padding:3px 12px; border-radius:20px; font-size:11px; font-weight:600; color:white; }
-        .genre-M { background:#1a3a6b; }
-        .genre-F { background:#e91e8c; }
-        .dar-tag { display:inline-block; margin:2px; padding:2px 8px; border-radius:10px; font-size:10px; color:white; font-weight:500; }
-        .talib { background:#1a3a6b; }
-        .taliba { background:#e91e8c; }
-        .fatat { background:#f5a623; }
-        .btn-action { padding:5px 13px; font-size:11px; border-radius:20px; border:none; cursor:pointer; color:white; font-weight:600; font-family:'Poppins',sans-serif; transition:all 0.2s; text-decoration:none; display:inline-block; }
-        .btn-action:hover { opacity:0.85; transform:translateY(-1px); }
-        .empty-state { text-align:center; padding:50px; color:#bbb; }
+        .alert-error { background:#e74c3c; box-shadow:0 4px 12px rgba(231,76,60,0.25); }
+        .card { background:white; border-radius:14px; box-shadow:0 4px 15px rgba(0,0,0,0.07); overflow:hidden; margin-bottom:22px; }
         .overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(26,58,107,0.45); z-index:100; backdrop-filter:blur(3px); }
         .overlay.active { display:block; }
         .panel { position:fixed; top:0; right:-480px; width:440px; height:100%; background:white; z-index:200; box-shadow:-8px 0 30px rgba(0,0,0,0.15); transition:right 0.35s cubic-bezier(0.4,0,0.2,1); overflow-y:auto; }
@@ -87,7 +58,6 @@
 
 {% block content %}
 <div class="dashboard-layout">
-
     <aside class="sidebar" id="sidebar">
         <button class="sidebar-toggle" onclick="toggleSidebar()" id="toggle-btn">‹</button>
         <div class="sidebar-profile">
@@ -98,7 +68,13 @@
                     {{ (current_user.prenom or current_user.email)[0].upper() }}
                 {% endif %}
             </div>
-            <div class="profile-name">{{ current_user.prenom or '' }} {{ current_user.nom or current_user.email.split('@')[0] }}</div>
+            <div class="profile-name">
+                {% if current_user.prenom and current_user.nom %}
+                    {{ current_user.prenom }} {{ current_user.nom }}
+                {% else %}
+                    {{ current_user.email.split('@')[0] }}
+                {% endif %}
+            </div>
             <div class="profile-role">{{ 'Administrateur' if current_user.is_admin else 'Responsable' }}</div>
             <div class="social-links">
                 <a href="#" class="social-link">f</a>
@@ -129,6 +105,9 @@
             <a href="{{ url_for('gerer_coordinateurs') }}" class="nav-item active">
                 <span class="nav-icon">👥</span><span class="nav-label">Gérer Coordinateurs</span>
             </a>
+            <a href="{{ url_for('heures') }}" class="nav-item">
+                <span class="nav-icon">⏱️</span><span class="nav-label">Séances</span>
+            </a>
             <div class="nav-divider"></div>
             <div class="nav-section-label">Compte</div>
             <a href="{{ url_for('parametres') }}" class="nav-item">
@@ -142,7 +121,7 @@
 
     <div class="overlay" id="overlay" onclick="closeAllPanels()"></div>
 
-    <!-- PANEL Modifier -->
+    <!-- PANEL: Modifier Coordinateur -->
     <div class="panel" id="panel-modifier">
         <div class="panel-top">
             <h2>✏️ Modifier Coordinateur</h2>
@@ -173,7 +152,7 @@
                     {% endfor %}
                 </select>
                 <p class="hint">💡 Ctrl + Click bach tzid aktar men wahda</p>
-                <button type="submit" class="submit-btn" style="background:#f5a623;">💾 Enregistrer</button>
+                <button type="submit" class="submit-btn" style="background:#f5a623;">💾 Enregistrer modifications</button>
             </form>
         </div>
     </div>
@@ -186,98 +165,59 @@
                 </div>
             {% endfor %}
         {% endwith %}
-
         <div class="page-title">👥 Gérer les Coordinateurs</div>
-
-        <div class="mini-stats">
-            <div class="mini-stat">
-                <div class="mini-stat-icon">👥</div>
-                <div><div class="mini-stat-num">{{ coordinateurs|length }}</div><div class="mini-stat-lbl">Total</div></div>
-            </div>
-            <div class="mini-stat">
-                <div class="mini-stat-icon">👨</div>
-                <div><div class="mini-stat-num">{{ coordinateurs|selectattr('genre','eq','M')|list|length }}</div><div class="mini-stat-lbl">Coordinateurs</div></div>
-            </div>
-            <div class="mini-stat">
-                <div class="mini-stat-icon">👩</div>
-                <div><div class="mini-stat-num">{{ coordinateurs|selectattr('genre','eq','F')|list|length }}</div><div class="mini-stat-lbl">Coordinatrices</div></div>
-            </div>
-        </div>
-
-        <div class="filters">
-            <div class="search-box">
-                <span class="search-icon">🔍</span>
-                <input type="text" id="searchInput" placeholder="Chercher par nom ou prénom..." oninput="filterTable()">
-            </div>
-            <select class="filter-select" id="filterGenre" onchange="filterTable()">
-                <option value="">👥 Tous</option>
-                <option value="M">👨 Coordinateurs</option>
-                <option value="F">👩 Coordinatrices</option>
-            </select>
-            <select class="filter-select" id="filterResp" onchange="filterTable()">
-                <option value="">🏢 Tous les responsables</option>
-                {% for r in responsables %}
-                <option value="{{ r.id }}">{{ r.prenom }} {{ r.nom }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
         <div class="card">
-            <div class="card-header">
-                <h3>📋 Liste des coordinateurs</h3>
-                <span id="countLabel" style="font-size:12px; color:#888; font-weight:600;"></span>
+            <div style="background:#1a3a6b; padding:16px 22px;">
+                <h3 style="color:white; font-size:14px; font-weight:700;">📋 Liste des Coordinateurs ({{ coordinateurs|length }})</h3>
             </div>
-            <table id="coordTable">
+            <table style="width:100%; border-collapse:collapse;">
                 <thead>
                     <tr>
-                        <th>#</th>
-                        <th>Nom & Prénom</th>
-                        <th>Genre</th>
-                        <th>Responsable</th>
-                        <th>🏠 Dours</th>
-                        <th>Actions</th>
+                        <th style="background:#f8fafc; color:#1a3a6b; padding:12px 18px; text-align:left; font-size:12px; font-weight:700; border-bottom:2px solid #e8edf5;">Nom</th>
+                        <th style="background:#f8fafc; color:#1a3a6b; padding:12px 18px; text-align:center; font-size:12px; font-weight:700; border-bottom:2px solid #e8edf5;">Genre</th>
+                        <th style="background:#f8fafc; color:#1a3a6b; padding:12px 18px; text-align:left; font-size:12px; font-weight:700; border-bottom:2px solid #e8edf5;">Responsable</th>
+                        <th style="background:#f8fafc; color:#1a3a6b; padding:12px 18px; text-align:left; font-size:12px; font-weight:700; border-bottom:2px solid #e8edf5;">🏠 Dours</th>
+                        <th style="background:#f8fafc; color:#1a3a6b; padding:12px 18px; text-align:center; font-size:12px; font-weight:700; border-bottom:2px solid #e8edf5;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for c in coordinateurs %}
-                    <tr data-genre="{{ c.genre }}" data-resp="{{ c.responsable_id }}"
-                        data-nom="{{ c.nom|lower }} {{ c.prenom|lower }}">
-                        <td style="color:#aaa; font-size:12px;">{{ loop.index }}</td>
-                        <td><div style="font-weight:600; color:#1a3a6b;">{{ c.prenom }} {{ c.nom }}</div></td>
-                        <td>
-                            <span class="genre-badge genre-{{ c.genre }}">
-                                {% if c.genre == 'M' %}👨 Coordinateur{% else %}👩 Coordinatrice{% endif %}
+                    {% for coord in coordinateurs %}
+                    <tr style="border-bottom:1px solid #f0f4f8;">
+                        <td style="padding:12px 18px; font-weight:600; color:#1a3a6b; font-size:13px;">
+                            {% if coord.genre == 'M' %}👨{% else %}👩{% endif %} {{ coord.prenom }} {{ coord.nom }}
+                        </td>
+                        <td style="padding:12px 18px; text-align:center;">
+                            <span style="padding:2px 10px; border-radius:10px; font-size:11px; font-weight:700; color:white; background:{% if coord.genre == 'M' %}#1a3a6b{% else %}#e91e8c{% endif %};">
+                                {% if coord.genre == 'M' %}Coordinateur{% else %}Coordinatrice{% endif %}
                             </span>
                         </td>
-                        <td style="color:#555; font-size:12px;">
-                            {% if c.responsable %}{{ c.responsable.prenom }} {{ c.responsable.nom }}{% else %}<span style="color:#bbb;">—</span>{% endif %}
+                        <td style="padding:12px 18px; font-size:13px; color:#555;">
+                            {{ coord.responsable.prenom }} {{ coord.responsable.nom }}
                         </td>
-                        <td>
-                            {% if c.dours %}
-                                {% for d in c.dours %}<span class="dar-tag {{ d.type }}">dar {{ d.type }} {{ d.nom }}</span>{% endfor %}
+                        <td style="padding:10px 18px;">
+                            {% if coord.dours %}
+                                {% for d in coord.dours %}
+                                <span style="display:inline-block; margin:2px; padding:2px 8px; border-radius:10px; font-size:10px; color:white; font-weight:500; background:{% if d.type == 'talib' %}#1a3a6b{% elif d.type == 'taliba' %}#e91e8c{% else %}#f5a623{% endif %};">{{ d.nom }}</span>
+                                {% endfor %}
                             {% else %}
-                                <span style="color:#bbb; font-size:11px; font-style:italic;">Aucune</span>
+                                <span style="color:#bbb; font-size:11px; font-style:italic;">Aucune dour</span>
                             {% endif %}
                         </td>
-                        <td>
-                            <button class="btn-action" style="background:#f5a623; margin-right:4px;"
-                                onclick="openModifier({{ c.id }}, '{{ c.nom }}', '{{ c.prenom }}', '{{ c.genre }}', {{ c.responsable_id }}, [{{ c.dours|map(attribute='id')|join(',') }}])">
-                                ✏️ Modifier
-                            </button>
-                            <a href="{{ url_for('supprimer_coordinateur', id=c.id) }}"
-                               class="btn-action" style="background:#e74c3c;"
-                               onclick="return confirm('Wash bghi thda had coordinateur?')">🗑️</a>
+                        <td style="padding:12px 18px; text-align:center;">
+                            <div style="display:flex; gap:6px; justify-content:center;">
+                                <button style="background:#f5a623; color:white; font-size:11px; padding:4px 12px; border-radius:10px; border:none; cursor:pointer; font-weight:600; font-family:'Poppins',sans-serif;"
+                                    onclick="openModifier({{ coord.id }}, '{{ coord.nom }}', '{{ coord.prenom }}', '{{ coord.genre }}', {{ coord.responsable_id }}, [{{ coord.dours|map(attribute='id')|join(',') }}])">
+                                    ✏️ Modifier
+                                </button>
+                                <a href="{{ url_for('supprimer_coordinateur', id=coord.id) }}"
+                                   style="background:#e74c3c; color:white; font-size:11px; padding:4px 12px; border-radius:10px; text-decoration:none; font-weight:600;"
+                                   onclick="return confirm('Wash bghi thda had coordinateur?')">🗑️</a>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
-            {% if not coordinateurs %}
-            <div class="empty-state">
-                <div style="font-size:40px;">👥</div>
-                <div style="font-size:14px; font-weight:600; color:#888; margin-top:10px;">Mazal ma zidti hta coordinateur</div>
-            </div>
-            {% endif %}
         </div>
     </main>
 </div>
@@ -299,22 +239,6 @@ function toggleSidebar() {
         }
     } catch(e) {}
 })();
-function filterTable() {
-    const search = document.getElementById('searchInput').value.toLowerCase();
-    const genre  = document.getElementById('filterGenre').value;
-    const resp   = document.getElementById('filterResp').value;
-    const rows   = document.querySelectorAll('#coordTable tbody tr');
-    let visible  = 0;
-    rows.forEach(row => {
-        const nom  = row.dataset.nom || '';
-        const g    = row.dataset.genre || '';
-        const r    = row.dataset.resp || '';
-        const show = nom.includes(search) && (genre==='' || g===genre) && (resp==='' || r===resp);
-        row.style.display = show ? '' : 'none';
-        if (show) visible++;
-    });
-    document.getElementById('countLabel').textContent = visible + ' coordinateur(s)';
-}
 function openPanel(id) {
     closeAllPanels();
     const panel = document.getElementById(id);
@@ -334,5 +258,4 @@ function openModifier(id, nom, prenom, genre, respId, dourIds) {
     for (let opt of sel.options) { opt.selected = dourIds.includes(parseInt(opt.value)); }
     openPanel('panel-modifier');
 }
-window.onload = () => filterTable();
 {% endblock %}
