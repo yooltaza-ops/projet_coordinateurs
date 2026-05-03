@@ -75,7 +75,6 @@ def index():
     total_heures_mois  = sum(s.nb_heures for s in all_seances_mois)
     total_seances_mois = len(all_seances_mois)
 
-    # Recap séances par coordinateur
     recap_seances = []
     if current_user.is_admin:
         all_coords = Coordinateur.query.all()
@@ -97,8 +96,16 @@ def index():
                 'nb_heures': nb_h,
             })
 
-    # Liste admins (pour la section gérer admins)
-    admins = User.query.filter_by(role='admin').all() if current_user.is_admin else []
+    if current_user.is_admin:
+        admins = User.query.filter(User.role == 'admin').all()
+    else:
+        admins = []
+    nb_admins = len(admins)
+
+    # ✅ FIX: nb_responsables = seulement ceux avec role 'responsable'
+    all_resp          = Responsable.query.order_by(Responsable.nom).all()
+    responsables_only = [r for r in all_resp if r.user and r.user.role == 'responsable']
+    nb_responsables   = len(responsables_only)
 
     return render_template('index.html',
                            data=data,
@@ -109,7 +116,9 @@ def index():
                            mois_nom_actuel=mois_noms[mois],
                            annee_actuel=annee,
                            recap_seances=recap_seances,
-                           admins=admins)
+                           admins=admins,
+                           nb_admins=nb_admins,
+                           nb_responsables=nb_responsables)
 
 
 # ─── Pages dédiées ────────────────────────────────────────────────────────────
@@ -442,15 +451,46 @@ def modifier_admin(id):
     if existing and existing.id != u.id:
         flash('Email déjà utilisé.', 'error')
         return redirect(url_for('index'))
+
     u.email  = new_email
     u.nom    = request.form.get('nom', '').strip()
     u.prenom = request.form.get('prenom', '').strip()
+
+    new_role = request.form.get('role', 'admin')
+    if new_role not in ('admin', 'responsable'):
+        new_role = 'admin'
+
+    safe_nom    = u.nom    or u.email.split('@')[0]
+    safe_prenom = u.prenom or u.email.split('@')[0]
+
+    if new_role == 'responsable':
+        if u.responsable_id is None:
+            r = Responsable(
+                nom=safe_nom,
+                prenom=safe_prenom,
+                email=u.email
+            )
+            db.session.add(r)
+            db.session.flush()
+            u.responsable_id = r.id
+        else:
+            r = Responsable.query.get(u.responsable_id)
+            if r:
+                r.nom    = safe_nom
+                r.prenom = safe_prenom
+                r.email  = u.email
+    else:
+        u.responsable_id = None
+
+    u.role = new_role
+
     pwd = request.form.get('password', '').strip()
     if pwd:
         if len(pwd) < 6:
             flash('Le mot de passe doit contenir au moins 6 caractères.', 'error')
             return redirect(url_for('index'))
         u.set_password(pwd)
+
     db.session.commit()
     flash('Admin modifié avec succès!', 'success')
     return redirect(url_for('index'))

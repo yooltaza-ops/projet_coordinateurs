@@ -16,6 +16,7 @@
         .stat-card.purple { border-color:#9b59b6; }
         .stat-card.teal   { border-color:#16a085; }
         .stat-number { font-size:28px; font-weight:700; color:#1a3a6b; line-height:1; }
+        .stat-number.orange { color:#f5a623; }
         .stat-number.purple { color:#9b59b6; }
         .stat-number.teal   { color:#16a085; }
         .stat-label { font-size:11px; color:#888; font-weight:500; }
@@ -80,6 +81,17 @@
         .admin-table td { padding:12px 16px; border-bottom:1px solid #fef5e4; vertical-align:middle; font-size:13px; }
         .admin-table tr:last-child td { border-bottom:none; }
         .admin-table tr:hover td { background:#fffdf7; }
+
+        /* Role selector inside panel */
+        .role-cards-panel { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+        .role-card-panel {
+            padding:12px; border:2px solid #e8edf5; border-radius:12px;
+            cursor:pointer; transition:all 0.2s; text-align:center;
+        }
+        .role-card-panel:hover { border-color:#f5a623; }
+        .role-card-panel.selected { border-color:#f5a623; background:#fff8ee; }
+        .role-card-panel .rc-icon  { font-size:20px; margin-bottom:4px; }
+        .role-card-panel .rc-title { font-size:12px; font-weight:700; color:#1a3a6b; }
 
         .desktop-table { display:block; }
         .resp-card { display:none; }
@@ -182,6 +194,18 @@
             <input type="text" name="nom" id="madm-nom" placeholder="Nom">
             <label>Email</label>
             <input type="email" name="email" id="madm-email" placeholder="admin@example.com" required>
+            <label>Rôle</label>
+            <div class="role-cards-panel">
+                <div class="role-card-panel" id="madm-card-admin" onclick="selectAdminRole('admin')">
+                    <div class="rc-icon">👑</div>
+                    <div class="rc-title">Administrateur</div>
+                </div>
+                <div class="role-card-panel" id="madm-card-responsable" onclick="selectAdminRole('responsable')">
+                    <div class="rc-icon">👤</div>
+                    <div class="rc-title">Responsable</div>
+                </div>
+            </div>
+            <input type="hidden" name="role" id="madm-role" value="admin">
             <label>
                 Nouveau mot de passe
                 <span style="color:#aaa; font-weight:400; font-size:11px;">(laisser vide = inchangé)</span>
@@ -210,10 +234,17 @@
 
     <!-- ══════════ STATS ══════════ -->
     <div class="stats-row">
+        <!-- ✅ FIX: nb_responsables au lieu de data|length -->
         <div class="stat-card blue">
-            <div class="stat-number">{{ data|length }}</div>
+            <div class="stat-number">{{ nb_responsables }}</div>
             <div class="stat-label">👤 Responsables</div>
         </div>
+        {% if current_user.is_admin %}
+        <div class="stat-card orange">
+            <div class="stat-number orange">{{ nb_admins }}</div>
+            <div class="stat-label">👑 Admins</div>
+        </div>
+        {% endif %}
         <div class="stat-card orange">
             <div class="stat-number">{{ data | sum(attribute='nb_coordinateurs') }}</div>
             <div class="stat-label">👨 Coordinateurs</div>
@@ -240,7 +271,9 @@
     {% if current_user.is_admin %}
     <div class="card">
         <div class="card-header" style="background:linear-gradient(135deg,#f5a623,#e8941a); padding:14px 22px; display:flex; justify-content:space-between; align-items:center;">
-            <h3 style="color:white; font-size:14px;">👑 Gérer Administrateurs</h3>
+            <h3 style="color:white; font-size:14px;">👑 Gérer Administrateurs
+                <span style="background:rgba(255,255,255,0.25); padding:2px 10px; border-radius:20px; font-size:12px; margin-left:8px;">{{ nb_admins }}</span>
+            </h3>
             <button onclick="openPanel('panel-add-admin')"
                 style="background:rgba(255,255,255,0.25); border:1.5px solid rgba(255,255,255,0.4); color:white;
                        padding:6px 16px; border-radius:20px; font-size:12px; font-weight:700;
@@ -295,7 +328,7 @@
                         <td style="text-align:center;">
                             {% if u.id != current_user.id %}
                             <button
-                                onclick="openModifierAdmin({{ u.id }}, '{{ u.nom or '' }}', '{{ u.prenom or '' }}', '{{ u.email }}')"
+                                onclick="openModifierAdmin({{ u.id }}, '{{ u.nom or '' }}', '{{ u.prenom or '' }}', '{{ u.email }}', '{{ u.role }}')"
                                 style="background:#f5a623; color:white; font-size:10px; padding:4px 12px;
                                        border-radius:10px; border:none; cursor:pointer; font-weight:600;
                                        font-family:'Poppins',sans-serif; margin-right:5px; transition:all 0.2s;"
@@ -571,12 +604,20 @@ function openModifier(id, nom, prenom, genre, respId, dourIds) {
     openPanel('panel-modifier');
 }
 
+// Sélectionner rôle dans le panel modifier admin
+function selectAdminRole(role) {
+    document.getElementById('madm-card-admin').classList.toggle('selected', role === 'admin');
+    document.getElementById('madm-card-responsable').classList.toggle('selected', role === 'responsable');
+    document.getElementById('madm-role').value = role;
+}
+
 // Modifier admin
-function openModifierAdmin(id, nom, prenom, email) {
+function openModifierAdmin(id, nom, prenom, email, role) {
     document.getElementById('form-modifier-admin').action = '/modifier_admin/' + id;
     document.getElementById('madm-nom').value    = nom;
     document.getElementById('madm-prenom').value = prenom;
     document.getElementById('madm-email').value  = email;
+    selectAdminRole(role || 'admin');
     openPanel('panel-modifier-admin');
 }
 {% endblock %}

@@ -295,6 +295,10 @@
                         <div class="dropdown-email">{{ current_user.email }}</div>
                     </div>
                 </div>
+                <a href="{{ url_for('index') }}">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-label">Tableau de bord</span>
+                </a>
                 <a href="{{ url_for('parametres') }}">⚙️ Paramètres</a>
                 <div class="dropdown-divider"></div>
                 <a href="{{ url_for('logout') }}" class="red">🚪 Déconnexion</a>
