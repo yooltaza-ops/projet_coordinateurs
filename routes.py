@@ -252,7 +252,7 @@ def ajouter_seance():
     coord_id  = int(request.form['coordinateur_id'])
     date_str  = request.form['date']
     nb_heures = float(request.form['nb_heures'])
-    note      = request.form.get('note', '').strip()
+    note      = request.form.get('note', '').strip() or None
     matiere   = request.form.get('matiere', '').strip() or None
     niveau    = request.form.get('niveau',  '').strip() or None
 
@@ -263,10 +263,14 @@ def ajouter_seance():
 
     date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
     s = Seance(
-        coordinateur_id=coord_id, date=date_obj,
-        mois=date_obj.month, annee=date_obj.year,
-        nb_heures=nb_heures, note=note,
-        matiere=matiere, niveau=niveau,
+        coordinateur_id=coord_id,
+        date=date_obj,
+        mois=date_obj.month,
+        annee=date_obj.year,
+        nb_heures=nb_heures,
+        note=note,
+        matiere=matiere,
+        niveau=niveau,
     )
     db.session.add(s)
     db.session.commit()
@@ -282,7 +286,6 @@ def modifier_seance(id):
     if not current_user.is_admin:
         if not current_user.responsable or coord.responsable_id != current_user.responsable.id:
             abort(403)
-
     date_obj    = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
     s.date      = date_obj
     s.mois      = date_obj.month
@@ -291,7 +294,6 @@ def modifier_seance(id):
     s.note      = request.form.get('note', '').strip() or None
     s.matiere   = request.form.get('matiere', '').strip() or None
     s.niveau    = request.form.get('niveau',  '').strip() or None
-
     db.session.commit()
     flash('Séance modifiée!', 'success')
     return redirect(url_for('heures', mois=s.mois, annee=s.annee, coord_id=coord.id))
@@ -466,19 +468,15 @@ def update_avatar():
 def ajouter_responsable():
     email_resp = request.form['email'].strip().lower()
     pwd        = request.form['password']
-    role       = request.form.get('role', 'responsable')
-    if role not in ('admin', 'responsable'):
-        role = 'responsable'
     r = Responsable(nom=request.form['nom'], prenom=request.form['prenom'], email=email_resp)
     db.session.add(r)
     db.session.flush()
-    u = User(email=email_resp, role=role,
-             responsable_id=r.id if role == 'responsable' else None)
+    u = User(email=email_resp, role='responsable', responsable_id=r.id)
     u.set_password(pwd)
     db.session.add(u)
     db.session.commit()
-    flash(f'Responsable {r.prenom} {r.nom} ajouté avec rôle {role}!', 'success')
-    return redirect(url_for('gerer_responsables'))
+    flash(f'Responsable {r.prenom} {r.nom} ajouté!', 'success')
+    return redirect(url_for('index'))
 
 
 @app.route('/gerer_responsables')
@@ -521,7 +519,12 @@ def modifier_responsable(id):
         pwd = request.form.get('password', '').strip()
         if pwd:
             r.user.set_password(pwd)
-        r.user.responsable_id = r.id if new_role == 'responsable' else None
+        # ✅ FIX: mnin responsable → admin, khelli responsable_id b7al howa
+        # bach les coordinateurs dyalo yb9aw rattachés
+        if new_role == 'responsable':
+            r.user.responsable_id = r.id
+        # ila admin → responsable_id katb9a None f User
+        # walakin l Responsable row w les coordinateurs kayb9aw intacts
 
     r.email = new_email
     db.session.commit()
@@ -534,11 +537,17 @@ def modifier_responsable(id):
 @admin_required
 def supprimer_responsable(id):
     r = Responsable.query.get_or_404(id)
+    # Supprimer les séances des coordinateurs liés
+    for c in r.coordinateurs:
+        for s in c.seances:
+            db.session.delete(s)
+        c.dours = []
+        db.session.delete(c)
     if r.user:
         db.session.delete(r.user)
     db.session.delete(r)
     db.session.commit()
-    flash('Responsable o ga3 les coordinateurs dyalo t-suppremaw!', 'success')
+    flash(f'Responsable supprimé avec ses coordinateurs!', 'success')
     return redirect(url_for('index'))
 
 
@@ -572,6 +581,7 @@ def modifier_admin(id):
         flash('Email déjà utilisé.', 'error')
         return redirect(url_for('index'))
 
+    old_role = u.role
     u.email  = new_email
     u.nom    = request.form.get('nom', '').strip()
     u.prenom = request.form.get('prenom', '').strip()
@@ -583,19 +593,28 @@ def modifier_admin(id):
     safe_nom    = u.nom    or u.email.split('@')[0]
     safe_prenom = u.prenom or u.email.split('@')[0]
 
+    # ── Admin → Responsable ──────────────────────────────────────────────────
     if new_role == 'responsable':
         if u.responsable_id is None:
+            # Créer un nouveau Responsable lié à ce User
             r = Responsable(nom=safe_nom, prenom=safe_prenom, email=u.email)
             db.session.add(r)
             db.session.flush()
             u.responsable_id = r.id
         else:
+            # Mettre à jour le Responsable existant (cas retour admin→resp)
             r = Responsable.query.get(u.responsable_id)
             if r:
                 r.nom    = safe_nom
                 r.prenom = safe_prenom
                 r.email  = u.email
-    else:
+
+    # ── Responsable → Admin ──────────────────────────────────────────────────
+    elif new_role == 'admin' and old_role == 'responsable':
+        # ✅ FIX PRINCIPAL: On garde le Responsable row + ses coordinateurs
+        # intacts — on détache seulement le User (responsable_id = None)
+        # Les coordinateurs dyalo kayb9aw rattachés l Responsable row
+        # Mnin yb9a admin men jadid → les coordinateurs kayb9aw f l'attente
         u.responsable_id = None
 
     u.role = new_role
@@ -608,7 +627,7 @@ def modifier_admin(id):
         u.set_password(pwd)
 
     db.session.commit()
-    flash('Admin modifié avec succès!', 'success')
+    flash(f'{"Responsable" if new_role == "responsable" else "Admin"} modifié avec succès!', 'success')
     return redirect(url_for('index'))
 
 
@@ -620,6 +639,7 @@ def supprimer_admin(id):
         flash('Impossible de supprimer votre propre compte.', 'error')
         return redirect(url_for('index'))
     u = User.query.get_or_404(id)
+    # Les coordinateurs + Responsable row kayb9aw intacts
     db.session.delete(u)
     db.session.commit()
     flash('Admin supprimé!', 'success')
