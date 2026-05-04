@@ -56,12 +56,16 @@ def index():
                  'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
 
     dours = Dour.query.all()
+
+    # ✅ FIX: gha responsables pur (role='responsable'), machi admins
     if current_user.is_admin:
-        responsables = Responsable.query.all()
+        all_resp = Responsable.query.all()
+        responsables = [r for r in all_resp if r.user and r.user.role == 'responsable']
     else:
         resp = current_user.responsable
         responsables = [resp] if resp else []
 
+    # ✅ FIX: data = gha responsables pur
     data = []
     for r in responsables:
         data.append({
@@ -71,10 +75,21 @@ def index():
             'total': len(r.coordinateurs)
         })
 
-    all_seances_mois   = Seance.query.filter_by(mois=mois, annee=annee).all()
+    # Séances du mois
+    if current_user.is_admin:
+        all_seances_mois = Seance.query.filter_by(mois=mois, annee=annee).all()
+    else:
+        resp = current_user.responsable
+        coord_ids = [c.id for c in resp.coordinateurs] if resp else []
+        all_seances_mois = Seance.query.filter(
+            Seance.mois == mois,
+            Seance.annee == annee,
+            Seance.coordinateur_id.in_(coord_ids)
+        ).all()
     total_heures_mois  = sum(s.nb_heures for s in all_seances_mois)
     total_seances_mois = len(all_seances_mois)
 
+    # Recap séances
     recap_seances = []
     if current_user.is_admin:
         all_coords = Coordinateur.query.all()
@@ -96,20 +111,34 @@ def index():
                 'nb_heures': nb_h,
             })
 
+    # Admins
     if current_user.is_admin:
         admins = User.query.filter(User.role == 'admin').all()
     else:
         admins = []
     nb_admins = len(admins)
 
-    # ✅ FIX: nb_responsables = seulement ceux avec role 'responsable'
-    all_resp          = Responsable.query.order_by(Responsable.nom).all()
-    responsables_only = [r for r in all_resp if r.user and r.user.role == 'responsable']
-    nb_responsables   = len(responsables_only)
+    # nb_responsables = gha role='responsable'
+    # nb_responsables = selon le rôle
+    if current_user.is_admin:
+        all_resp_all      = Responsable.query.order_by(Responsable.nom).all()
+        responsables_only = [r for r in all_resp_all if r.user and r.user.role == 'responsable']
+        nb_responsables   = len(responsables_only)
+    else:
+        # Responsable yshuf gha coordinateurs dyalo
+        resp = current_user.responsable
+        nb_responsables = len(resp.coordinateurs) if resp else 0
+
+    # responsables pour les selects dans panels (modifier coordinateur)
+    if current_user.is_admin:
+        responsables_select = [r for r in Responsable.query.all() if r.user and r.user.role == 'responsable']
+    else:
+        resp = current_user.responsable
+        responsables_select = [resp] if resp else []
 
     return render_template('index.html',
                            data=data,
-                           responsables=responsables,
+                           responsables=responsables_select,
                            dours=dours,
                            total_heures_mois=total_heures_mois,
                            total_seances_mois=total_seances_mois,
@@ -134,7 +163,8 @@ def ajouter_responsable_page():
 def ajouter_coordinateur_page():
     dours = Dour.query.all()
     if current_user.is_admin:
-        responsables = Responsable.query.all()
+        all_resp = Responsable.query.all()
+        responsables = [r for r in all_resp if r.user and r.user.role == 'responsable']
     else:
         resp = current_user.responsable
         responsables = [resp] if resp else []
@@ -154,7 +184,8 @@ def gerer_dours_page():
 def gerer_coordinateurs():
     dours = Dour.query.all()
     if current_user.is_admin:
-        responsables = Responsable.query.all()
+        all_resp = Responsable.query.all()
+        responsables = [r for r in all_resp if r.user and r.user.role == 'responsable']
         coordinateurs = Coordinateur.query.all()
     else:
         resp = current_user.responsable
@@ -182,7 +213,16 @@ def heures():
     mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin',
                  'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
 
-    all_seances_mois = Seance.query.filter_by(mois=mois, annee=annee).all()
+    if current_user.is_admin:
+        all_seances_mois = Seance.query.filter_by(mois=mois, annee=annee).all()
+    else:
+        resp = current_user.responsable
+        coord_ids = [c.id for c in resp.coordinateurs] if resp else []
+        all_seances_mois = Seance.query.filter(
+            Seance.mois == mois,
+            Seance.annee == annee,
+            Seance.coordinateur_id.in_(coord_ids)
+        ).all()
     total_heures  = sum(s.nb_heures for s in all_seances_mois)
     total_seances = len(all_seances_mois)
 
@@ -465,11 +505,7 @@ def modifier_admin(id):
 
     if new_role == 'responsable':
         if u.responsable_id is None:
-            r = Responsable(
-                nom=safe_nom,
-                prenom=safe_prenom,
-                email=u.email
-            )
+            r = Responsable(nom=safe_nom, prenom=safe_prenom, email=u.email)
             db.session.add(r)
             db.session.flush()
             u.responsable_id = r.id
@@ -561,7 +597,7 @@ def supprimer_coordinateur(id):
     db.session.delete(c)
     db.session.commit()
     flash('Coordinateur supprimé!', 'success')
-    return redirect(url_for('index'))
+    return redirect(url_for('gerer_coordinateurs'))
 
 
 # ─── Dours ────────────────────────────────────────────────────────────────────

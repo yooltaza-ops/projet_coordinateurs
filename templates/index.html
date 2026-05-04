@@ -304,7 +304,9 @@
     <div class="stats-row">
         <div class="stat-card blue">
             <div class="stat-number">{{ nb_responsables }}</div>
-            <div class="stat-label">👤 Responsables</div>
+            <div class="stat-label">
+                {% if current_user.is_admin %}👤 Responsables{% else %}👥 Coordinateurs{% endif %}
+            </div>
         </div>
         {% if current_user.is_admin %}
         <div class="stat-card orange">
@@ -622,7 +624,7 @@
                                 </div>
                                 <div>
                                     {% if coord.dours %}{% for d in coord.dours %}
-                                    <span style="display:inline-block; margin:2px; padding:2px 8px; border-radius:10px; font-size:10px; color:white; font-weight:500; background:{% if d.type == 'talib' %}#1a3a6b{% elif d.type == 'taliba' %}#e91e8c{% else %}#f5a623{% endif %};">{{ d.nom }}</span>
+                                    <span style="display:inline-block; margin:2px; padding:2px 8px; border-radius:10px; font-size:10px; color:white; font-weight:500; background:{% if d.type == 'talib' %}#1a3a6b{% elif d.type == 'taliba' %}#e91e8c{% else %}#f5a623{% endif %};">dar {{ d.type }} {{ d.nom }}</span>
                                     {% endfor %}{% else %}
                                     <span style="color:#bbb; font-size:11px; font-style:italic;">Mazal ma zidti dour</span>
                                     {% endif %}

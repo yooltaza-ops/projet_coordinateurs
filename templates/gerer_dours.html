@@ -79,7 +79,7 @@
                             <span style="font-size:18px;">{% if d.type == 'talib' %}🧒{% elif d.type == 'taliba' %}👧{% else %}👩{% endif %}</span>
                             <div>
                                 <div class="dour-name">{{ d.nom }}</div>
-                                <span class="dar-tag {{ d.type }}">{{ d.type }}</span>
+                                <span class="dar-tag {{ d.type }}">dar {{ d.type }}</span>
                             </div>
                         </div>
                         <a href="{{ url_for('supprimer_dour', id=d.id) }}"
