@@ -1,0 +1,879 @@
+{% extends "base.html" %}
+{% block title %}Rapport Coordinateurs — Yool{% endblock %}
+
+{% block extra_css %}
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+    --blue:    #1a3a6b;
+    --blue2:   #2a5298;
+    --orange:  #f5a623;
+    --pink:    #e91e8c;
+    --teal:    #0d9488;
+    --green:   #16a34a;
+    --purple:  #7c3aed;
+    --red:     #dc2626;
+    --grey:    #64748b;
+    --light:   #f1f5f9;
+    --border:  #e2e8f0;
+    --white:   #ffffff;
+    --shadow:  0 4px 20px rgba(0,0,0,0.07);
+    --shadow2: 0 8px 32px rgba(0,0,0,0.13);
+}
+
+* { box-sizing: border-box; }
+
+.rp-wrap {
+    padding: 28px;
+    font-family: 'DM Sans', sans-serif;
+}
+@media (max-width:768px) { .rp-wrap { padding: 12px; } }
+
+/* ── Page header ── */
+.rp-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    flex-wrap: wrap; gap: 14px; margin-bottom: 24px;
+}
+.rp-title {
+    font-size: 22px; font-weight: 700; color: var(--blue);
+    display: flex; align-items: center; gap: 10px;
+}
+.rp-subtitle { font-size: 13px; color: var(--grey); margin-top: 3px; font-weight: 400; }
+
+/* ── Filter bar ── */
+.filter-bar {
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    background: var(--white); padding: 14px 18px; border-radius: 14px;
+    box-shadow: var(--shadow); margin-bottom: 22px; border: 1.5px solid var(--border);
+}
+.filter-bar select, .filter-bar input {
+    padding: 8px 13px; border: 2px solid var(--border); border-radius: 10px;
+    font-size: 13px; font-family: 'DM Sans', sans-serif;
+    color: var(--blue); font-weight: 600; outline: none;
+    background: var(--light); transition: border 0.2s; cursor: pointer;
+}
+.filter-bar select:focus, .filter-bar input:focus { border-color: var(--orange); }
+.filter-btn {
+    padding: 8px 20px; background: var(--blue); color: white;
+    border: none; border-radius: 10px; font-size: 13px; font-weight: 700;
+    font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all 0.2s;
+}
+.filter-btn:hover { background: var(--orange); transform: translateY(-1px); }
+.filter-label { font-size: 11px; color: var(--grey); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+
+/* ── Summary bar ── */
+.summary-row {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 22px;
+}
+@media (max-width:900px) { .summary-row { grid-template-columns: repeat(3,1fr); } }
+@media (max-width:560px)  { .summary-row { grid-template-columns: repeat(2,1fr); } }
+
+.sum-card {
+    background: var(--white); border-radius: 14px; padding: 16px 18px;
+    box-shadow: var(--shadow); border-left: 4px solid; display: flex;
+    flex-direction: column; gap: 3px; transition: transform .2s, box-shadow .2s;
+}
+.sum-card:hover { transform: translateY(-3px); box-shadow: var(--shadow2); }
+.sum-card.c-blue   { border-color: var(--blue); }
+.sum-card.c-orange { border-color: var(--orange); }
+.sum-card.c-teal   { border-color: var(--teal); }
+.sum-card.c-purple { border-color: var(--purple); }
+.sum-card.c-pink   { border-color: var(--pink); }
+.sum-num  { font-size: 26px; font-weight: 700; line-height: 1.1; color: var(--blue); }
+.sum-num.orange { color: var(--orange); }
+.sum-num.teal   { color: var(--teal); }
+.sum-num.purple { color: var(--purple); }
+.sum-num.pink   { color: var(--pink); }
+.sum-lbl  { font-size: 11px; color: var(--grey); font-weight: 500; }
+
+/* ── Breakdown grid ── */
+.breakdown-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;
+}
+@media (max-width: 768px) { .breakdown-grid { grid-template-columns: 1fr; } }
+
+.bk-card {
+    background: var(--white); border-radius: 16px;
+    box-shadow: var(--shadow); overflow: hidden; border: 1.5px solid var(--border);
+}
+.bk-header {
+    padding: 13px 18px; border-bottom: 1.5px solid var(--border);
+    font-size: 13px; font-weight: 700; color: var(--white);
+}
+.bk-header.teal   { background: linear-gradient(135deg, var(--teal), #0f766e); }
+.bk-header.purple { background: linear-gradient(135deg, var(--purple), #6d28d9); }
+.bk-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 18px; border-bottom: 1px solid var(--border);
+}
+.bk-row:last-child { border-bottom: none; }
+.bk-label { flex: 1; font-size: 13px; font-weight: 600; color: var(--blue); }
+.bk-bar-wrap { flex: 2; height: 8px; background: var(--light); border-radius: 8px; overflow: hidden; }
+.bk-bar-fill { height: 100%; border-radius: 8px; transition: width .6s ease; }
+.bk-num { font-size: 12px; font-weight: 700; color: var(--grey); min-width: 48px; text-align: right; }
+
+/* ── Main table card ── */
+.main-card {
+    background: var(--white); border-radius: 16px;
+    box-shadow: var(--shadow); overflow: hidden;
+    border: 1.5px solid var(--border); margin-bottom: 24px;
+}
+.main-card-header {
+    padding: 16px 22px; display: flex; justify-content: space-between;
+    align-items: center; border-bottom: 1.5px solid var(--border);
+    background: linear-gradient(135deg, var(--blue), var(--blue2));
+}
+.main-card-header h3 { color: white; font-size: 14px; font-weight: 700; }
+.header-badge {
+    background: rgba(255,255,255,0.2); color: white;
+    padding: 3px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;
+}
+.expand-all-btn {
+    background: rgba(255,255,255,0.18); border: 1.5px solid rgba(255,255,255,.4);
+    color: white; padding: 5px 14px; border-radius: 20px;
+    font-size: 11px; font-weight: 700; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: all .2s;
+}
+.expand-all-btn:hover { background: rgba(255,255,255,0.32); }
+
+/* ── Coordinator accordion row ── */
+.coord-block { border-bottom: 1.5px solid var(--border); }
+.coord-block:last-child { border-bottom: none; }
+
+.coord-trigger {
+    display: flex; align-items: center; gap: 14px;
+    padding: 15px 20px; cursor: pointer;
+    transition: background .18s; user-select: none;
+    background: var(--white);
+}
+.coord-trigger:hover { background: var(--light); }
+.coord-trigger.open  { background: #f0f4ff; }
+
+.coord-av {
+    width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+    color: white; display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+}
+.coord-meta { flex: 1; min-width: 0; }
+.coord-name { font-size: 14px; font-weight: 700; color: var(--blue); }
+.coord-sub  { font-size: 11px; color: var(--grey); margin-top: 2px; }
+.coord-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.pill {
+    padding: 2px 10px; border-radius: 20px; font-size: 10px;
+    font-weight: 700; color: white; white-space: nowrap;
+}
+.pill.mat  { background: var(--teal); }
+.pill.niv  { background: var(--purple); }
+
+.coord-stats-inline {
+    display: flex; gap: 16px; align-items: center; flex-shrink: 0;
+}
+.csi-item { text-align: center; }
+.csi-val  { font-size: 16px; font-weight: 700; line-height: 1; }
+.csi-lbl  { font-size: 10px; color: var(--grey); margin-top: 2px; }
+.csi-val.teal   { color: var(--teal); }
+.csi-val.purple { color: var(--purple); }
+
+/* ── ADD SEANCE BUTTON per coordinator ── */
+.btn-add-seance {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 14px;
+    background: linear-gradient(135deg, var(--green), #15803d);
+    color: white; border: none; border-radius: 9px;
+    font-size: 11px; font-weight: 700; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: all .2s;
+    box-shadow: 0 2px 8px rgba(22,163,74,.28); white-space: nowrap;
+    flex-shrink: 0;
+}
+.btn-add-seance:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 16px rgba(22,163,74,.42);
+}
+
+.chevron {
+    font-size: 12px; color: var(--grey); transition: transform .25s; flex-shrink: 0;
+}
+.coord-trigger.open .chevron { transform: rotate(180deg); }
+
+/* ── Seances sub-table ── */
+.seances-panel {
+    display: none; background: #fafbff; border-top: 1px solid var(--border);
+}
+.seances-panel.open { display: block; }
+.seances-table-wrap { overflow-x: auto; }
+.seances-table {
+    width: 100%; border-collapse: collapse; font-size: 12px;
+}
+.seances-table th {
+    background: #f1f5f9; color: var(--blue); padding: 9px 16px;
+    text-align: left; font-size: 11px; font-weight: 700;
+    border-bottom: 1.5px solid var(--border); white-space: nowrap;
+}
+.seances-table th.center { text-align: center; }
+.seances-table td {
+    padding: 10px 16px; border-bottom: 1px solid #f0f4f8;
+    vertical-align: middle; color: #334155;
+}
+.seances-table tr:last-child td { border-bottom: none; }
+.seances-table tr:hover td { background: #f8faff; }
+.date-cell { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--grey); white-space: nowrap; }
+.mat-badge {
+    display: inline-block; padding: 2px 9px; border-radius: 20px;
+    font-size: 10px; font-weight: 700; color: white; background: var(--teal);
+}
+.niv-badge {
+    display: inline-block; padding: 2px 9px; border-radius: 20px;
+    font-size: 10px; font-weight: 700; color: white; background: var(--purple);
+}
+.h-badge {
+    font-size: 13px; font-weight: 700; color: var(--teal);
+    background: #e6faf7; padding: 3px 10px; border-radius: 20px;
+    display: inline-block;
+}
+.note-cell { max-width: 200px; color: var(--grey); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.note-empty { color: #cbd5e1; font-style: italic; }
+.sub-total {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 18px; background: #eef2ff;
+    border-top: 2px solid var(--border); font-size: 12px;
+}
+.sub-total-left  { color: var(--blue); font-weight: 700; }
+.sub-total-right { color: var(--teal); font-size: 15px; font-weight: 700; }
+.no-seances {
+    padding: 20px 18px; text-align: center;
+    color: #cbd5e1; font-size: 12px; font-style: italic;
+}
+
+/* ── Empty state ── */
+.empty-big {
+    padding: 60px 20px; text-align: center; color: #cbd5e1;
+}
+.empty-big .ei { font-size: 52px; opacity: .4; margin-bottom: 12px; }
+.empty-big p   { font-size: 13px; line-height: 1.7; }
+
+/* ── Alert ── */
+.alert {
+    padding: 13px 18px; background: var(--green); color: white;
+    border-radius: 10px; margin-bottom: 18px; font-size: 13px;
+    display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 4px 12px rgba(22,163,74,.25);
+}
+.alert-error { background: var(--red); }
+
+/* ════════════════════════════════════════════════
+   MULTI-SESSION MODAL
+   ════════════════════════════════════════════════ */
+.modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(15, 23, 42, 0.60);
+    backdrop-filter: blur(5px);
+    z-index: 900;
+    align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+
+.modal-box {
+    background: var(--white); border-radius: 20px;
+    width: 100%; max-width: 700px; margin: 16px;
+    box-shadow: 0 28px 70px rgba(0,0,0,0.25);
+    overflow: hidden; display: flex; flex-direction: column;
+    max-height: 90vh;
+    animation: modalIn .28s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes modalIn {
+    from { opacity: 0; transform: scale(0.91) translateY(22px); }
+    to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+.modal-header {
+    background: linear-gradient(135deg, var(--blue), var(--blue2));
+    padding: 20px 24px; flex-shrink: 0;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.modal-header-left { display: flex; flex-direction: column; gap: 4px; }
+.modal-header h2 { color: white; font-size: 15px; font-weight: 700; margin: 0; }
+.modal-coord-name {
+    color: rgba(255,255,255,0.75); font-size: 12px; font-weight: 500;
+}
+.modal-close {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: rgba(255,255,255,0.18); border: none; color: white;
+    font-size: 16px; cursor: pointer; display: flex; align-items: center;
+    justify-content: center; transition: background .2s; flex-shrink: 0;
+}
+.modal-close:hover { background: rgba(255,255,255,0.35); }
+
+.modal-body {
+    overflow-y: auto; padding: 20px 24px; flex: 1;
+}
+
+/* ── Sessions list ── */
+.sessions-list { display: flex; flex-direction: column; gap: 14px; }
+
+.session-card {
+    background: var(--light); border: 2px solid var(--border);
+    border-radius: 14px; padding: 16px 18px; position: relative;
+    transition: border-color .2s;
+}
+.session-card:focus-within { border-color: var(--orange); }
+
+.session-card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+}
+.session-num {
+    font-size: 11px; font-weight: 700; color: var(--blue);
+    background: white; border: 1.5px solid var(--border);
+    padding: 3px 10px; border-radius: 20px;
+    text-transform: uppercase; letter-spacing: .4px;
+}
+.btn-remove-session {
+    background: #fee2e2; color: var(--red); border: none;
+    border-radius: 8px; padding: 4px 10px; font-size: 11px;
+    font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif;
+    transition: all .15s;
+}
+.btn-remove-session:hover { background: var(--red); color: white; }
+
+.session-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+@media (max-width: 500px) { .session-grid { grid-template-columns: 1fr; } }
+
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group.full { grid-column: 1 / -1; }
+.form-group label {
+    font-size: 10px; font-weight: 700; color: var(--blue);
+    text-transform: uppercase; letter-spacing: .4px;
+}
+.form-group select,
+.form-group input[type="date"],
+.form-group input[type="number"],
+.form-group input[type="text"] {
+    padding: 9px 12px;
+    border: 2px solid var(--border); border-radius: 9px;
+    font-size: 13px; font-family: 'DM Sans', sans-serif;
+    color: #1e293b; background: white;
+    outline: none; transition: border .2s, box-shadow .2s;
+}
+.form-group select:focus,
+.form-group input:focus {
+    border-color: var(--orange);
+    box-shadow: 0 0 0 3px rgba(245,166,35,.14);
+}
+
+/* ── Add session button ── */
+.btn-add-row {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 11px 18px;
+    border: 2.5px dashed var(--teal);
+    background: #f0fdfa; color: var(--teal);
+    border-radius: 12px; font-size: 12px; font-weight: 700;
+    cursor: pointer; font-family: 'DM Sans', sans-serif;
+    transition: all .2s; margin-top: 4px;
+}
+.btn-add-row:hover {
+    background: var(--teal); color: white; border-style: solid;
+}
+
+/* ── Modal footer ── */
+.modal-footer {
+    padding: 16px 24px; flex-shrink: 0;
+    display: flex; gap: 10px; justify-content: flex-end;
+    border-top: 1.5px solid var(--border); background: #fafbff;
+}
+.btn-cancel {
+    padding: 10px 22px; background: var(--light); color: var(--grey);
+    border: 2px solid var(--border); border-radius: 10px;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: all .2s;
+}
+.btn-cancel:hover { background: var(--border); }
+.btn-save {
+    padding: 10px 28px;
+    background: linear-gradient(135deg, var(--green), #15803d);
+    color: white; border: none; border-radius: 10px;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: all .2s;
+    box-shadow: 0 4px 14px rgba(22,163,74,.3);
+    display: flex; align-items: center; gap: 7px;
+}
+.btn-save:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(22,163,74,.45); }
+
+/* ── Session count badge ── */
+.sessions-count-badge {
+    font-size: 11px; font-weight: 700;
+    background: rgba(255,255,255,0.2); color: white;
+    padding: 2px 10px; border-radius: 20px; margin-left: 8px;
+}
+
+/* print */
+@media print {
+    .filter-bar, .rp-header button, .expand-all-btn,
+    .sidebar, .navbar, .mob-menu-btn, .modal-overlay,
+    .btn-add-seance { display: none !important; }
+    .seances-panel { display: block !important; }
+    .rp-wrap { padding: 0; }
+    .main-card, .bk-card { box-shadow: none; border: 1px solid #ccc; }
+}
+{% endblock %}
+
+{% block content %}
+<div class="rp-wrap">
+
+    <!-- ══════════════════════════════════════════════
+         MODAL — AJOUTER SÉANCE(S) POUR UN COORDINATEUR
+         ══════════════════════════════════════════════ -->
+    <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-header-left">
+                    <h2>➕ Ajouter des Séances</h2>
+                    <span class="modal-coord-name" id="modal-coord-display">—</span>
+                </div>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+
+            <form method="POST" action="{{ url_for('ajouter_seances_multiple') }}" id="multi-form">
+                <input type="hidden" name="coordinateur_id" id="hidden-coord-id">
+                <!-- redirect back to this report page with same filters -->
+                <input type="hidden" name="redirect_url" id="hidden-redirect-url">
+
+                <div class="modal-body">
+                    <div class="sessions-list" id="sessions-list">
+                        <!-- sessions injected by JS -->
+                    </div>
+
+                    <button type="button" class="btn-add-row" onclick="addSession()">
+                        ＋ Ajouter une autre séance
+                    </button>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeModal()">Annuler</button>
+                    <button type="submit" class="btn-save" id="btn-save-multi">
+                        💾 Enregistrer <span class="sessions-count-badge" id="save-count-badge">1</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+        <div class="alert {% if category == 'error' %}alert-error{% endif %}">
+            {% if category == 'error' %}⚠️{% else %}✅{% endif %} {{ message }}
+        </div>
+        {% endfor %}
+    {% endwith %}
+
+    <!-- ── Header ── -->
+    <div class="rp-header">
+        <div>
+            <div class="rp-title">📊 Rapport Coordinateurs</div>
+            <div class="rp-subtitle">Sti3mal zaman · Matière · Niveau — {{ mois_noms[mois] }} {{ annee }}</div>
+        </div>
+        <button onclick="window.print()"
+            style="padding:8px 18px; background:var(--blue); color:white; border:none;
+                   border-radius:10px; font-size:12px; font-weight:700; cursor:pointer;
+                   font-family:'DM Sans',sans-serif; transition:all .2s;"
+            onmouseover="this.style.background='#f5a623'"
+            onmouseout="this.style.background='var(--blue)'">
+            🖨️ Imprimer
+        </button>
+    </div>
+
+    <!-- ── Filters ── -->
+    <form class="filter-bar" method="GET" action="{{ url_for('rapport_coordinateurs') }}">
+        <span class="filter-label">📅 Période</span>
+        <select name="mois">
+            {% for i in range(1,13) %}
+            <option value="{{ i }}" {% if i == mois %}selected{% endif %}>{{ mois_noms[i] }}</option>
+            {% endfor %}
+        </select>
+        <select name="annee">
+            {% for y in annees %}
+            <option value="{{ y }}" {% if y == annee %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+        </select>
+
+        <span class="filter-label" style="margin-left:8px;">🔬 Matière</span>
+        <select name="filtre_matiere">
+            <option value="">Toutes</option>
+            {% for m in matieres %}
+            <option value="{{ m }}" {% if filtre_matiere == m %}selected{% endif %}>{{ m }}</option>
+            {% endfor %}
+        </select>
+
+        <span class="filter-label">🎓 Niveau</span>
+        <select name="filtre_niveau">
+            <option value="">Tous</option>
+            {% for n in niveaux %}
+            <option value="{{ n }}" {% if filtre_niveau == n %}selected{% endif %}>{{ n }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit" class="filter-btn">🔍 Filtrer</button>
+
+        {% if filtre_matiere or filtre_niveau %}
+        <a href="{{ url_for('rapport_coordinateurs', mois=mois, annee=annee) }}"
+           style="font-size:12px; color:#e74c3c; font-weight:700; text-decoration:none;">✕ Reset</a>
+        {% endif %}
+    </form>
+
+    <!-- ── Summary ── -->
+    <div class="summary-row">
+        <div class="sum-card c-blue">
+            <div class="sum-num">{{ stats | length }}</div>
+            <div class="sum-lbl">👥 Coordinateurs</div>
+        </div>
+        <div class="sum-card c-purple">
+            <div class="sum-num purple">{{ total_seances }}</div>
+            <div class="sum-lbl">📚 Séances</div>
+        </div>
+        <div class="sum-card c-teal">
+            <div class="sum-num teal">{{ "%.1f"|format(total_heures) }}h</div>
+            <div class="sum-lbl">⏱️ Total heures</div>
+        </div>
+        <div class="sum-card c-orange">
+            <div class="sum-num orange">{{ matieres_actives | length }}</div>
+            <div class="sum-lbl">🔬 Matières</div>
+        </div>
+        <div class="sum-card c-pink">
+            <div class="sum-num pink">{{ niveaux_actifs | length }}</div>
+            <div class="sum-lbl">🎓 Niveaux</div>
+        </div>
+    </div>
+
+    <!-- ── Breakdown charts ── -->
+    {% if breakdown_mat or breakdown_niv %}
+    <div class="breakdown-grid">
+        <div class="bk-card">
+            <div class="bk-header teal">🔬 Heures par Matière</div>
+            {% if breakdown_mat %}
+            {% set max_mat = breakdown_mat[0][1] if breakdown_mat else 1 %}
+            {% for mat, h in breakdown_mat %}
+            <div class="bk-row">
+                <div class="bk-label">{{ mat }}</div>
+                <div class="bk-bar-wrap">
+                    <div class="bk-bar-fill" style="width:{{ ((h / max_mat)*100)|round|int }}%;background:linear-gradient(90deg,var(--teal),#14b8a6);"></div>
+                </div>
+                <div class="bk-num" style="color:var(--teal);">{{ "%.1f"|format(h) }}h</div>
+            </div>
+            {% endfor %}
+            {% else %}<div class="no-seances">Aucune donnée</div>{% endif %}
+        </div>
+        <div class="bk-card">
+            <div class="bk-header purple">🎓 Heures par Niveau</div>
+            {% if breakdown_niv %}
+            {% set max_niv = breakdown_niv[0][1] if breakdown_niv else 1 %}
+            {% for niv, h in breakdown_niv %}
+            <div class="bk-row">
+                <div class="bk-label">{{ niv }}</div>
+                <div class="bk-bar-wrap">
+                    <div class="bk-bar-fill" style="width:{{ ((h / max_niv)*100)|round|int }}%;background:linear-gradient(90deg,var(--purple),#8b5cf6);"></div>
+                </div>
+                <div class="bk-num" style="color:var(--purple);">{{ "%.1f"|format(h) }}h</div>
+            </div>
+            {% endfor %}
+            {% else %}<div class="no-seances">Aucune donnée</div>{% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ── Main accordion table ── -->
+    <div class="main-card">
+        <div class="main-card-header">
+            <h3>📋 Détail par Coordinateur — {{ mois_noms[mois] }} {{ annee }}</h3>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <span class="header-badge">{{ stats | length }}</span>
+                <button class="expand-all-btn" onclick="toggleAll()">
+                    <span id="expand-lbl">▼ Tout ouvrir</span>
+                </button>
+            </div>
+        </div>
+
+        {% if stats %}
+        {% set month_abbr = ['','Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'] %}
+        {% for row in stats %}
+        <div class="coord-block" id="block-{{ row.coord.id }}">
+
+            <!-- Trigger row -->
+            <div class="coord-trigger" onclick="toggleBlock('{{ row.coord.id }}')" id="trigger-{{ row.coord.id }}">
+                <div class="coord-av"
+                     style="background:{% if row.coord.genre == 'M' %}linear-gradient(135deg,#1a3a6b,#2a5298){% else %}linear-gradient(135deg,#e91e8c,#c2185b){% endif %};">
+                    {{ row.initiales }}
+                </div>
+                <div class="coord-meta">
+                    <div class="coord-name">
+                        {% if row.coord.genre == 'M' %}👨{% else %}👩{% endif %}
+                        {{ row.coord.prenom }} {{ row.coord.nom }}
+                    </div>
+                    <div class="coord-sub">
+                        {{ row.coord.responsable.prenom }} {{ row.coord.responsable.nom }}
+                        {% if row.coord.dours %}
+                        ·
+                        {% for d in row.coord.dours[:2] %}{{ d.nom }}{% if not loop.last %}, {% endif %}{% endfor %}
+                        {% if row.coord.dours|length > 2 %}+{{ row.coord.dours|length - 2 }}{% endif %}
+                        {% endif %}
+                    </div>
+                    {% if row.matieres_uniq or row.niveaux_uniq %}
+                    <div class="coord-pills">
+                        {% for m in row.matieres_uniq[:3] %}<span class="pill mat">{{ m }}</span>{% endfor %}
+                        {% for n in row.niveaux_uniq[:2] %}<span class="pill niv">{{ n }}</span>{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="coord-stats-inline">
+                    <div class="csi-item">
+                        <div class="csi-val purple">{{ row.nb_seances }}</div>
+                        <div class="csi-lbl">séances</div>
+                    </div>
+                    <div class="csi-item">
+                        <div class="csi-val teal">{{ "%.1f"|format(row.nb_heures) }}h</div>
+                        <div class="csi-lbl">heures</div>
+                    </div>
+
+                    <!-- ✅ PER-COORDINATOR ADD BUTTON — stops propagation so accordion doesn't toggle -->
+                    <button class="btn-add-seance"
+                            onclick="event.stopPropagation(); openModal({{ row.coord.id }}, '{{ row.coord.prenom }} {{ row.coord.nom }}')">
+                        ＋ Séance
+                    </button>
+
+                    <div class="chevron">▼</div>
+                </div>
+            </div>
+
+            <!-- Seances sub-panel -->
+            <div class="seances-panel" id="panel-{{ row.coord.id }}">
+                {% if row.seances %}
+                <div class="seances-table-wrap">
+                    <table class="seances-table">
+                        <thead>
+                            <tr>
+                                <th>📅 Date</th>
+                                <th>🔬 Matière</th>
+                                <th>🎓 Niveau</th>
+                                <th class="center">⏱️ Heures</th>
+                                <th>📝 Note</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in row.seances %}
+                            <tr>
+                                <td class="date-cell">
+                                    {{ s.date.strftime('%A') }}<br>
+                                    <strong>{{ s.date.day }} {{ month_abbr[s.date.month] }} {{ s.date.year }}</strong>
+                                </td>
+                                <td>
+                                    {% if s.matiere %}<span class="mat-badge">{{ s.matiere }}</span>
+                                    {% else %}<span style="color:#cbd5e1;font-style:italic;font-size:11px;">—</span>{% endif %}
+                                </td>
+                                <td>
+                                    {% if s.niveau %}<span class="niv-badge">{{ s.niveau }}</span>
+                                    {% else %}<span style="color:#cbd5e1;font-style:italic;font-size:11px;">—</span>{% endif %}
+                                </td>
+                                <td style="text-align:center;">
+                                    <span class="h-badge">{{ "%.1f"|format(s.nb_heures) }}h</span>
+                                </td>
+                                <td>
+                                    {% if s.note %}<span class="note-cell">{{ s.note }}</span>
+                                    {% else %}<span class="note-cell note-empty">Aucune note</span>{% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="sub-total">
+                    <div class="sub-total-left">
+                        🔢 {{ row.nb_seances }} séance{{ 's' if row.nb_seances != 1 }} —
+                        {% if row.matieres_uniq %}{{ row.matieres_uniq | join(', ') }}{% endif %}
+                        {% if row.niveaux_uniq %} · {{ row.niveaux_uniq | join(', ') }}{% endif %}
+                    </div>
+                    <div class="sub-total-right">{{ "%.1f"|format(row.nb_heures) }}h</div>
+                </div>
+                {% else %}
+                <div class="no-seances">
+                    📭 Aucune séance
+                    {% if filtre_matiere %}pour « {{ filtre_matiere }} »{% endif %}
+                    {% if filtre_niveau %} · niveau {{ filtre_niveau }}{% endif %}
+                    — {{ mois_noms[mois] }} {{ annee }}
+                </div>
+                {% endif %}
+            </div>
+
+        </div><!-- end coord-block -->
+        {% endfor %}
+
+        {% else %}
+        <div class="empty-big">
+            <div class="ei">📭</div>
+            <p>Aucune donnée pour {{ mois_noms[mois] }} {{ annee }}<br>
+            {% if filtre_matiere or filtre_niveau %}Essaie de changer les filtres.{% endif %}</p>
+        </div>
+        {% endif %}
+
+    </div><!-- end main-card -->
+
+</div><!-- end rp-wrap -->
+{% endblock %}
+
+
+{% block extra_js %}
+// ── Accordion ──────────────────────────────────────────────────────────────
+function toggleBlock(id) {
+    const panel   = document.getElementById('panel-'   + id);
+    const trigger = document.getElementById('trigger-' + id);
+    const isOpen  = panel.classList.toggle('open');
+    trigger.classList.toggle('open', isOpen);
+}
+
+let allOpen = false;
+function toggleAll() {
+    allOpen = !allOpen;
+    document.querySelectorAll('.seances-panel').forEach(p => p.classList.toggle('open', allOpen));
+    document.querySelectorAll('.coord-trigger').forEach(t => t.classList.toggle('open', allOpen));
+    document.getElementById('expand-lbl').textContent = allOpen ? '▲ Tout fermer' : '▼ Tout ouvrir';
+}
+
+// ── Matières & Niveaux passed from Jinja ──────────────────────────────────
+const MATIERES = {{ matieres | tojson }};
+const NIVEAUX  = {{ niveaux  | tojson }};
+
+// ── Multi-session modal ────────────────────────────────────────────────────
+let sessionCounter = 0;
+
+function buildMatieresOptions() {
+    return '<option value="">— Sélectionner —</option>' +
+        MATIERES.map(m => `<option value="${m}">${m}</option>`).join('');
+}
+function buildNiveauxOptions() {
+    return '<option value="">— Sélectionner —</option>' +
+        NIVEAUX.map(n => `<option value="${n}">${n}</option>`).join('');
+}
+
+function addSession(prefill = {}) {
+    sessionCounter++;
+    const idx  = sessionCounter;
+    const list = document.getElementById('sessions-list');
+
+    const today = new Date().toISOString().split('T')[0];
+
+    const card = document.createElement('div');
+    card.className = 'session-card';
+    card.id = `session-card-${idx}`;
+    card.innerHTML = `
+        <div class="session-card-header">
+            <span class="session-num">Séance ${list.children.length + 1}</span>
+            <button type="button" class="btn-remove-session" onclick="removeSession(${idx})"
+                    style="${list.children.length === 0 ? 'display:none' : ''}">
+                ✕ Supprimer
+            </button>
+        </div>
+        <div class="session-grid">
+            <div class="form-group">
+                <label>📅 Date</label>
+                <input type="date" name="seances[${idx}][date]"
+                       value="${prefill.date || today}" required>
+            </div>
+            <div class="form-group">
+                <label>⏱️ Heures</label>
+                <input type="number" name="seances[${idx}][nb_heures]"
+                       step="0.5" min="0.5" max="12"
+                       value="${prefill.nb_heures || ''}"
+                       placeholder="ex: 2" required>
+            </div>
+            <div class="form-group">
+                <label>🔬 Matière</label>
+                <select name="seances[${idx}][matiere]">${buildMatieresOptions()}</select>
+            </div>
+            <div class="form-group">
+                <label>🎓 Niveau</label>
+                <select name="seances[${idx}][niveau]">${buildNiveauxOptions()}</select>
+            </div>
+            <div class="form-group full">
+                <label>📝 Note (optionnelle)</label>
+                <input type="text" name="seances[${idx}][note]"
+                       value="${prefill.note || ''}"
+                       placeholder="Remarque sur la séance...">
+            </div>
+        </div>`;
+    list.appendChild(card);
+    updateRemoveButtons();
+    updateSaveBadge();
+}
+
+function removeSession(idx) {
+    const card = document.getElementById(`session-card-${idx}`);
+    if (card) card.remove();
+    renumberSessions();
+    updateRemoveButtons();
+    updateSaveBadge();
+}
+
+function renumberSessions() {
+    document.querySelectorAll('.session-card').forEach((card, i) => {
+        const badge = card.querySelector('.session-num');
+        if (badge) badge.textContent = `Séance ${i + 1}`;
+    });
+}
+
+function updateRemoveButtons() {
+    const cards = document.querySelectorAll('.session-card');
+    cards.forEach((card, i) => {
+        const btn = card.querySelector('.btn-remove-session');
+        if (btn) btn.style.display = cards.length <= 1 ? 'none' : '';
+    });
+}
+
+function updateSaveBadge() {
+    const count = document.querySelectorAll('.session-card').length;
+    const badge = document.getElementById('save-count-badge');
+    if (badge) badge.textContent = count;
+    const btn = document.getElementById('btn-save-multi');
+    if (btn) {
+        btn.querySelector('span') || null;
+        // update button text
+        const text = count === 1 ? 'séance' : 'séances';
+        badge.textContent = `${count} ${text}`;
+    }
+}
+
+function openModal(coordId, coordName) {
+    // Reset
+    sessionCounter = 0;
+    document.getElementById('sessions-list').innerHTML = '';
+
+    // Fill coord info
+    document.getElementById('hidden-coord-id').value = coordId;
+    document.getElementById('modal-coord-display').textContent =
+        '👤 ' + coordName;
+
+    // Store current URL for redirect after save
+    document.getElementById('hidden-redirect-url').value = window.location.href;
+
+    // Add first session by default
+    addSession();
+
+    // Open overlay
+    document.getElementById('modal-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeModal(evt) {
+    if (evt && evt.target !== document.getElementById('modal-overlay')) return;
+    document.getElementById('modal-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+// Close on Escape
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+        document.getElementById('modal-overlay').classList.remove('open');
+        document.body.style.overflow = '';
+    }
+});
+{% endblock %}

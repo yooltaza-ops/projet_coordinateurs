@@ -3,12 +3,45 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 
+
 db = SQLAlchemy()
 
 coordinateur_dour = db.Table('coordinateur_dour',
     db.Column('coordinateur_id', db.Integer, db.ForeignKey('coordinateur.id')),
     db.Column('dour_id', db.Integer, db.ForeignKey('dour.id'))
 )
+
+# ── Listes fixes ────────────────────────────────────────────────────────────
+MATIERES = [
+    'Arabe',
+    'Français',
+    'Mathématiques',
+    'Éducation Islamique',
+    'Éveil / Sciences',
+    'Éducation Physique',
+    'Anglais',
+    'Informatique',
+    'Autre',
+]
+
+NIVEAUX = [
+    '1ère année',
+    '2ème année',
+    '3ème année',
+    '4ème année',
+    '5ème année',
+    '6ème année',
+    'Collège — 1AC',
+    'Collège — 2AC',
+    'Collège — 3AC',
+    'Lycée — Tronc commun',
+    'Lycée — 1ère Bac',
+    'Lycée — 2ème Bac',
+    'Préscolaire',
+    'Alphabétisation',
+    'Autre',
+]
+
 
 class User(db.Model, UserMixin):
     __tablename__ = 'user'
@@ -37,7 +70,8 @@ class Responsable(db.Model):
     nom           = db.Column(db.String(100), nullable=False)
     prenom        = db.Column(db.String(100), nullable=False)
     email         = db.Column(db.String(150))
-    coordinateurs = db.relationship('Coordinateur', backref='responsable', lazy=True)
+    coordinateurs = db.relationship('Coordinateur', backref='responsable', lazy=True,
+                                    cascade='all, delete-orphan')
 
     def count_coordinateurs(self):
         return sum(1 for c in self.coordinateurs if c.genre == 'M')
@@ -60,10 +94,14 @@ class Coordinateur(db.Model):
     genre          = db.Column(db.Enum('M', 'F'), nullable=False)
     responsable_id = db.Column(db.Integer, db.ForeignKey('responsable.id'))
     dours          = db.relationship('Dour', secondary=coordinateur_dour, lazy=True)
-    seances        = db.relationship('Seance', backref='coordinateur', lazy=True, cascade='all, delete-orphan')
+    seances        = db.relationship('Seance', backref='coordinateur', lazy=True,
+                                     cascade='all, delete-orphan')
 
     def seances_mois(self, mois, annee):
-        return sorted([s for s in self.seances if s.mois == mois and s.annee == annee], key=lambda s: s.date)
+        return sorted(
+            [s for s in self.seances if s.mois == mois and s.annee == annee],
+            key=lambda s: s.date
+        )
 
     def total_heures_mois(self, mois, annee):
         return sum(s.nb_heures for s in self.seances_mois(mois, annee))
@@ -81,4 +119,8 @@ class Seance(db.Model):
     annee           = db.Column(db.Integer, nullable=False)
     nb_heures       = db.Column(db.Float, nullable=False, default=0)
     note            = db.Column(db.String(300), nullable=True)
+    # ── NOUVEAUX CHAMPS ──────────────────────────────────────────────────────
+    matiere         = db.Column(db.String(100), nullable=True)   # ex: 'Arabe'
+    niveau          = db.Column(db.String(100), nullable=True)   # ex: '3ème année'
+    # ─────────────────────────────────────────────────────────────────────────
     created_at      = db.Column(db.DateTime, default=datetime.utcnow)

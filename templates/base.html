@@ -386,16 +386,20 @@
                 <span class="nav-icon">👥</span>
                 <span class="nav-label">Gérer Coordinateurs</span>
             </a>
-
+            
             <a href="{{ url_for('heures') }}"
                class="nav-item {% if request.endpoint == 'heures' %}active{% endif %}">
                 <span class="nav-icon">⏱️</span>
                 <span class="nav-label">Séances</span>
             </a>
-
+            <a href="{{ url_for('rapport_coordinateurs') }}"
+                class="nav-item {% if request.endpoint == 'rapport_coordinateurs' %}active{% endif %}">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label">Rapport</span>
+            </a>
             <div class="nav-divider"></div>
             <div class="nav-section-label">Compte</div>
-
+            
             <a href="{{ url_for('parametres') }}"
                class="nav-item {% if request.endpoint == 'parametres' %}active{% endif %}">
                 <span class="nav-icon">⚙️</span>

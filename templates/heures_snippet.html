@@ -1,0 +1,85 @@
+{#
+  ════════════════════════════════════════════════════════
+  SNIPPET — zed had les champs f heures.html dyalek:
+
+  • F form "Ajouter séance"   → kopyi l-bloc "AJOUTER"
+  • F form "Modifier séance"  → kopyi l-bloc "MODIFIER"
+
+  Daba f bal: had snippet khassk tزيد f kol form
+  li 3endek f heures.html, wach bgha barka.
+  ════════════════════════════════════════════════════════
+#}
+
+
+{# ══ AJOUTER SÉANCE — champs à ajouter après nb_heures ══ #}
+
+{# --- BLOC AJOUTER (début) --- #}
+<label>🔬 Matière</label>
+<select name="matiere">
+    <option value="">— Sélectionner —</option>
+    {% for m in matieres %}
+    <option value="{{ m }}">{{ m }}</option>
+    {% endfor %}
+</select>
+
+<label>🎓 Niveau</label>
+<select name="niveau">
+    <option value="">— Sélectionner —</option>
+    {% for n in niveaux %}
+    <option value="{{ n }}">{{ n }}</option>
+    {% endfor %}
+</select>
+{# --- BLOC AJOUTER (fin) --- #}
+
+
+{# ══ MODIFIER SÉANCE — champs à ajouter après nb_heures ══ #}
+{# Dans openModifierSeance() JavaScript, zed aussi: 
+   document.getElementById('mod-s-matiere').value = matiere;
+   document.getElementById('mod-s-niveau').value  = niveau;
+#}
+
+{# --- BLOC MODIFIER (début) --- #}
+<label>🔬 Matière</label>
+<select name="matiere" id="mod-s-matiere">
+    <option value="">— Sélectionner —</option>
+    {% for m in matieres %}
+    <option value="{{ m }}">{{ m }}</option>
+    {% endfor %}
+</select>
+
+<label>🎓 Niveau</label>
+<select name="niveau" id="mod-s-niveau">
+    <option value="">— Sélectionner —</option>
+    {% for n in niveaux %}
+    <option value="{{ n }}">{{ n }}</option>
+    {% endfor %}
+</select>
+{# --- BLOC MODIFIER (fin) --- #}
+
+
+{#
+  ════════════════════════════════════════════════════════
+  Dans la route heures() f routes.py, zed:
+
+    from models import MATIERES, NIVEAUX
+    ...
+    return render_template('heures.html',
+        ...
+        matieres=MATIERES,
+        niveaux=NIVEAUX,
+    )
+
+  W f openModifierSeance() JS, zed les paramètres matiere + niveau:
+
+    function openModifierSeance(id, date, nbh, note, matiere, niveau) {
+        ...
+        document.getElementById('mod-s-matiere').value = matiere || '';
+        document.getElementById('mod-s-niveau').value  = niveau  || '';
+        ...
+    }
+
+  W f l-button onclick dyal modifier, zed:
+    onclick="openModifierSeance({{ s.id }}, '{{ s.date }}', {{ s.nb_heures }},
+             '{{ s.note or '' }}', '{{ s.matiere or '' }}', '{{ s.niveau or '' }}')"
+  ════════════════════════════════════════════════════════
+#}

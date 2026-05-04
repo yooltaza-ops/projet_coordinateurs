@@ -1,12 +1,18 @@
-from flask import render_template, request, redirect, url_for, flash, abort
+from flask import render_template, request, redirect, url_for, flash, abort, Response
 from flask_login import login_user, logout_user, login_required, current_user
 from app import app
-from models import db, Responsable, Coordinateur, Dour, User, Seance
+from models import db, Responsable, Coordinateur, Dour, User, Seance, MATIERES, NIVEAUX
 from functools import wraps
 import os, uuid
 from datetime import datetime, date
 from werkzeug.utils import secure_filename
 
+
+def redirect_back(fallback='index'):
+    ref = request.referrer
+    if ref:
+        return redirect(ref)
+    return redirect(url_for(fallback))
 
 def admin_required(f):
     @wraps(f)
@@ -57,7 +63,6 @@ def index():
 
     dours = Dour.query.all()
 
-    # ✅ FIX: gha responsables pur (role='responsable'), machi admins
     if current_user.is_admin:
         all_resp = Responsable.query.all()
         responsables = [r for r in all_resp if r.user and r.user.role == 'responsable']
@@ -65,7 +70,6 @@ def index():
         resp = current_user.responsable
         responsables = [resp] if resp else []
 
-    # ✅ FIX: data = gha responsables pur
     data = []
     for r in responsables:
         data.append({
@@ -75,7 +79,6 @@ def index():
             'total': len(r.coordinateurs)
         })
 
-    # Séances du mois
     if current_user.is_admin:
         all_seances_mois = Seance.query.filter_by(mois=mois, annee=annee).all()
     else:
@@ -89,7 +92,6 @@ def index():
     total_heures_mois  = sum(s.nb_heures for s in all_seances_mois)
     total_seances_mois = len(all_seances_mois)
 
-    # Recap séances
     recap_seances = []
     if current_user.is_admin:
         all_coords = Coordinateur.query.all()
@@ -111,25 +113,20 @@ def index():
                 'nb_heures': nb_h,
             })
 
-    # Admins
     if current_user.is_admin:
         admins = User.query.filter(User.role == 'admin').all()
     else:
         admins = []
     nb_admins = len(admins)
 
-    # nb_responsables = gha role='responsable'
-    # nb_responsables = selon le rôle
     if current_user.is_admin:
         all_resp_all      = Responsable.query.order_by(Responsable.nom).all()
         responsables_only = [r for r in all_resp_all if r.user and r.user.role == 'responsable']
         nb_responsables   = len(responsables_only)
     else:
-        # Responsable yshuf gha coordinateurs dyalo
         resp = current_user.responsable
         nb_responsables = len(resp.coordinateurs) if resp else 0
 
-    # responsables pour les selects dans panels (modifier coordinateur)
     if current_user.is_admin:
         responsables_select = [r for r in Responsable.query.all() if r.user and r.user.role == 'responsable']
     else:
@@ -196,6 +193,7 @@ def gerer_coordinateurs():
                            responsables=responsables, dours=dours)
 
 
+# ─── Heures / Séances ─────────────────────────────────────────────────────────
 @app.route('/heures')
 @login_required
 def heures():
@@ -242,7 +240,9 @@ def heures():
         total_heures=total_heures,
         total_seances=total_seances,
         annees=list(range(now.year - 2, now.year + 2)),
-        today=date.today().isoformat()
+        today=date.today().isoformat(),
+        matieres=MATIERES,
+        niveaux=NIVEAUX,
     )
 
 
@@ -253,14 +253,21 @@ def ajouter_seance():
     date_str  = request.form['date']
     nb_heures = float(request.form['nb_heures'])
     note      = request.form.get('note', '').strip()
+    matiere   = request.form.get('matiere', '').strip() or None
+    niveau    = request.form.get('niveau',  '').strip() or None
+
     coord = Coordinateur.query.get_or_404(coord_id)
     if not current_user.is_admin:
         if not current_user.responsable or coord.responsable_id != current_user.responsable.id:
             abort(403)
+
     date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
-    s = Seance(coordinateur_id=coord_id, date=date_obj,
-               mois=date_obj.month, annee=date_obj.year,
-               nb_heures=nb_heures, note=note)
+    s = Seance(
+        coordinateur_id=coord_id, date=date_obj,
+        mois=date_obj.month, annee=date_obj.year,
+        nb_heures=nb_heures, note=note,
+        matiere=matiere, niveau=niveau,
+    )
     db.session.add(s)
     db.session.commit()
     flash(f'Séance ajoutée pour {coord.prenom} {coord.nom}!', 'success')
@@ -275,12 +282,16 @@ def modifier_seance(id):
     if not current_user.is_admin:
         if not current_user.responsable or coord.responsable_id != current_user.responsable.id:
             abort(403)
+
     date_obj    = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
     s.date      = date_obj
     s.mois      = date_obj.month
     s.annee     = date_obj.year
     s.nb_heures = float(request.form['nb_heures'])
-    s.note      = request.form.get('note', '').strip()
+    s.note      = request.form.get('note', '').strip() or None
+    s.matiere   = request.form.get('matiere', '').strip() or None
+    s.niveau    = request.form.get('niveau',  '').strip() or None
+
     db.session.commit()
     flash('Séance modifiée!', 'success')
     return redirect(url_for('heures', mois=s.mois, annee=s.annee, coord_id=coord.id))
@@ -299,6 +310,82 @@ def supprimer_seance(id):
     db.session.commit()
     flash('Séance supprimée!', 'success')
     return redirect(url_for('heures', mois=mois, annee=annee, coord_id=coord_id))
+
+
+@app.route('/heures/ajouter_multiple', methods=['POST'])
+@login_required
+def ajouter_seances_multiple():
+    coord_id     = request.form.get('coordinateur_id', type=int)
+    redirect_url = request.form.get('redirect_url', '').strip()
+
+    if not coord_id:
+        flash('Coordinateur manquant.', 'error')
+        return redirect(url_for('rapport_coordinateurs'))
+
+    coord = Coordinateur.query.get_or_404(coord_id)
+    if not current_user.is_admin:
+        if not current_user.responsable or coord.responsable_id != current_user.responsable.id:
+            abort(403)
+
+    sessions = {}
+    for key, value in request.form.items():
+        if key.startswith('seances['):
+            try:
+                idx   = key.split('[')[1].split(']')[0]
+                field = key.split('[')[2].split(']')[0]
+                if idx not in sessions:
+                    sessions[idx] = {}
+                sessions[idx][field] = value
+            except (IndexError, ValueError):
+                continue
+
+    added  = 0
+    errors = []
+
+    for idx, data in sessions.items():
+        date_str  = data.get('date', '').strip()
+        nb_heures = data.get('nb_heures', '').strip()
+        matiere   = data.get('matiere', '').strip() or None
+        niveau    = data.get('niveau',  '').strip() or None
+        note      = data.get('note',    '').strip() or None
+
+        if not date_str or not nb_heures:
+            errors.append(f'Séance {idx}: date ou heures manquantes.')
+            continue
+
+        try:
+            date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+            nb_h     = float(nb_heures)
+            if nb_h <= 0:
+                raise ValueError('Heures must be positive')
+        except ValueError as e:
+            errors.append(f'Séance {idx}: valeur invalide ({e}).')
+            continue
+
+        s = Seance(
+            coordinateur_id=coord_id,
+            date=date_obj,
+            mois=date_obj.month,
+            annee=date_obj.year,
+            nb_heures=nb_h,
+            matiere=matiere,
+            niveau=niveau,
+            note=note,
+        )
+        db.session.add(s)
+        added += 1
+
+    if added > 0:
+        db.session.commit()
+        label = 'séance' if added == 1 else 'séances'
+        flash(f'✅ {added} {label} ajoutée{"s" if added > 1 else ""} pour {coord.prenom} {coord.nom}!', 'success')
+
+    for err in errors:
+        flash(err, 'error')
+
+    if redirect_url:
+        return redirect(redirect_url)
+    return redirect(url_for('rapport_coordinateurs'))
 
 
 # ─── Paramètres ───────────────────────────────────────────────────────────────
@@ -399,15 +486,11 @@ def ajouter_responsable():
 @admin_required
 def gerer_responsables():
     all_resp = Responsable.query.order_by(Responsable.nom).all()
-
-    responsables_only = [r for r in all_resp
-                         if r.user and r.user.role == 'responsable']
-    admins_only       = [r for r in all_resp
-                         if r.user and r.user.role == 'admin']
+    responsables_only = [r for r in all_resp if r.user and r.user.role == 'responsable']
+    admins_only       = [r for r in all_resp if r.user and r.user.role == 'admin']
     admins_purs       = User.query.filter_by(role='admin').filter(
                             User.responsable_id == None
                         ).order_by(User.nom).all()
-
     total_coordinateurs = Coordinateur.query.count()
     return render_template('gerer_responsables.html',
                            responsables_only=responsables_only,
@@ -453,12 +536,9 @@ def supprimer_responsable(id):
     r = Responsable.query.get_or_404(id)
     if r.user:
         db.session.delete(r.user)
-    for c in r.coordinateurs:
-        c.dours = []
-        db.session.delete(c)
     db.session.delete(r)
     db.session.commit()
-    flash('Responsable supprimé!', 'success')
+    flash('Responsable o ga3 les coordinateurs dyalo t-suppremaw!', 'success')
     return redirect(url_for('index'))
 
 
@@ -556,7 +636,7 @@ def ajouter_coordinateur():
             abort(403)
     dour_ids = request.form.getlist('dours')
     c = Coordinateur(nom=request.form['nom'], prenom=request.form['prenom'],
-                     genre=request.form['genre'], responsable_id=resp_id)
+                    genre=request.form['genre'], responsable_id=resp_id)
     for did in dour_ids:
         d = Dour.query.get(int(did))
         if d: c.dours.append(d)
@@ -597,7 +677,7 @@ def supprimer_coordinateur(id):
     db.session.delete(c)
     db.session.commit()
     flash('Coordinateur supprimé!', 'success')
-    return redirect(url_for('gerer_coordinateurs'))
+    return redirect_back()
 
 
 # ─── Dours ────────────────────────────────────────────────────────────────────
@@ -627,3 +707,129 @@ def supprimer_dour(id):
 @app.errorhandler(403)
 def forbidden(e):
     return render_template('403.html'), 403
+
+
+# ─── Stats Coordinateurs ──────────────────────────────────────────────────────
+@app.route('/stats_coordinateurs')
+@login_required
+def stats_coordinateurs():
+    now   = datetime.now()
+    mois  = request.args.get('mois',  now.month,  type=int)
+    annee = request.args.get('annee', now.year,   type=int)
+
+    mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin',
+                 'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
+
+    if current_user.is_admin:
+        coordinateurs = Coordinateur.query.order_by(Coordinateur.nom).all()
+    else:
+        resp = current_user.responsable
+        coordinateurs = sorted(resp.coordinateurs, key=lambda c: c.nom) if resp else []
+
+    stats = []
+    for coord in coordinateurs:
+        seances = coord.seances_mois(mois, annee)
+        nb_h = sum(s.nb_heures for s in seances)
+        stats.append({
+            'coord':      coord,
+            'seances':    seances,
+            'nb_seances': len(seances),
+            'nb_heures':  nb_h,
+            'initiales':  (coord.prenom[0] + coord.nom[0]).upper() if coord.prenom and coord.nom else '?',
+        })
+
+    stats.sort(key=lambda x: x['nb_heures'], reverse=True)
+
+    total_heures  = sum(s['nb_heures']  for s in stats)
+    total_seances = sum(s['nb_seances'] for s in stats)
+    max_heures    = max((s['nb_heures'] for s in stats), default=1) or 1
+
+    coord_id = request.args.get('coord_id', type=int)
+    coord_detail   = None
+    seances_detail = []
+    if coord_id:
+        coord_detail = Coordinateur.query.get(coord_id)
+        if coord_detail:
+            if not current_user.is_admin:
+                resp = current_user.responsable
+                if not resp or coord_detail.responsable_id != resp.id:
+                    coord_detail = None
+            if coord_detail:
+                seances_detail = coord_detail.seances_mois(mois, annee)
+
+    return render_template('stats_coordinateurs.html',
+        stats=stats,
+        mois=mois, annee=annee,
+        mois_noms=mois_noms,
+        annees=list(range(now.year - 2, now.year + 2)),
+        total_heures=total_heures,
+        total_seances=total_seances,
+        max_heures=max_heures,
+        coord_detail=coord_detail,
+        seances_detail=seances_detail,
+    )
+
+
+# ─── Rapport Coordinateurs ────────────────────────────────────────────────────
+@app.route('/rapport_coordinateurs')
+@login_required
+def rapport_coordinateurs():
+    from collections import defaultdict
+
+    now   = datetime.now()
+    mois  = request.args.get('mois',  now.month,  type=int)
+    annee = request.args.get('annee', now.year,   type=int)
+    filtre_matiere = request.args.get('filtre_matiere', '').strip()
+    filtre_niveau  = request.args.get('filtre_niveau',  '').strip()
+
+    mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin',
+                 'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
+
+    if current_user.is_admin:
+        coordinateurs = Coordinateur.query.order_by(Coordinateur.nom).all()
+    else:
+        resp = current_user.responsable
+        coordinateurs = sorted(resp.coordinateurs, key=lambda c: c.nom) if resp else []
+
+    stats = []
+    heures_par_mat       = defaultdict(float)
+    heures_par_niv       = defaultdict(float)
+    matieres_actives_set = set()
+    niveaux_actifs_set   = set()
+
+    for coord in coordinateurs:
+        seances = coord.seances_mois(mois, annee)
+        if filtre_matiere:
+            seances = [s for s in seances if s.matiere == filtre_matiere]
+        if filtre_niveau:
+            seances = [s for s in seances if s.niveau == filtre_niveau]
+        nb_h = sum(s.nb_heures for s in seances)
+        mats = sorted({s.matiere for s in seances if s.matiere})
+        nivs = sorted({s.niveau  for s in seances if s.niveau})
+        matieres_actives_set.update(mats)
+        niveaux_actifs_set.update(nivs)
+        for s in seances:
+            if s.matiere: heures_par_mat[s.matiere] += s.nb_heures
+            if s.niveau:  heures_par_niv[s.niveau]  += s.nb_heures
+        stats.append({
+            'coord': coord, 'seances': seances,
+            'nb_seances': len(seances), 'nb_heures': nb_h,
+            'initiales': (coord.prenom[0] + coord.nom[0]).upper() if coord.prenom and coord.nom else '?',
+            'matieres_uniq': mats, 'niveaux_uniq': nivs,
+        })
+
+    stats.sort(key=lambda x: x['nb_heures'], reverse=True)
+    breakdown_mat = sorted(heures_par_mat.items(), key=lambda x: x[1], reverse=True)
+    breakdown_niv = sorted(heures_par_niv.items(), key=lambda x: x[1], reverse=True)
+
+    return render_template('rapport_coordinateurs.html',
+        stats=stats, mois=mois, annee=annee, mois_noms=mois_noms,
+        annees=list(range(now.year - 2, now.year + 2)),
+        filtre_matiere=filtre_matiere, filtre_niveau=filtre_niveau,
+        matieres=MATIERES, niveaux=NIVEAUX,
+        total_heures=sum(s['nb_heures'] for s in stats),
+        total_seances=sum(s['nb_seances'] for s in stats),
+        breakdown_mat=breakdown_mat, breakdown_niv=breakdown_niv,
+        matieres_actives=sorted(matieres_actives_set),
+        niveaux_actifs=sorted(niveaux_actifs_set),
+    )
