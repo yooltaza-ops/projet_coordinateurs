@@ -186,7 +186,7 @@
             <div class="stat-label">👤 Responsables</div>
         </div>
         <div class="stat-card" style="border-color:#f5a623;">
-            <div class="stat-number">{{ admins_only|length + admins_purs|length }}</div>
+            <div class="stat-number">{{ admins_purs|length }}</div>
             <div class="stat-label">🛡️ Admins</div>
         </div>
         <div class="stat-card" style="border-color:#27ae60;">
@@ -259,67 +259,7 @@
     </div>
     {% endif %}
 
-
-    <!-- ══ SECTION 2: ADMINS liés à un Responsable ══ -->
-    {% if admins_only %}
-    <div class="section-title">
-        🛡️ Admins — avec compte Responsable
-        <span class="section-count orange">{{ admins_only|length }}</span>
-    </div>
-    <div class="resp-grid">
-        {% for r in admins_only %}
-        {% set colors = ['#e67e22','#9b59b6','#16a085','#e74c3c','#1a3a6b','#27ae60'] %}
-        {% set color = colors[loop.index0 % colors|length] %}
-        {% set ini1 = (r.prenom or r.nom or r.email or '?')[0].upper() %}
-        {% set ini2 = (r.nom or '')[0].upper() if r.nom else '' %}
-        <div class="resp-card" style="border-top:3px solid #f5a623;">
-            <div class="resp-card-header">
-                <div class="resp-avatar" style="background:{{ color }};">
-                    {{ ini1 }}{{ ini2 }}
-                </div>
-                <div class="resp-info">
-                    <div class="resp-name">{{ r.prenom }} {{ r.nom }}</div>
-                    <div class="resp-email">{{ r.email or '—' }}</div>
-                </div>
-                <span class="role-badge admin">🛡️ Admin</span>
-            </div>
-            <div class="resp-card-body">
-                <div class="resp-stats">
-                    <div class="resp-stat">👨 {{ r.count_coordinateurs() }}</div>
-                    <div class="resp-stat">👩 {{ r.count_coordinatrices() }}</div>
-                    <div class="resp-stat">📊 {{ r.coordinateurs|length }} total</div>
-                </div>
-                <div class="coord-tags">
-                    {% for c in r.coordinateurs[:4] %}
-                    <span class="coord-tag" style="background:{% if c.genre == 'M' %}#1a3a6b{% else %}#e91e8c{% endif %};">
-                        {{ c.prenom }} {{ c.nom }}
-                    </span>
-                    {% endfor %}
-                    {% if r.coordinateurs|length > 4 %}
-                    <span class="coord-tag" style="background:#95a5a6;">+{{ r.coordinateurs|length - 4 }}</span>
-                    {% endif %}
-                    {% if not r.coordinateurs %}
-                    <span style="color:#ddd; font-size:11px; font-style:italic;">Aucun coordinateur</span>
-                    {% endif %}
-                </div>
-                <div class="resp-actions">
-                    <button class="btn-edit"
-                        onclick="openModifier({{ r.id }}, '{{ r.nom|replace("'", "\\'") }}', '{{ r.prenom|replace("'", "\\'") }}', '{{ (r.email or '')|replace("'", "\\'") }}', 'admin')">
-                        ✏️ Modifier
-                    </button>
-                    <a href="{{ url_for('supprimer_responsable', id=r.id) }}" class="btn-del"
-                       onclick="return confirm('Wash bghi thda {{ r.prenom }} {{ r.nom }}?')">
-                        🗑️ Supprimer
-                    </a>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-
-
-    <!-- ══ SECTION 3: ADMINS PURS ══ -->
+    <!-- ══ SECTION 2: ADMINS PURS ══ -->
     {% if admins_purs %}
     <div class="section-title">
         🛡️ Admins purs

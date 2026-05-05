@@ -1,194 +1,41 @@
 {% extends "base.html" %}
 {% block title %}Tableau de bord — Yool{% endblock %}
 
-{% block extra_css %}
-        /* ══ MAIN ══ */
-        .main-content { flex:1; padding:28px; overflow-x:hidden; min-width:0; }
-        .page-title { font-size:21px; font-weight:700; color:#1a3a6b; margin-bottom:22px; display:flex; align-items:center; gap:10px; }
-
-        .stats-row { display:flex; gap:14px; margin-bottom:22px; flex-wrap:wrap; }
-        .stat-card { flex:1; min-width:130px; background:white; border-radius:14px; padding:18px 20px; box-shadow:0 4px 15px rgba(0,0,0,0.07); border-left:5px solid; display:flex; flex-direction:column; gap:4px; transition:transform 0.2s,box-shadow 0.2s; cursor:default; }
-        .stat-card:hover { transform:translateY(-3px); box-shadow:0 8px 25px rgba(0,0,0,0.1); }
-        .stat-card.blue   { border-color:#1a3a6b; }
-        .stat-card.orange { border-color:#f5a623; }
-        .stat-card.green  { border-color:#27ae60; }
-        .stat-card.pink   { border-color:#e91e8c; }
-        .stat-card.purple { border-color:#9b59b6; }
-        .stat-card.teal   { border-color:#16a085; }
-        .stat-number { font-size:28px; font-weight:700; color:#1a3a6b; line-height:1; }
-        .stat-number.orange { color:#f5a623; }
-        .stat-number.purple { color:#9b59b6; }
-        .stat-number.teal   { color:#16a085; }
-        .stat-label { font-size:11px; color:#888; font-weight:500; }
-
-        .card { background:white; border-radius:14px; box-shadow:0 4px 15px rgba(0,0,0,0.07); overflow:hidden; margin-bottom:22px; }
-        .card-header { padding:16px 22px; border-bottom:1.5px solid #f0f4f8; }
-        .card-header h3 { font-size:14px; font-weight:700; color:#1a3a6b; }
-        .card-body { padding:18px 22px; }
-
-        .quick-actions { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:12px; }
-        .action-card { background:#f8fafc; border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:7px; cursor:pointer; text-decoration:none; border:2px solid #f0f4f8; transition:all 0.2s; }
-        .action-card:hover { border-color:#f5a623; background:white; transform:translateY(-2px); box-shadow:0 6px 20px rgba(245,166,35,0.12); }
-        .action-icon { font-size:24px; }
-        .action-title { font-size:13px; font-weight:700; color:#1a3a6b; }
-        .action-desc { font-size:11px; color:#aaa; line-height:1.4; }
-
-        .alert { padding:13px 18px; background:#27ae60; color:white; border-radius:10px; margin-bottom:18px; font-size:13px; display:flex; align-items:center; gap:10px; box-shadow:0 4px 12px rgba(39,174,96,0.25); }
-        .alert-error { background:#e74c3c; }
-
-        /* Panels */
-        .overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(26,58,107,0.45); z-index:100; backdrop-filter:blur(3px); }
-        .overlay.active { display:block; }
-        .panel { position:fixed; top:0; right:-480px; width:440px; height:100%; background:white; z-index:200; box-shadow:-8px 0 30px rgba(0,0,0,0.15); transition:right 0.35s cubic-bezier(0.4,0,0.2,1); overflow-y:auto; }
-        .panel.active { right:0; }
-        .panel-top { background:#1a3a6b; padding:20px 26px; display:flex; justify-content:space-between; align-items:center; }
-        .panel-top h2 { color:white; font-size:15px; font-weight:600; }
-        .close-btn { background:rgba(255,255,255,0.2); border:none; color:white; width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:15px; display:flex; align-items:center; justify-content:center; }
-        .close-btn:hover { background:rgba(255,255,255,0.35); }
-        .panel-body { padding:22px 26px; }
-        .panel label { display:block; margin-bottom:5px; color:#1a3a6b; font-size:12px; font-weight:600; }
-        .panel input, .panel select { width:100%; padding:10px 13px; border:2px solid #e8edf5; border-radius:10px; margin-bottom:14px; font-size:13px; font-family:'Poppins',sans-serif; transition:border 0.2s; outline:none; box-sizing:border-box; }
-        .panel input:focus, .panel select:focus { border-color:#f5a623; }
-        .multi-select { height:auto !important; padding:5px !important; }
-        .multi-select option { padding:7px 9px; margin:2px; border-radius:5px; }
-        .multi-select option:checked { background:#1a3a6b; color:white; }
-        .hint { font-size:11px; color:#aaa; margin-top:-11px; margin-bottom:14px; }
-        .submit-btn { width:100%; padding:12px; border:none; border-radius:25px; font-size:13px; font-weight:600; cursor:pointer; color:white; font-family:'Poppins',sans-serif; transition:all 0.2s; }
-        .submit-btn:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.15); }
-        .dour-item { display:flex; justify-content:space-between; align-items:center; padding:9px 12px; background:#f8fafc; border-radius:8px; margin-bottom:5px; border-left:4px solid #1a3a6b; }
-        .dar-tag { display:inline-block; margin:2px; padding:2px 9px; border-radius:10px; font-size:10px; color:white; font-weight:500; }
-        .talib  { background:#1a3a6b; }
-        .taliba { background:#e91e8c; }
-        .fatat  { background:#f5a623; }
-
-        .resp-table { width:100%; border-collapse:collapse; }
-        .resp-table th { background:#f8fafc; color:#1a3a6b; padding:12px 16px; text-align:left; font-size:12px; font-weight:700; border-bottom:2px solid #e8edf5; }
-        .resp-table td { padding:12px 16px; border-bottom:1px solid #f0f4f8; vertical-align:top; font-size:13px; }
-        .resp-table tr:last-child td { border-bottom:none; }
-        .resp-table tr:hover td { background:#fafbfc; }
-
-        .recap-seances-table { width:100%; border-collapse:collapse; }
-        .recap-seances-table th { background:#f8fafc; color:#1a3a6b; padding:11px 14px; text-align:left; font-size:12px; font-weight:700; border-bottom:2px solid #e8edf5; }
-        .recap-seances-table th.center { text-align:center; }
-        .recap-seances-table td { padding:11px 14px; border-bottom:1px solid #f0f4f8; font-size:13px; vertical-align:middle; }
-        .recap-seances-table tr:last-child td { border-bottom:none; }
-        .recap-seances-table tr:hover td { background:#fafbfc; }
-        .coord-av { width:34px; height:34px; border-radius:50%; color:white; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; }
-
-        /* Admin table — desktop */
-        .admin-table { width:100%; border-collapse:collapse; }
-        .admin-table th { background:#fff8ee; color:#b8740a; padding:12px 16px; text-align:left; font-size:12px; font-weight:700; border-bottom:2px solid #fce8c3; }
-        .admin-table td { padding:12px 16px; border-bottom:1px solid #fef5e4; vertical-align:middle; font-size:13px; }
-        .admin-table tr:last-child td { border-bottom:none; }
-        .admin-table tr:hover td { background:#fffdf7; }
-
-        /* Admin responsive */
-        .admin-desktop { display:block; overflow-x:auto; }
-        .admin-mobile  { display:none; }
-
-        /* Role selector inside panel */
-        .role-cards-panel { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
-        .role-card-panel {
-            padding:12px; border:2px solid #e8edf5; border-radius:12px;
-            cursor:pointer; transition:all 0.2s; text-align:center;
-        }
-        .role-card-panel:hover { border-color:#f5a623; }
-        .role-card-panel.selected { border-color:#f5a623; background:#fff8ee; }
-        .role-card-panel .rc-icon  { font-size:20px; margin-bottom:4px; }
-        .role-card-panel .rc-title { font-size:12px; font-weight:700; color:#1a3a6b; }
-
-        .desktop-table { display:block; }
-        .resp-card { display:none; }
-
-        @media (max-width:768px) {
-            .main-content { padding:12px; }
-            .page-title { font-size:16px; margin-bottom:14px; }
-            .stats-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
-            .stat-card { min-width:unset; padding:12px 13px; }
-            .stat-number { font-size:22px; }
-            .quick-actions { grid-template-columns:1fr 1fr; gap:8px; }
-            .action-card { padding:12px; }
-            .action-icon { font-size:20px; }
-            .action-title { font-size:12px; }
-            .action-desc { font-size:10px; }
-            .card { margin-bottom:14px; }
-            .card-body { padding:12px; }
-            .panel { width:100%; right:-100%; }
-            .desktop-table { display:none; }
-            .resp-card { display:block; }
-
-            /* Admin mobile cards */
-            .admin-desktop { display:none; }
-            .admin-mobile  { display:block; padding:10px; }
-
-            .admin-mob-card {
-                background:white;
-                border-radius:12px;
-                border:1.5px solid #fce8c3;
-                overflow:hidden;
-                margin-bottom:10px;
-            }
-            .admin-mob-card-header {
-                display:flex;
-                align-items:center;
-                gap:10px;
-                padding:13px 14px;
-                background:#fff8ee;
-                border-bottom:1px solid #fce8c3;
-            }
-            .admin-mob-avatar {
-                width:42px; height:42px; border-radius:50%;
-                background:linear-gradient(135deg,#f5a623,#e8941a);
-                color:white; display:flex; align-items:center;
-                justify-content:center; font-size:17px; font-weight:700;
-                flex-shrink:0; box-shadow:0 3px 8px rgba(245,166,35,0.3);
-            }
-            .admin-mob-info { flex:1; min-width:0; }
-            .admin-mob-name { font-weight:700; color:#1a3a6b; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-            .admin-mob-email { font-size:11px; color:#999; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-            .admin-mob-vous {
-                font-size:10px; background:#e8f5e9; color:#27ae60;
-                padding:2px 8px; border-radius:10px; font-weight:600;
-                display:inline-block; margin-top:3px;
-            }
-            .admin-mob-badge {
-                background:linear-gradient(135deg,#f5a623,#e8941a);
-                color:white; padding:4px 10px; border-radius:20px;
-                font-size:10px; font-weight:700; white-space:nowrap;
-                box-shadow:0 2px 6px rgba(245,166,35,0.3); flex-shrink:0;
-            }
-            .admin-mob-actions {
-                display:flex; gap:8px; padding:10px 14px;
-                flex-wrap:nowrap; align-items:center;
-            }
-            .admin-mob-edit {
-                background:#f5a623; color:white; font-size:11px;
-                padding:8px 0; border-radius:10px; border:none;
-                cursor:pointer; font-weight:600; font-family:'Poppins',sans-serif;
-                flex:1; text-align:center; transition:background 0.2s;
-            }
-            .admin-mob-edit:hover { background:#e8941a; }
-            .admin-mob-del {
-                background:#e74c3c; color:white; font-size:11px;
-                padding:8px 0; border-radius:10px;
-                text-decoration:none; font-weight:600;
-                flex:1; text-align:center; transition:background 0.2s;
-                display:block;
-            }
-            .admin-mob-del:hover { background:#c0392b; }
-            .admin-mob-self {
-                color:#ccc; font-size:11px; font-style:italic;
-                text-align:center; width:100%; padding:6px 0;
-            }
-        }
-{% endblock %}
+{% block extra_css %}{% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+<script src="{{ url_for('static', filename='dashboard.js') }}" defer></script>
 
-<!-- Overlay -->
+<!-- ══ CONFIRM DELETE MODAL ══ -->
+<div class="confirm-overlay" id="confirm-overlay">
+    <div class="confirm-box">
+        <div class="confirm-icon-wrap">
+            <div class="confirm-icon">🗑️</div>
+        </div>
+        <div class="confirm-content">
+            <div class="confirm-title">Supprimer cet élément ?</div>
+            <div class="confirm-msg">Cette action est définitive et ne peut pas être annulée.</div>
+            <div style="margin-top:14px; background:#f0f4f8; border-radius:10px; padding:9px 14px; border:1.5px solid #e8edf5;">
+                <span style="font-size:12px; color:#888; display:block; margin-bottom:3px;">Élément à supprimer</span>
+                <span id="confirm-element-name" style="font-size:13px; font-weight:700; color:#1a3a6b;"></span>
+            </div>
+            <div style="margin-top:12px; background:#fff8ee; border:1.5px solid #fce8c3; border-radius:10px; padding:10px 14px; display:flex; align-items:flex-start; gap:8px; text-align:left;">
+                <span style="font-size:14px; flex-shrink:0;">⚠️</span>
+                <span id="confirm-warn-msg" style="font-size:11px; color:#b8740a; line-height:1.5;"></span>
+            </div>
+        </div>
+        <div class="confirm-actions">
+            <button class="confirm-btn-cancel" onclick="confirmCancel()">Annuler</button>
+            <button class="confirm-btn-ok" onclick="confirmOk()">🗑️ Supprimer</button>
+        </div>
+    </div>
+</div>
+
+<!-- Overlay panels -->
 <div class="overlay" id="overlay" onclick="closeAllPanels()"></div>
 
-<!-- ══════════ PANEL : Modifier Coordinateur ══════════ -->
+<!-- PANEL : Modifier Coordinateur -->
 <div class="panel" id="panel-modifier">
     <div class="panel-top">
         <h2>✏️ Modifier Coordinateur</h2>
@@ -224,8 +71,8 @@
     </div>
 </div>
 
-<!-- ══════════ PANEL : Ajouter Admin ══════════ -->
 {% if current_user.is_admin %}
+<!-- PANEL : Ajouter Admin -->
 <div class="panel" id="panel-add-admin">
     <div class="panel-top" style="background:linear-gradient(135deg,#f5a623,#e8941a);">
         <h2>👑 Ajouter Administrateur</h2>
@@ -233,22 +80,16 @@
     </div>
     <div class="panel-body">
         <form method="POST" action="{{ url_for('ajouter_admin') }}">
-            <label>Prénom</label>
-            <input type="text" name="prenom" placeholder="Prénom" required>
-            <label>Nom</label>
-            <input type="text" name="nom" placeholder="Nom" required>
-            <label>Email</label>
-            <input type="email" name="email" placeholder="admin@example.com" required>
-            <label>Mot de passe</label>
-            <input type="password" name="password" placeholder="••••••••" required minlength="6">
-            <button type="submit" class="submit-btn" style="background:linear-gradient(135deg,#f5a623,#e8941a);">
-                👑 Créer Administrateur
-            </button>
+            <label>Prénom</label><input type="text" name="prenom" placeholder="Prénom" required>
+            <label>Nom</label><input type="text" name="nom" placeholder="Nom" required>
+            <label>Email</label><input type="email" name="email" placeholder="admin@example.com" required>
+            <label>Mot de passe</label><input type="password" name="password" placeholder="••••••••" required minlength="6">
+            <button type="submit" class="submit-btn" style="background:linear-gradient(135deg,#f5a623,#e8941a);">👑 Créer Administrateur</button>
         </form>
     </div>
 </div>
 
-<!-- ══════════ PANEL : Modifier Admin ══════════ -->
+<!-- PANEL : Modifier Admin -->
 <div class="panel" id="panel-modifier-admin">
     <div class="panel-top" style="background:linear-gradient(135deg,#f5a623,#e8941a);">
         <h2>✏️ Modifier Administrateur</h2>
@@ -256,57 +97,44 @@
     </div>
     <div class="panel-body">
         <form method="POST" id="form-modifier-admin">
-            <label>Prénom</label>
-            <input type="text" name="prenom" id="madm-prenom" placeholder="Prénom">
-            <label>Nom</label>
-            <input type="text" name="nom" id="madm-nom" placeholder="Nom">
-            <label>Email</label>
-            <input type="email" name="email" id="madm-email" placeholder="admin@example.com" required>
+            <label>Prénom</label><input type="text" name="prenom" id="madm-prenom" placeholder="Prénom">
+            <label>Nom</label><input type="text" name="nom" id="madm-nom" placeholder="Nom">
+            <label>Email</label><input type="email" name="email" id="madm-email" placeholder="admin@example.com" required>
             <label>Rôle</label>
             <div class="role-cards-panel">
                 <div class="role-card-panel" id="madm-card-admin" onclick="selectAdminRole('admin')">
-                    <div class="rc-icon">👑</div>
-                    <div class="rc-title">Administrateur</div>
+                    <div class="rc-icon">👑</div><div class="rc-title">Administrateur</div>
                 </div>
                 <div class="role-card-panel" id="madm-card-responsable" onclick="selectAdminRole('responsable')">
-                    <div class="rc-icon">👤</div>
-                    <div class="rc-title">Responsable</div>
+                    <div class="rc-icon">👤</div><div class="rc-title">Responsable</div>
                 </div>
             </div>
             <input type="hidden" name="role" id="madm-role" value="admin">
-            <label>
-                Nouveau mot de passe
-                <span style="color:#aaa; font-weight:400; font-size:11px;">(laisser vide = inchangé)</span>
-            </label>
+            <label>Nouveau mot de passe <span style="color:#aaa;font-weight:400;font-size:11px;">(laisser vide = inchangé)</span></label>
             <input type="password" name="password" placeholder="••••••••" minlength="6">
-            <button type="submit" class="submit-btn" style="background:linear-gradient(135deg,#f5a623,#e8941a);">
-                💾 Enregistrer modifications
-            </button>
+            <button type="submit" class="submit-btn" style="background:linear-gradient(135deg,#f5a623,#e8941a);">💾 Enregistrer modifications</button>
         </form>
     </div>
 </div>
 {% endif %}
 
-<!-- ══════════ MAIN CONTENT ══════════ -->
 <main class="main-content">
 
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}
-            <div class="alert {% if category == 'error' %}alert-error{% endif %}">
-                {% if category == 'error' %}⚠️{% else %}✅{% endif %} {{ message }}
-            </div>
+        <div class="alert {% if category == 'error' %}alert-error{% endif %}">
+            {% if category == 'error' %}⚠️{% else %}✅{% endif %} {{ message }}
+        </div>
         {% endfor %}
     {% endwith %}
 
     <div class="page-title">📊 Tableau de bord</div>
 
-    <!-- ══════════ STATS ══════════ -->
+    <!-- STATS -->
     <div class="stats-row">
         <div class="stat-card blue">
             <div class="stat-number">{{ nb_responsables }}</div>
-            <div class="stat-label">
-                {% if current_user.is_admin %}👤 Responsables{% else %}👥 Coordinateurs{% endif %}
-            </div>
+            <div class="stat-label">{% if current_user.is_admin %}👤 Responsables{% else %}👥 Coordinateurs{% endif %}</div>
         </div>
         {% if current_user.is_admin %}
         <div class="stat-card orange">
@@ -336,193 +164,130 @@
         </div>
     </div>
 
-    <!-- ══════════ GÉRER ADMINS ══════════ -->
+    <!-- GÉRER ADMINS -->
     {% if current_user.is_admin %}
     <div class="card">
-        <div class="card-header" style="background:linear-gradient(135deg,#f5a623,#e8941a); padding:14px 22px; display:flex; justify-content:space-between; align-items:center;">
-            <h3 style="color:white; font-size:14px;">👑 Gérer Administrateurs
-                <span style="background:rgba(255,255,255,0.25); padding:2px 10px; border-radius:20px; font-size:12px; margin-left:8px;">{{ nb_admins }}</span>
+        <div class="card-header" style="background:linear-gradient(135deg,#f5a623,#e8941a);padding:14px 22px;display:flex;justify-content:space-between;align-items:center;">
+            <h3 style="color:white;font-size:14px;">👑 Gérer Administrateurs
+                <span style="background:rgba(255,255,255,0.25);padding:2px 10px;border-radius:20px;font-size:12px;margin-left:8px;">{{ nb_admins }}</span>
             </h3>
             <button onclick="openPanel('panel-add-admin')"
-                style="background:rgba(255,255,255,0.25); border:1.5px solid rgba(255,255,255,0.4); color:white;
-                       padding:6px 16px; border-radius:20px; font-size:12px; font-weight:700;
-                       cursor:pointer; font-family:'Poppins',sans-serif; transition:all 0.2s;"
+                style="background:rgba(255,255,255,0.25);border:1.5px solid rgba(255,255,255,0.4);color:white;padding:6px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;"
                 onmouseover="this.style.background='rgba(255,255,255,0.4)'"
                 onmouseout="this.style.background='rgba(255,255,255,0.25)'">
                 + Ajouter Admin
             </button>
         </div>
-
-        <!-- ══ Desktop table ══ -->
+        <!-- Desktop -->
         <div class="admin-desktop">
             <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>Administrateur</th>
-                        <th>Email</th>
-                        <th style="text-align:center;">Statut</th>
-                        <th style="text-align:center;">Actions</th>
-                    </tr>
-                </thead>
+                <thead><tr><th>Administrateur</th><th>Email</th><th style="text-align:center;">Statut</th><th style="text-align:center;">Actions</th></tr></thead>
                 <tbody>
                     {% for u in admins %}
                     <tr>
                         <td>
-                            <div style="display:flex; align-items:center; gap:10px;">
-                                <div style="width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg,#f5a623,#e8941a);
-                                            color:white; display:flex; align-items:center; justify-content:center;
-                                            font-size:14px; font-weight:700; flex-shrink:0; box-shadow:0 3px 8px rgba(245,166,35,0.3);">
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#f5a623,#e8941a);color:white;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;">
                                     {{ (u.prenom or u.email)[0].upper() }}
                                 </div>
                                 <div>
-                                    <div style="font-weight:700; color:#1a3a6b; font-size:13px;">
-                                        {% if u.prenom and u.nom %}{{ u.prenom }} {{ u.nom }}
-                                        {% else %}{{ u.email.split('@')[0] }}{% endif %}
+                                    <div style="font-weight:700;color:#1a3a6b;font-size:13px;">
+                                        {% if u.prenom and u.nom %}{{ u.prenom }} {{ u.nom }}{% else %}{{ u.email.split('@')[0] }}{% endif %}
                                     </div>
-                                    {% if u.id == current_user.id %}
-                                    <span style="font-size:10px; background:#e8f5e9; color:#27ae60;
-                                                 padding:2px 8px; border-radius:10px; font-weight:600;">
-                                        Vous
-                                    </span>
-                                    {% endif %}
+                                    {% if u.id == current_user.id %}<span style="font-size:10px;background:#e8f5e9;color:#27ae60;padding:2px 8px;border-radius:10px;font-weight:600;">Vous</span>{% endif %}
                                 </div>
                             </div>
                         </td>
-                        <td style="color:#888; font-size:12px;">{{ u.email }}</td>
+                        <td style="color:#888;font-size:12px;">{{ u.email }}</td>
                         <td style="text-align:center;">
-                            <span style="background:linear-gradient(135deg,#f5a623,#e8941a); color:white;
-                                         padding:3px 14px; border-radius:20px; font-size:11px; font-weight:700;
-                                         box-shadow:0 2px 6px rgba(245,166,35,0.3);">
-                                👑 Admin
-                            </span>
+                            <span style="background:linear-gradient(135deg,#f5a623,#e8941a);color:white;padding:3px 14px;border-radius:20px;font-size:11px;font-weight:700;">👑 Admin</span>
                         </td>
                         <td style="text-align:center;">
                             {% if u.id != current_user.id %}
-                            <button
-                                onclick="openModifierAdmin({{ u.id }}, '{{ u.nom or '' }}', '{{ u.prenom or '' }}', '{{ u.email }}', '{{ u.role }}')"
-                                style="background:#f5a623; color:white; font-size:10px; padding:4px 12px;
-                                       border-radius:10px; border:none; cursor:pointer; font-weight:600;
-                                       font-family:'Poppins',sans-serif; margin-right:5px; transition:all 0.2s;"
-                                onmouseover="this.style.background='#e8941a'"
-                                onmouseout="this.style.background='#f5a623'">
+                            <button onclick="openModifierAdmin({{ u.id }}, '{{ u.nom or '' }}', '{{ u.prenom or '' }}', '{{ u.email }}', '{{ u.role }}')"
+                                style="background:#f5a623;color:white;font-size:10px;padding:4px 12px;border-radius:10px;border:none;cursor:pointer;font-weight:600;font-family:'Poppins',sans-serif;margin-right:5px;"
+                                onmouseover="this.style.background='#e8941a'" onmouseout="this.style.background='#f5a623'">
                                 ✏️ Modifier
                             </button>
-                            <a href="{{ url_for('supprimer_admin', id=u.id) }}"
-                               style="background:#e74c3c; color:white; font-size:10px; padding:4px 12px;
-                                      border-radius:10px; text-decoration:none; font-weight:600; transition:all 0.2s;"
-                               onmouseover="this.style.background='#c0392b'"
-                               onmouseout="this.style.background='#e74c3c'"
-                               onclick="return confirm('Wash bghi thda had admin?')">
+                            <button
+                                onclick="confirmDelete('{{ url_for('supprimer_admin', id=u.id) }}', '{% if u.prenom and u.nom %}{{ u.prenom }} {{ u.nom }}{% else %}{{ u.email.split('@')[0] }}{% endif %}', 'admin')"
+                                style="background:#e74c3c;color:white;font-size:10px;padding:4px 12px;border-radius:10px;border:none;cursor:pointer;font-weight:600;font-family:'Poppins',sans-serif;"
+                                onmouseover="this.style.background='#c0392b'" onmouseout="this.style.background='#e74c3c'">
                                 🗑️ Supprimer
-                            </a>
+                            </button>
                             {% else %}
-                            <span style="color:#ccc; font-size:11px; font-style:italic;">— compte actuel —</span>
+                            <span style="color:#ccc;font-size:11px;font-style:italic;">— compte actuel —</span>
                             {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
-                    {% if not admins %}
-                    <tr>
-                        <td colspan="4" style="text-align:center; color:#bbb; padding:24px; font-size:13px;">
-                            Aucun administrateur trouvé
-                        </td>
-                    </tr>
-                    {% endif %}
+                    {% if not admins %}<tr><td colspan="4" style="text-align:center;color:#bbb;padding:24px;font-size:13px;">Aucun administrateur trouvé</td></tr>{% endif %}
                 </tbody>
             </table>
         </div>
-
-        <!-- ══ Mobile cards ══ -->
+        <!-- Mobile -->
         <div class="admin-mobile">
             {% for u in admins %}
             <div class="admin-mob-card">
                 <div class="admin-mob-card-header">
                     <div class="admin-mob-avatar">{{ (u.prenom or u.email)[0].upper() }}</div>
                     <div class="admin-mob-info">
-                        <div class="admin-mob-name">
-                            {% if u.prenom and u.nom %}{{ u.prenom }} {{ u.nom }}
-                            {% else %}{{ u.email.split('@')[0] }}{% endif %}
-                        </div>
+                        <div class="admin-mob-name">{% if u.prenom and u.nom %}{{ u.prenom }} {{ u.nom }}{% else %}{{ u.email.split('@')[0] }}{% endif %}</div>
                         <div class="admin-mob-email">{{ u.email }}</div>
-                        {% if u.id == current_user.id %}
-                        <span class="admin-mob-vous">Vous</span>
-                        {% endif %}
+                        {% if u.id == current_user.id %}<span class="admin-mob-vous">Vous</span>{% endif %}
                     </div>
                     <span class="admin-mob-badge">👑 Admin</span>
                 </div>
                 {% if u.id != current_user.id %}
                 <div class="admin-mob-actions">
-                    <button class="admin-mob-edit"
-                        onclick="openModifierAdmin({{ u.id }}, '{{ u.nom or '' }}', '{{ u.prenom or '' }}', '{{ u.email }}', '{{ u.role }}')">
-                        ✏️ Modifier
-                    </button>
-                    <a href="{{ url_for('supprimer_admin', id=u.id) }}"
-                       class="admin-mob-del"
-                       onclick="return confirm('Wash bghi thda had admin?')">
+                    <button class="admin-mob-edit" onclick="openModifierAdmin({{ u.id }}, '{{ u.nom or '' }}', '{{ u.prenom or '' }}', '{{ u.email }}', '{{ u.role }}')">✏️ Modifier</button>
+                    <button onclick="confirmDelete('{{ url_for('supprimer_admin', id=u.id) }}', '{% if u.prenom and u.nom %}{{ u.prenom }} {{ u.nom }}{% else %}{{ u.email.split('@')[0] }}{% endif %}', 'admin')"
+                        style="background:#e74c3c;color:white;font-size:11px;padding:8px 0;border-radius:10px;border:none;cursor:pointer;font-weight:600;font-family:'Poppins',sans-serif;flex:1;text-align:center;">
                         🗑️ Supprimer
-                    </a>
+                    </button>
                 </div>
                 {% else %}
-                <div class="admin-mob-actions">
-                    <span class="admin-mob-self">— compte actuel —</span>
-                </div>
+                <div class="admin-mob-actions"><span class="admin-mob-self">— compte actuel —</span></div>
                 {% endif %}
             </div>
             {% endfor %}
-            {% if not admins %}
-            <div style="text-align:center; color:#bbb; padding:24px; font-size:13px;">
-                Aucun administrateur trouvé
-            </div>
-            {% endif %}
+            {% if not admins %}<div style="text-align:center;color:#bbb;padding:24px;font-size:13px;">Aucun administrateur trouvé</div>{% endif %}
         </div>
-
     </div>
     {% endif %}
 
-    <!-- ══════════ QUICK ACTIONS ══════════ -->
+    <!-- QUICK ACTIONS -->
     <div class="card">
         <div class="card-header"><h3>⚡ Actions rapides</h3></div>
         <div class="card-body">
             <div class="quick-actions">
                 <a href="{{ url_for('ajouter_coordinateur_page') }}" class="action-card">
-                    <div class="action-icon">➕</div>
-                    <div class="action-title">Ajouter Coordinateur</div>
-                    <div class="action-desc">Créer un nouveau coordinateur</div>
+                    <div class="action-icon">➕</div><div class="action-title">Ajouter Coordinateur</div><div class="action-desc">Créer un nouveau coordinateur</div>
                 </a>
                 <a href="{{ url_for('gerer_coordinateurs') }}" class="action-card">
-                    <div class="action-icon">👥</div>
-                    <div class="action-title">Gérer Coordinateurs</div>
-                    <div class="action-desc">Voir, modifier, supprimer</div>
+                    <div class="action-icon">👥</div><div class="action-title">Gérer Coordinateurs</div><div class="action-desc">Voir, modifier, supprimer</div>
                 </a>
                 <a href="{{ url_for('heures') }}" class="action-card" style="border-color:#e8d5f5;">
-                    <div class="action-icon">⏱️</div>
-                    <div class="action-title" style="color:#9b59b6;">Séances & Heures</div>
-                    <div class="action-desc">Gérer les séances par coordinateur</div>
+                    <div class="action-icon">⏱️</div><div class="action-title" style="color:#9b59b6;">Séances & Heures</div><div class="action-desc">Gérer les séances par coordinateur</div>
                 </a>
                 {% if current_user.is_admin %}
                 <a href="{{ url_for('ajouter_responsable_page') }}" class="action-card">
-                    <div class="action-icon">👤</div>
-                    <div class="action-title">Ajouter Responsable</div>
-                    <div class="action-desc">Créer un compte responsable</div>
+                    <div class="action-icon">👤</div><div class="action-title">Ajouter Responsable</div><div class="action-desc">Créer un compte responsable</div>
                 </a>
                 <a href="{{ url_for('gerer_dours_page') }}" class="action-card">
-                    <div class="action-icon">🏠</div>
-                    <div class="action-title">Gérer les Dours</div>
-                    <div class="action-desc">Ajouter ou supprimer des dours</div>
+                    <div class="action-icon">🏠</div><div class="action-title">Gérer les Dours</div><div class="action-desc">Ajouter ou supprimer des dours</div>
                 </a>
                 {% endif %}
                 <a href="{{ url_for('parametres') }}" class="action-card">
-                    <div class="action-icon">⚙️</div>
-                    <div class="action-title">Paramètres</div>
-                    <div class="action-desc">Profil et mot de passe</div>
+                    <div class="action-icon">⚙️</div><div class="action-title">Paramètres</div><div class="action-desc">Profil et mot de passe</div>
                 </a>
             </div>
         </div>
     </div>
 
-    <!-- ══════════ RECAP SÉANCES ══════════ -->
+    <!-- RECAP SÉANCES -->
     <div class="card">
-        <div class="card-header" style="background:linear-gradient(135deg,#9b59b6,#8e44ad); padding:14px 22px;">
+        <div class="card-header" style="background:linear-gradient(135deg,#9b59b6,#8e44ad);padding:14px 22px;">
             <h3 style="color:white;">📚 Récap Séances — {{ mois_nom_actuel }} {{ annee_actuel }}</h3>
         </div>
         {% if recap_seances %}
@@ -530,44 +295,40 @@
             <table class="recap-seances-table">
                 <thead>
                     <tr>
-                        <th>Coordinateur</th>
-                        <th class="center">Genre</th>
-                        <th class="center">Séances</th>
-                        <th class="center">Heures</th>
-                        <th class="center">Moy/séance</th>
+                        <th>Coordinateur</th><th class="center">Genre</th>
+                        <th class="center">Séances</th><th class="center">Heures</th><th class="center">Moy/séance</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for row in recap_seances %}
                     <tr>
                         <td>
-                            <div style="display:flex; align-items:center; gap:10px;">
+                            <div style="display:flex;align-items:center;gap:10px;">
                                 <div class="coord-av" style="background:{% if row.genre == 'M' %}#1a3a6b{% else %}#e91e8c{% endif %};">{{ row.initiales }}</div>
                                 <div>
-                                    <div style="font-weight:600; color:#1a3a6b; font-size:13px;">{{ row.nom }}</div>
-                                    <div style="font-size:11px; color:#aaa;">{{ row.responsable }}</div>
+                                    <div style="font-weight:600;color:#1a3a6b;font-size:13px;">{{ row.nom }}</div>
+                                    <div style="font-size:11px;color:#aaa;">{{ row.responsable }}</div>
                                 </div>
                             </div>
                         </td>
                         <td style="text-align:center;">
-                            <span style="padding:2px 9px; border-radius:9px; font-size:11px; font-weight:700; color:white; background:{% if row.genre == 'M' %}#1a3a6b{% else %}#e91e8c{% endif %};">
+                            <span style="padding:2px 9px;border-radius:9px;font-size:11px;font-weight:700;color:white;background:{% if row.genre == 'M' %}#1a3a6b{% else %}#e91e8c{% endif %};">
                                 {% if row.genre == 'M' %}👨{% else %}👩{% endif %}
                             </span>
                         </td>
-                        <td style="text-align:center;"><span style="font-weight:700; color:#9b59b6; font-size:15px;">{{ row.nb_seances }}</span></td>
-                        <td style="text-align:center;"><span style="font-weight:700; color:#16a085; font-size:15px;">{{ "%.1f"|format(row.nb_heures) }}h</span></td>
+                        <td style="text-align:center;"><span style="font-weight:700;color:#9b59b6;font-size:15px;">{{ row.nb_seances }}</span></td>
+                        <td style="text-align:center;"><span style="font-weight:700;color:#16a085;font-size:15px;">{{ "%.1f"|format(row.nb_heures) }}h</span></td>
                         <td style="text-align:center;">
-                            {% if row.nb_seances > 0 %}
-                            <span style="color:#888; font-size:12px;">{{ "%.1f"|format(row.nb_heures / row.nb_seances) }}h</span>
+                            {% if row.nb_seances > 0 %}<span style="color:#888;font-size:12px;">{{ "%.1f"|format(row.nb_heures / row.nb_seances) }}h</span>
                             {% else %}<span style="color:#ddd;">—</span>{% endif %}
                         </td>
                     </tr>
                     {% endfor %}
-                    <tr style="background:#f8fafc; font-weight:700;">
-                        <td colspan="2" style="color:#1a3a6b; font-size:13px;">🔢 Total</td>
-                        <td style="text-align:center; color:#9b59b6; font-size:15px;">{{ total_seances_mois }}</td>
-                        <td style="text-align:center; color:#16a085; font-size:15px;">{{ "%.1f"|format(total_heures_mois) }}h</td>
-                        <td style="text-align:center; color:#888; font-size:12px;">
+                    <tr style="background:#f8fafc;font-weight:700;">
+                        <td colspan="2" style="color:#1a3a6b;font-size:13px;">🔢 Total</td>
+                        <td style="text-align:center;color:#9b59b6;font-size:15px;">{{ total_seances_mois }}</td>
+                        <td style="text-align:center;color:#16a085;font-size:15px;">{{ "%.1f"|format(total_heures_mois) }}h</td>
+                        <td style="text-align:center;color:#888;font-size:12px;">
                             {% if total_seances_mois > 0 %}{{ "%.1f"|format(total_heures_mois / total_seances_mois) }}h{% else %}—{% endif %}
                         </td>
                     </tr>
@@ -575,66 +336,64 @@
             </table>
         </div>
         {% else %}
-        <div style="padding:30px; text-align:center; color:#bbb; font-size:13px;">
+        <div style="padding:30px;text-align:center;color:#bbb;font-size:13px;">
             📭 Aucune séance enregistrée pour {{ mois_nom_actuel }} —
-            <a href="{{ url_for('heures') }}" style="color:#9b59b6; font-weight:600;">Zid séances</a>
+            <a href="{{ url_for('heures') }}" style="color:#9b59b6;font-weight:600;">Zid séances</a>
         </div>
         {% endif %}
     </div>
 
-    <!-- ══════════ COORDINATEURS PAR RESPONSABLE ══════════ -->
+    <!-- COORDINATEURS PAR RESPONSABLE -->
     <div class="card">
         <div class="card-header" style="background:#1a3a6b;">
             <h3 style="color:white;">📋 Coordinateurs par Responsable</h3>
         </div>
-
         <!-- Desktop -->
         <div class="desktop-table" style="overflow-x:auto;">
             <table class="resp-table">
                 <thead>
                     <tr>
-                        <th>Responsable</th>
-                        <th style="text-align:center;">👨</th>
-                        <th style="text-align:center;">👩</th>
-                        <th style="text-align:center;">Total</th>
-                        <th>🏠 Dours</th>
+                        <th>Responsable</th><th style="text-align:center;">👨</th>
+                        <th style="text-align:center;">👩</th><th style="text-align:center;">Total</th><th>🏠 Dours</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in data %}
                     <tr>
-                        <td style="font-weight:600; color:#1a3a6b;">
+                        <td style="font-weight:600;color:#1a3a6b;">
                             {{ item.responsable.prenom }} {{ item.responsable.nom }}
                             {% if current_user.is_admin %}
                             <div style="margin-top:5px;">
-                                <a href="{{ url_for('supprimer_responsable', id=item.responsable.id) }}"
-                                   style="background:#e74c3c; color:white; font-size:10px; padding:2px 9px; border-radius:10px; text-decoration:none; font-weight:600;"
-                                   onclick="return confirm('Wash bghi thda had responsable?')">🗑️ Supprimer</a>
+                                <button onclick="confirmDelete('{{ url_for('supprimer_responsable', id=item.responsable.id) }}', '{{ item.responsable.prenom }} {{ item.responsable.nom }}', 'responsable')"
+                                    style="background:#e74c3c;color:white;font-size:10px;padding:2px 9px;border-radius:10px;border:none;cursor:pointer;font-weight:600;font-family:'Poppins',sans-serif;">
+                                    🗑️ Supprimer
+                                </button>
                             </div>
                             {% endif %}
                         </td>
-                        <td style="text-align:center;"><span style="background:#1a3a6b; color:white; padding:3px 12px; border-radius:20px; font-size:12px; font-weight:600;">{{ item.nb_coordinateurs }}</span></td>
-                        <td style="text-align:center;"><span style="background:#e91e8c; color:white; padding:3px 12px; border-radius:20px; font-size:12px; font-weight:600;">{{ item.nb_coordinatrices }}</span></td>
-                        <td style="text-align:center;"><span style="background:#95a5a6; color:white; padding:3px 12px; border-radius:20px; font-size:12px; font-weight:600;">{{ item.total }}</span></td>
+                        <td style="text-align:center;"><span style="background:#1a3a6b;color:white;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600;">{{ item.nb_coordinateurs }}</span></td>
+                        <td style="text-align:center;"><span style="background:#e91e8c;color:white;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600;">{{ item.nb_coordinatrices }}</span></td>
+                        <td style="text-align:center;"><span style="background:#95a5a6;color:white;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600;">{{ item.total }}</span></td>
                         <td>
                             {% for coord in item.responsable.coordinateurs %}
-                            <div style="background:#f8fafc; border-radius:9px; padding:9px 12px; margin-bottom:6px; border:1px solid #e8edf5;">
-                                <div style="font-weight:600; color:#1a3a6b; font-size:12px; margin-bottom:5px;">
+                            <div style="background:#f8fafc;border-radius:9px;padding:9px 12px;margin-bottom:6px;border:1px solid #e8edf5;">
+                                <div style="font-weight:600;color:#1a3a6b;font-size:12px;margin-bottom:5px;">
                                     {% if coord.genre == 'M' %}👨{% else %}👩{% endif %} {{ coord.prenom }} {{ coord.nom }}
                                 </div>
                                 <div>
                                     {% if coord.dours %}{% for d in coord.dours %}
-                                    <span style="display:inline-block; margin:2px; padding:2px 8px; border-radius:10px; font-size:10px; color:white; font-weight:500; background:{% if d.type == 'talib' %}#1a3a6b{% elif d.type == 'taliba' %}#e91e8c{% else %}#f5a623{% endif %};">dar {{ d.type }} {{ d.nom }}</span>
+                                    <span style="display:inline-block;margin:2px;padding:2px 8px;border-radius:10px;font-size:10px;color:white;font-weight:500;background:{% if d.type == 'talib' %}#1a3a6b{% elif d.type == 'taliba' %}#e91e8c{% else %}#f5a623{% endif %};">{{ d.nom }}</span>
                                     {% endfor %}{% else %}
-                                    <span style="color:#bbb; font-size:11px; font-style:italic;">Mazal ma zidti dour</span>
+                                    <span style="color:#bbb;font-size:11px;font-style:italic;">Mazal ma zidti dour</span>
                                     {% endif %}
                                 </div>
-                                <div style="margin-top:6px; display:flex; gap:5px; flex-wrap:wrap;">
-                                    <button style="background:#f5a623; color:white; font-size:10px; padding:3px 10px; border-radius:10px; border:none; cursor:pointer; font-weight:600; font-family:'Poppins',sans-serif;"
+                                <div style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap;">
+                                    <button style="background:#f5a623;color:white;font-size:10px;padding:3px 10px;border-radius:10px;border:none;cursor:pointer;font-weight:600;font-family:'Poppins',sans-serif;"
                                         onclick="openModifier({{ coord.id }}, '{{ coord.nom }}', '{{ coord.prenom }}', '{{ coord.genre }}', {{ coord.responsable_id }}, [{{ coord.dours|map(attribute='id')|join(',') }}])">✏️ Modifier</button>
-                                    <a href="{{ url_for('supprimer_coordinateur', id=coord.id) }}"
-                                       style="background:#e74c3c; color:white; font-size:10px; padding:3px 10px; border-radius:10px; text-decoration:none; font-weight:600;"
-                                       onclick="return confirm('Wash bghi thda had coordinateur?')">🗑️</a>
+                                    <button onclick="confirmDelete('{{ url_for('supprimer_coordinateur', id=coord.id) }}', '{{ coord.prenom }} {{ coord.nom }}', 'coordinateur')"
+                                        style="background:#e74c3c;color:white;font-size:10px;padding:3px 10px;border-radius:10px;border:none;cursor:pointer;font-weight:600;font-family:'Poppins',sans-serif;">
+                                        🗑️
+                                    </button>
                                 </div>
                             </div>
                             {% endfor %}
@@ -644,42 +403,46 @@
                 </tbody>
             </table>
         </div>
-
         <!-- Mobile -->
         <div class="resp-card" style="padding:10px;">
             {% for item in data %}
-            <div style="border-radius:12px; border:1.5px solid #e8edf5; overflow:hidden; margin-bottom:12px;">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; padding:13px 14px; background:#f8fafc; border-bottom:1px solid #e8edf5;">
+            <div style="border-radius:12px;border:1.5px solid #e8edf5;overflow:hidden;margin-bottom:12px;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:13px 14px;background:#f8fafc;border-bottom:1px solid #e8edf5;">
                     <div>
-                        <div style="font-weight:700; color:#1a3a6b; font-size:13px;">{{ item.responsable.prenom }} {{ item.responsable.nom }}</div>
-                        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;">
-                            <span style="padding:2px 10px; border-radius:20px; font-size:11px; font-weight:700; color:white; background:#1a3a6b;">👨 {{ item.nb_coordinateurs }}</span>
-                            <span style="padding:2px 10px; border-radius:20px; font-size:11px; font-weight:700; color:white; background:#e91e8c;">👩 {{ item.nb_coordinatrices }}</span>
-                            <span style="padding:2px 10px; border-radius:20px; font-size:11px; font-weight:700; color:white; background:#95a5a6;">Total {{ item.total }}</span>
+                        <div style="font-weight:700;color:#1a3a6b;font-size:13px;">{{ item.responsable.prenom }} {{ item.responsable.nom }}</div>
+                        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">
+                            <span style="padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;color:white;background:#1a3a6b;">👨 {{ item.nb_coordinateurs }}</span>
+                            <span style="padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;color:white;background:#e91e8c;">👩 {{ item.nb_coordinatrices }}</span>
+                            <span style="padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;color:white;background:#95a5a6;">Total {{ item.total }}</span>
                         </div>
                     </div>
                     {% if current_user.is_admin %}
-                    <a href="{{ url_for('supprimer_responsable', id=item.responsable.id) }}"
-                       style="background:#e74c3c; color:white; font-size:10px; padding:4px 10px; border-radius:10px; text-decoration:none; font-weight:600; white-space:nowrap;"
-                       onclick="return confirm('Wash bghi thda had responsable?')">🗑️</a>
+                    <button onclick="confirmDelete('{{ url_for('supprimer_responsable', id=item.responsable.id) }}', '{{ item.responsable.prenom }} {{ item.responsable.nom }}', 'responsable')"
+                        style="background:#e74c3c;color:white;font-size:10px;padding:4px 10px;border-radius:10px;border:none;cursor:pointer;font-weight:600;font-family:'Poppins',sans-serif;white-space:nowrap;">
+                        🗑️
+                    </button>
                     {% endif %}
                 </div>
                 <div style="padding:10px 14px;">
                     {% for coord in item.responsable.coordinateurs %}
-                    <div style="background:white; border-radius:9px; padding:9px 12px; margin-bottom:6px; border:1px solid #e8edf5;">
-                        <div style="font-weight:600; color:#1a3a6b; font-size:12px; margin-bottom:5px;">
+                    <div style="background:white;border-radius:9px;padding:9px 12px;margin-bottom:6px;border:1px solid #e8edf5;">
+                        <div style="font-weight:600;color:#1a3a6b;font-size:12px;margin-bottom:5px;">
                             {% if coord.genre == 'M' %}👨{% else %}👩{% endif %} {{ coord.prenom }} {{ coord.nom }}
                         </div>
-                        <div>{% if coord.dours %}{% for d in coord.dours %}
-                            <span style="display:inline-block; margin:2px; padding:2px 8px; border-radius:10px; font-size:10px; color:white; font-weight:500; background:{% if d.type == 'talib' %}#1a3a6b{% elif d.type == 'taliba' %}#e91e8c{% else %}#f5a623{% endif %};">{{ d.nom }}</span>
-                            {% endfor %}{% else %}<span style="color:#bbb; font-size:11px; font-style:italic;">Mazal ma zidti dour</span>{% endif %}
+                        <div>
+                            {% if coord.dours %}{% for d in coord.dours %}
+                            <span style="display:inline-block;margin:2px;padding:2px 8px;border-radius:10px;font-size:10px;color:white;font-weight:500;background:{% if d.type == 'talib' %}#1a3a6b{% elif d.type == 'taliba' %}#e91e8c{% else %}#f5a623{% endif %};">{{ d.nom }}</span>
+                            {% endfor %}{% else %}
+                            <span style="color:#bbb;font-size:11px;font-style:italic;">Mazal ma zidti dour</span>
+                            {% endif %}
                         </div>
-                        <div style="margin-top:6px; display:flex; gap:5px;">
-                            <button style="background:#f5a623; color:white; font-size:10px; padding:4px 12px; border-radius:10px; border:none; cursor:pointer; font-weight:600; font-family:'Poppins',sans-serif;"
+                        <div style="margin-top:6px;display:flex;gap:5px;">
+                            <button style="background:#f5a623;color:white;font-size:10px;padding:4px 12px;border-radius:10px;border:none;cursor:pointer;font-weight:600;font-family:'Poppins',sans-serif;"
                                 onclick="openModifier({{ coord.id }}, '{{ coord.nom }}', '{{ coord.prenom }}', '{{ coord.genre }}', {{ coord.responsable_id }}, [{{ coord.dours|map(attribute='id')|join(',') }}])">✏️ Modifier</button>
-                            <a href="{{ url_for('supprimer_coordinateur', id=coord.id) }}"
-                               style="background:#e74c3c; color:white; font-size:10px; padding:4px 12px; border-radius:10px; text-decoration:none; font-weight:600;"
-                               onclick="return confirm('Wash bghi thda had coordinateur?')">🗑️</a>
+                            <button onclick="confirmDelete('{{ url_for('supprimer_coordinateur', id=coord.id) }}', '{{ coord.prenom }} {{ coord.nom }}', 'coordinateur')"
+                                style="background:#e74c3c;color:white;font-size:10px;padding:4px 12px;border-radius:10px;border:none;cursor:pointer;font-weight:600;font-family:'Poppins',sans-serif;">
+                                🗑️
+                            </button>
                         </div>
                     </div>
                     {% endfor %}
@@ -692,48 +455,4 @@
 </main>
 {% endblock %}
 
-{% block extra_js %}
-function openPanel(id) {
-    closeAllPanels();
-    const panel = document.getElementById(id);
-    if (panel) {
-        panel.classList.add('active');
-        document.getElementById('overlay').classList.add('active');
-    }
-}
-function closeAllPanels() {
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    document.getElementById('overlay').classList.remove('active');
-}
-
-// Modifier coordinateur
-function openModifier(id, nom, prenom, genre, respId, dourIds) {
-    document.getElementById('form-modifier').action = '/modifier_coordinateur/' + id;
-    document.getElementById('mod-nom').value    = nom;
-    document.getElementById('mod-prenom').value = prenom;
-    document.getElementById('mod-genre').value  = genre;
-    document.getElementById('mod-resp').value   = respId;
-    const sel = document.getElementById('mod-dours');
-    for (let opt of sel.options) {
-        opt.selected = dourIds.includes(parseInt(opt.value));
-    }
-    openPanel('panel-modifier');
-}
-
-// Sélectionner rôle dans le panel modifier admin
-function selectAdminRole(role) {
-    document.getElementById('madm-card-admin').classList.toggle('selected', role === 'admin');
-    document.getElementById('madm-card-responsable').classList.toggle('selected', role === 'responsable');
-    document.getElementById('madm-role').value = role;
-}
-
-// Modifier admin
-function openModifierAdmin(id, nom, prenom, email, role) {
-    document.getElementById('form-modifier-admin').action = '/modifier_admin/' + id;
-    document.getElementById('madm-nom').value    = nom;
-    document.getElementById('madm-prenom').value = prenom;
-    document.getElementById('madm-email').value  = email;
-    selectAdminRole(role || 'admin');
-    openPanel('panel-modifier-admin');
-}
-{% endblock %}
+{% block extra_js %}{% endblock %}

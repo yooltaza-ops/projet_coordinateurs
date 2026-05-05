@@ -114,7 +114,10 @@ def index():
             })
 
     if current_user.is_admin:
-        admins = User.query.filter(User.role == 'admin').all()
+        admins = User.query.filter(
+            User.role == 'admin',
+            User.responsable_id == None
+        ).all()
     else:
         admins = []
     nb_admins = len(admins)
@@ -468,14 +471,36 @@ def update_avatar():
 def ajouter_responsable():
     email_resp = request.form['email'].strip().lower()
     pwd        = request.form['password']
-    r = Responsable(nom=request.form['nom'], prenom=request.form['prenom'], email=email_resp)
-    db.session.add(r)
-    db.session.flush()
-    u = User(email=email_resp, role='responsable', responsable_id=r.id)
-    u.set_password(pwd)
-    db.session.add(u)
+    role       = request.form.get('role', 'responsable')
+    if role not in ('admin', 'responsable'):
+        role = 'responsable'
+
+    if User.query.filter_by(email=email_resp).first():
+        flash('Cet email est déjà utilisé.', 'error')
+        return redirect(url_for('ajouter_responsable_page'))
+
+    if role == 'responsable':
+        # خلق Responsable + User مربوطين
+        r = Responsable(nom=request.form['nom'], prenom=request.form['prenom'], email=email_resp)
+        db.session.add(r)
+        db.session.flush()
+        u = User(email=email_resp, role='responsable', responsable_id=r.id)
+        u.set_password(pwd)
+        db.session.add(u)
+    else:
+        # Admin فقط — بلا Responsable row
+        u = User(
+            email=email_resp,
+            role='admin',
+            nom=request.form['nom'],
+            prenom=request.form['prenom'],
+            responsable_id=None
+        )
+        u.set_password(pwd)
+        db.session.add(u)
+
     db.session.commit()
-    flash(f'Responsable {r.prenom} {r.nom} ajouté!', 'success')
+    flash(f'{"Responsable" if role == "responsable" else "Admin"} ajouté avec succès!', 'success')
     return redirect(url_for('index'))
 
 
@@ -485,14 +510,13 @@ def ajouter_responsable():
 def gerer_responsables():
     all_resp = Responsable.query.order_by(Responsable.nom).all()
     responsables_only = [r for r in all_resp if r.user and r.user.role == 'responsable']
-    admins_only       = [r for r in all_resp if r.user and r.user.role == 'admin']
-    admins_purs       = User.query.filter_by(role='admin').filter(
-                            User.responsable_id == None
-                        ).order_by(User.nom).all()
+    admins_purs = User.query.filter_by(role='admin').filter(
+                      User.responsable_id == None
+                  ).order_by(User.nom).all()
     total_coordinateurs = Coordinateur.query.count()
     return render_template('gerer_responsables.html',
                            responsables_only=responsables_only,
-                           admins_only=admins_only,
+                           admins_only=[],
                            admins_purs=admins_purs,
                            total_coordinateurs=total_coordinateurs)
 
@@ -519,16 +543,33 @@ def modifier_responsable(id):
         pwd = request.form.get('password', '').strip()
         if pwd:
             r.user.set_password(pwd)
-        # ✅ FIX: mnin responsable → admin, khelli responsable_id b7al howa
-        # bach les coordinateurs dyalo yb9aw rattachés
+
         if new_role == 'responsable':
             r.user.responsable_id = r.id
-        # ila admin → responsable_id katb9a None f User
-        # walakin l Responsable row w les coordinateurs kayb9aw intacts
+            r.email = new_email
+            db.session.commit()
+        else:
+            # Responsable → Admin — detach user then delete responsable row
+            u = r.user
+            u.responsable_id = None
+            u.nom    = r.nom
+            u.prenom = r.prenom
+            u.email  = new_email
+            u.role   = 'admin'
+            db.session.flush()
+            # حذف coordinateurs ديالو أولا
+            for c in r.coordinateurs:
+                Seance.query.filter_by(coordinateur_id=c.id).delete()
+                db.session.execute(
+                    db.text("DELETE FROM coordinateur_dour WHERE coordinateur_id = :cid"),
+                    {"cid": c.id}
+                )
+                db.session.flush()
+                db.session.delete(c)
+            db.session.delete(r)
+            db.session.commit()
 
-    r.email = new_email
-    db.session.commit()
-    flash(f'{r.prenom} {r.nom} modifié avec succès!', 'success')
+    flash(f'Compte modifié avec succès!', 'success')
     return redirect(url_for('gerer_responsables'))
 
 
@@ -537,17 +578,19 @@ def modifier_responsable(id):
 @admin_required
 def supprimer_responsable(id):
     r = Responsable.query.get_or_404(id)
-    # Supprimer les séances des coordinateurs liés
     for c in r.coordinateurs:
-        for s in c.seances:
-            db.session.delete(s)
-        c.dours = []
+        Seance.query.filter_by(coordinateur_id=c.id).delete()
+        db.session.execute(
+            db.text("DELETE FROM coordinateur_dour WHERE coordinateur_id = :cid"),
+            {"cid": c.id}
+        )
+        db.session.flush()
         db.session.delete(c)
     if r.user:
         db.session.delete(r.user)
     db.session.delete(r)
     db.session.commit()
-    flash(f'Responsable supprimé avec ses coordinateurs!', 'success')
+    flash('Responsable supprimé avec ses coordinateurs!', 'success')
     return redirect(url_for('index'))
 
 
@@ -593,28 +636,19 @@ def modifier_admin(id):
     safe_nom    = u.nom    or u.email.split('@')[0]
     safe_prenom = u.prenom or u.email.split('@')[0]
 
-    # ── Admin → Responsable ──────────────────────────────────────────────────
     if new_role == 'responsable':
         if u.responsable_id is None:
-            # Créer un nouveau Responsable lié à ce User
             r = Responsable(nom=safe_nom, prenom=safe_prenom, email=u.email)
             db.session.add(r)
             db.session.flush()
             u.responsable_id = r.id
         else:
-            # Mettre à jour le Responsable existant (cas retour admin→resp)
             r = Responsable.query.get(u.responsable_id)
             if r:
                 r.nom    = safe_nom
                 r.prenom = safe_prenom
                 r.email  = u.email
-
-    # ── Responsable → Admin ──────────────────────────────────────────────────
     elif new_role == 'admin' and old_role == 'responsable':
-        # ✅ FIX PRINCIPAL: On garde le Responsable row + ses coordinateurs
-        # intacts — on détache seulement le User (responsable_id = None)
-        # Les coordinateurs dyalo kayb9aw rattachés l Responsable row
-        # Mnin yb9a admin men jadid → les coordinateurs kayb9aw f l'attente
         u.responsable_id = None
 
     u.role = new_role
@@ -627,7 +661,7 @@ def modifier_admin(id):
         u.set_password(pwd)
 
     db.session.commit()
-    flash(f'{"Responsable" if new_role == "responsable" else "Admin"} modifié avec succès!', 'success')
+    flash('Compte modifié avec succès!', 'success')
     return redirect(url_for('index'))
 
 
@@ -639,7 +673,6 @@ def supprimer_admin(id):
         flash('Impossible de supprimer votre propre compte.', 'error')
         return redirect(url_for('index'))
     u = User.query.get_or_404(id)
-    # Les coordinateurs + Responsable row kayb9aw intacts
     db.session.delete(u)
     db.session.commit()
     flash('Admin supprimé!', 'success')
@@ -677,7 +710,12 @@ def modifier_coordinateur(id):
     c.prenom = request.form['prenom']
     c.genre = request.form['genre']
     c.responsable_id = request.form['responsable_id']
-    c.dours = []
+    # حذف relations قديمة مباشرة بـ SQL
+    db.session.execute(
+        db.text("DELETE FROM coordinateur_dour WHERE coordinateur_id = :cid"),
+        {"cid": c.id}
+    )
+    db.session.flush()
     for did in request.form.getlist('dours'):
         d = Dour.query.get(int(did))
         if d: c.dours.append(d)
@@ -693,7 +731,12 @@ def supprimer_coordinateur(id):
     if not current_user.is_admin:
         if not current_user.responsable or c.responsable_id != current_user.responsable.id:
             abort(403)
-    c.dours = []
+    Seance.query.filter_by(coordinateur_id=c.id).delete()
+    db.session.execute(
+        db.text("DELETE FROM coordinateur_dour WHERE coordinateur_id = :cid"),
+        {"cid": c.id}
+    )
+    db.session.flush()
     db.session.delete(c)
     db.session.commit()
     flash('Coordinateur supprimé!', 'success')
