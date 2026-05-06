@@ -896,3 +896,14 @@ def rapport_coordinateurs():
         matieres_actives=sorted(matieres_actives_set),
         niveaux_actifs=sorted(niveaux_actifs_set),
     )
+
+@app.route('/update_social', methods=['POST'])
+@login_required
+def update_social():
+    current_user.facebook = request.form.get('facebook', '').strip() or None
+    current_user.twitter  = request.form.get('twitter',  '').strip() or None
+    current_user.linkedin = request.form.get('linkedin', '').strip() or None
+    current_user.website  = request.form.get('website',  '').strip() or None
+    db.session.commit()
+    flash('Réseaux sociaux mis à jour!', 'success')
+    return redirect(url_for('parametres'))

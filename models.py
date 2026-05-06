@@ -57,6 +57,10 @@ class User(db.Model, UserMixin):
     avatar         = db.Column(db.String(200), nullable=True)
     responsable_id = db.Column(db.Integer, db.ForeignKey('responsable.id'), nullable=True)
     responsable    = db.relationship('Responsable', backref=db.backref('user', uselist=False))
+    facebook = db.Column(db.String(300), nullable=True)
+    twitter  = db.Column(db.String(300), nullable=True)
+    linkedin = db.Column(db.String(300), nullable=True)
+    website  = db.Column(db.String(300), nullable=True)
 
     def set_password(self, pwd):
         self.password = generate_password_hash(pwd)
