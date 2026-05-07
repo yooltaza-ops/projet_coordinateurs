@@ -591,7 +591,7 @@ def supprimer_responsable(id):
     db.session.delete(r)
     db.session.commit()
     flash('Responsable supprimé avec ses coordinateurs!', 'success')
-    return redirect(url_for('gerer_responsables_page'))
+    return redirect(url_for('gerer_responsables'))
 
 
 # ─── Admins ───────────────────────────────────────────────────────────────────
