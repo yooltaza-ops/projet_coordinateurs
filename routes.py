@@ -501,7 +501,7 @@ def ajouter_responsable():
 
     db.session.commit()
     flash(f'{"Responsable" if role == "responsable" else "Admin"} ajouté avec succès!', 'success')
-    return redirect(url_for('index'))
+    return redirect(url_for('ajouter_responsable_page'))
 
 
 @app.route('/gerer_responsables')
@@ -570,7 +570,7 @@ def modifier_responsable(id):
             db.session.commit()
 
     flash(f'Compte modifié avec succès!', 'success')
-    return redirect(url_for('gerer_responsables'))
+    return redirect(url_for('gerer_responsables_page'))
 
 
 @app.route('/supprimer_responsable/<int:id>')
@@ -591,7 +591,7 @@ def supprimer_responsable(id):
     db.session.delete(r)
     db.session.commit()
     flash('Responsable supprimé avec ses coordinateurs!', 'success')
-    return redirect(url_for('index'))
+    return redirect(url_for('gerer_responsables_page'))
 
 
 # ─── Admins ───────────────────────────────────────────────────────────────────
@@ -696,7 +696,7 @@ def ajouter_coordinateur():
     db.session.add(c)
     db.session.commit()
     flash('Coordinateur ajouté avec succès!', 'success')
-    return redirect(url_for('index'))
+    return redirect(url_for('ajouter_coordinateur_page'))
 
 
 @app.route('/modifier_coordinateur/<int:id>', methods=['POST'])
@@ -721,7 +721,7 @@ def modifier_coordinateur(id):
         if d: c.dours.append(d)
     db.session.commit()
     flash('Coordinateur modifié!', 'success')
-    return redirect(url_for('index'))
+    return redirect(url_for('gerer_coordinateurs'))
 
 
 @app.route('/supprimer_coordinateur/<int:id>')
@@ -752,7 +752,7 @@ def gerer_dours():
     db.session.add(d)
     db.session.commit()
     flash('Dour ajoutée!', 'success')
-    return redirect(url_for('index'))
+    return redirect(url_for('gerer_dours_page'))
 
 
 @app.route('/supprimer_dour/<int:id>')
@@ -763,7 +763,7 @@ def supprimer_dour(id):
     db.session.delete(d)
     db.session.commit()
     flash('Dour supprimée!', 'success')
-    return redirect(url_for('index'))
+    return redirect(url_for('gerer_dours_page'))
 
 
 # ─── Erreurs ──────────────────────────────────────────────────────────────────
