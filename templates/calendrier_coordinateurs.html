@@ -11,9 +11,6 @@
     --light:  #f1f5f9; --border: #e2e8f0; --white:  #ffffff;
     --shadow: 0 4px 20px rgba(0,0,0,0.07);
     --shadow2:0 8px 32px rgba(0,0,0,0.13);
-    --c0:#1a3a6b;--c1:#0d9488;--c2:#7c3aed;--c3:#e91e8c;
-    --c4:#f5a623;--c5:#16a34a;--c6:#dc2626;--c7:#0ea5e9;
-    --c8:#d97706;--c9:#6366f1;--c10:#ec4899;--c11:#14b8a6;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'DM Sans', sans-serif; }
@@ -21,13 +18,11 @@ body { font-family: 'DM Sans', sans-serif; }
 .page-wrap { padding: 24px; background: #f8faff; min-height: 100vh; }
 @media(max-width:768px){ .page-wrap { padding: 10px; } }
 
-/* ── View switcher ── */
 .view-select   { display: block; }
 .view-calendar { display: none; }
 .view-calendar.active { display: block; }
 .view-select.hidden   { display: none; }
 
-/* ── Page header ── */
 .page-header {
     display: flex; align-items: center; justify-content: space-between;
     flex-wrap: wrap; gap: 12px; margin-bottom: 20px;
@@ -35,7 +30,6 @@ body { font-family: 'DM Sans', sans-serif; }
 .page-title { font-size: 22px; font-weight: 700; color: var(--blue); display: flex; align-items: center; gap: 10px; }
 .page-sub   { font-size: 12px; color: var(--grey); margin-top: 3px; }
 
-/* ── Search ── */
 .search-wrap {
     background: var(--white); border-radius: 14px; padding: 12px 18px;
     box-shadow: var(--shadow); border: 1.5px solid var(--border);
@@ -49,7 +43,6 @@ body { font-family: 'DM Sans', sans-serif; }
 .search-input:focus { border-color: var(--orange); background: white; }
 .search-label { font-size: 11px; font-weight: 700; color: var(--grey); text-transform: uppercase; letter-spacing: .5px; white-space: nowrap; }
 
-/* ── Coordinator grid ── */
 .coord-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -86,7 +79,6 @@ body { font-family: 'DM Sans', sans-serif; }
 .empty-coords { grid-column:1/-1; padding: 60px 20px; text-align: center; color: #cbd5e1; }
 .empty-coords .ei { font-size: 48px; margin-bottom: 10px; opacity: .4; }
 
-/* ── Calendar topbar ── */
 .cal-topbar {
     display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
     background: var(--white); border-radius: 14px; padding: 12px 18px;
@@ -122,7 +114,6 @@ body { font-family: 'DM Sans', sans-serif; }
 }
 .today-btn:hover { background: var(--orange); }
 
-/* ── Summary strip ── */
 .sum-strip { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
 .sum-item {
     background: var(--white); border-radius: 10px; padding: 10px 16px;
@@ -132,7 +123,6 @@ body { font-family: 'DM Sans', sans-serif; }
 .sum-val { font-size: 20px; font-weight: 700; }
 .sum-lbl { font-size: 10px; color: var(--grey); }
 
-/* ── Calendar grid ── */
 .calendar-card {
     background: var(--white); border-radius: 18px;
     box-shadow: var(--shadow2); border: 1.5px solid var(--border); overflow: hidden;
@@ -173,6 +163,8 @@ body { font-family: 'DM Sans', sans-serif; }
 }
 .cal-cell:hover .cell-add-btn { display: flex; }
 .cell-add-btn:hover { background: var(--green); transform: scale(1.15); }
+
+/* ── chip colors by statut ── */
 .seance-chip {
     display: flex; align-items: center; gap: 4px; padding: 3px 6px; border-radius: 6px;
     margin-bottom: 2px; font-size: 10px; font-weight: 600; color: white; cursor: pointer;
@@ -190,16 +182,18 @@ body { font-family: 'DM Sans', sans-serif; }
 .modal-overlay {
     display: none; position: fixed; inset: 0;
     background: rgba(15,23,42,0.60); backdrop-filter: blur(5px);
-    z-index: 900; align-items: center; justify-content: center;
+    z-index: 900; align-items: flex-start; justify-content: center;
+    padding: 16px; overflow-y: auto;
 }
 .modal-overlay.open { display: flex; }
 .modal-box {
-    background: var(--white); border-radius: 20px; width: 100%; max-width: 680px; margin: 16px;
+    background: var(--white); border-radius: 20px; width: 100%; max-width: 680px;
+    margin: auto;
     box-shadow: 0 28px 70px rgba(0,0,0,0.25); overflow: hidden;
-    display: flex; flex-direction: column; max-height: 90vh;
+    display: flex; flex-direction: column;
     animation: modalIn .28s cubic-bezier(0.34,1.56,0.64,1);
 }
-.modal-box.sm { max-width: 420px; }
+.modal-box.sm { max-width: 480px; }
 @keyframes modalIn {
     from { opacity:0; transform:scale(0.91) translateY(22px); }
     to   { opacity:1; transform:scale(1) translateY(0); }
@@ -212,7 +206,7 @@ body { font-family: 'DM Sans', sans-serif; }
 .modal-close {
     width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,.18);
     border: none; color: white; font-size: 15px; cursor: pointer;
-    display: flex; align-items: center; justify-content: center; transition: background .2s;
+    display: flex; align-items: center; justify-content: center; transition: background .2s; flex-shrink: 0;
 }
 .modal-close:hover { background: rgba(255,255,255,.35); }
 .modal-body { overflow-y: auto; padding: 18px 22px; flex: 1; }
@@ -221,14 +215,107 @@ body { font-family: 'DM Sans', sans-serif; }
     border-top: 1.5px solid var(--border); background: #fafbff;
 }
 
-/* Form */
-.sessions-list { display: flex; flex-direction: column; gap: 12px; }
+/* ── Section label (comme suivi_partenariat) ── */
+.sp-section-label {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 700; color: #8898aa;
+    text-transform: uppercase; letter-spacing: .08em;
+    margin: 16px 0 10px;
+}
+.sp-section-label:first-child { margin-top: 0; }
+.sp-section-label::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(to right, #e2e8f0, transparent);
+}
+
+/* Form grids */
+.sc-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.sc-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+@media(max-width:500px){
+    .sc-grid-2 { grid-template-columns:1fr; }
+    .sc-grid-3 { grid-template-columns:1fr; }
+}
+
+/* ── Statut pills (identique suivi_partenariat) ── */
+.sp-statut-group { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px; }
+.sp-statut-pill {
+    display: flex; align-items: center; gap: 7px;
+    padding: 7px 14px; border-radius: 10px;
+    border: 1.5px solid #d1d9e6; background: #fafbfd; cursor: pointer;
+    font-size: 12px; font-weight: 600; color: #6b7a99;
+    transition: all .18s; user-select: none;
+}
+.sp-statut-pill input[type=radio] { display: none; }
+.sp-statut-pill .sdot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: currentColor; opacity: .35; flex-shrink: 0;
+}
+.sp-statut-pill.s-passee:has(input:checked)    { background:#edfdf4; border-color:#4ade80; color:#166534; box-shadow:0 0 0 3px rgba(74,222,128,.12); }
+.sp-statut-pill.s-annulee:has(input:checked)   { background:#fff0f0; border-color:#f87171; color:#991b1b; box-shadow:0 0 0 3px rgba(248,113,113,.12); }
+.sp-statut-pill.s-rattrapage:has(input:checked){ background:#fffbeb; border-color:#fbbf24; color:#92400e; box-shadow:0 0 0 3px rgba(251,191,36,.12); }
+.sp-statut-pill:has(input:checked) .sdot { opacity: 1; }
+
+/* Number stepper */
+.sp-num-wrap {
+    display: inline-flex; align-items: center;
+    border: 2px solid var(--border); border-radius: 9px;
+    background: white; overflow: hidden; width: 100%;
+    transition: border-color .18s;
+}
+.sp-num-wrap:focus-within { border-color: var(--orange); }
+.sp-num-btn {
+    width: 36px; min-width: 36px; height: 38px; border: none;
+    background: var(--light); cursor: pointer; font-size: 18px;
+    color: #4a5568; display: flex; align-items: center; justify-content: center;
+    transition: background .15s; flex-shrink: 0;
+}
+.sp-num-btn:first-child { border-right: 1.5px solid var(--border); }
+.sp-num-btn:last-child  { border-left:  1.5px solid var(--border); }
+.sp-num-btn:hover { background: #e8edf5; color: var(--blue); }
+.sp-num-input {
+    border: none; background: transparent; text-align: center;
+    font-size: 15px; font-weight: 700; color: #1a202c;
+    flex: 1; outline: none; font-family: 'DM Sans', sans-serif; padding: 0; min-width: 0;
+}
+
+/* Prof search */
+.prof-search-wrapper { position: relative; }
+.prof-search-input {
+    width: 100%; outline: none;
+    font-family: 'DM Sans', sans-serif; font-size: 13px;
+    color: #1a202c; background: white;
+    border: 2px solid var(--border); border-radius: 9px;
+    padding: 9px 11px 9px 34px;
+    transition: border-color .18s;
+}
+.prof-search-input:focus { border-color: var(--orange); }
+.prof-search-icon {
+    position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+    font-size: 14px; pointer-events: none; opacity: .45;
+}
+.prof-dropdown {
+    display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 300;
+    background: white; border: 2px solid var(--orange); border-top: 1px solid #f0e8d4;
+    border-radius: 0 0 9px 9px; max-height: 180px; overflow-y: auto;
+    box-shadow: 0 8px 24px rgba(26,58,107,.12);
+}
+.prof-dropdown.open { display: block; }
+.prof-option {
+    padding: 9px 12px; font-size: 12px; cursor: pointer; color: #2d3748;
+    transition: background .12s; border-bottom: 1px solid #f4f7fb;
+}
+.prof-option:last-child { border-bottom: none; }
+.prof-option:hover { background: #fdf8f0; color: var(--blue); }
+.prof-option.selected { background: #fffbeb; font-weight: 600; }
+
+/* Sessions (form add multiple) */
+.sessions-list { display: flex; flex-direction: column; gap: 16px; }
 .session-card {
     background: var(--light); border: 2px solid var(--border);
     border-radius: 14px; padding: 14px 16px; transition: border-color .2s;
 }
 .session-card:focus-within { border-color: var(--orange); }
-.sc-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.sc-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .sc-num {
     font-size: 10px; font-weight: 700; color: var(--blue); background: white;
     border: 1.5px solid var(--border); padding: 2px 10px; border-radius: 20px;
@@ -240,20 +327,28 @@ body { font-family: 'DM Sans', sans-serif; }
     font-family: 'DM Sans', sans-serif; transition: all .15s;
 }
 .btn-rm:hover { background: var(--red); color: white; }
-.sc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-@media(max-width:500px){ .sc-grid { grid-template-columns:1fr; } }
+
 .fg { display: flex; flex-direction: column; gap: 4px; }
-.fg.full { grid-column:1/-1; }
+.fg.full { grid-column: 1/-1; }
 .fg label {
     font-size: 10px; font-weight: 700; color: var(--blue);
     text-transform: uppercase; letter-spacing: .4px;
 }
-.fg select, .fg input[type="date"], .fg input[type="number"], .fg input[type="text"] {
+.fg select,
+.fg input[type="date"],
+.fg input[type="time"],
+.fg input[type="number"],
+.fg input[type="text"],
+.fg textarea {
     padding: 8px 11px; border: 2px solid var(--border); border-radius: 9px;
     font-size: 13px; font-family: 'DM Sans', sans-serif;
     color: #1e293b; background: white; outline: none; transition: border .2s;
 }
-.fg select:focus, .fg input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(245,166,35,.12); }
+.fg select:focus, .fg input:focus, .fg textarea:focus {
+    border-color: var(--orange); box-shadow: 0 0 0 3px rgba(245,166,35,.12);
+}
+.fg textarea { resize: vertical; min-height: 60px; }
+
 .btn-add-row {
     display: flex; align-items: center; justify-content: center; gap: 8px;
     padding: 10px 16px; border: 2.5px dashed var(--teal); background: #f0fdfa; color: var(--teal);
@@ -284,10 +379,13 @@ body { font-family: 'DM Sans', sans-serif; }
 .dr-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
 .dr-date { font-size: 12px; font-weight: 700; color: var(--blue); font-family: 'DM Mono', monospace; }
 .dr-h { font-size: 13px; font-weight: 700; color: var(--teal); background: #e6faf7; padding: 2px 9px; border-radius: 20px; }
-.dr-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.dr-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
 .dr-badge { padding: 2px 9px; border-radius: 20px; font-size: 10px; font-weight: 700; color: white; }
-.dr-mat { background: var(--teal); }
-.dr-niv { background: var(--purple); }
+.dr-mat   { background: var(--teal); }
+.dr-niv   { background: var(--purple); }
+.dr-passee    { background: #16a34a; }
+.dr-annulee   { background: var(--red); }
+.dr-rattrapage{ background: var(--orange); color: #1a1a1a; }
 .dr-note { font-size: 11px; color: var(--grey); margin-top: 4px; font-style: italic; }
 .dr-actions { display: flex; gap: 8px; margin-top: 10px; }
 .btn-edit-s {
@@ -303,7 +401,6 @@ body { font-family: 'DM Sans', sans-serif; }
 }
 .btn-del-s:hover { background: var(--red); color: white; }
 
-/* Alert */
 .alert {
     padding: 11px 16px; border-radius: 10px; margin-bottom: 14px;
     font-size: 13px; display: flex; align-items: center; gap: 8px;
@@ -322,7 +419,6 @@ body { font-family: 'DM Sans', sans-serif; }
 {% block content %}
 <div class="page-wrap">
 
-<!-- ══ MODAL ADD ══ -->
 <!-- ══ MODAL ADD ══ -->
 <div class="modal-overlay" id="modal-add" onclick="closeAdd(event)">
     <div class="modal-box" onclick="event.stopPropagation()">
@@ -362,18 +458,95 @@ body { font-family: 'DM Sans', sans-serif; }
         </div>
         <form method="POST" id="edit-form">
             <div class="modal-body">
-                <div class="sc-grid">
-                    <div class="fg"><label>📅 Date</label>
-                        <input type="date" name="date" id="edit-date" required></div>
-                    <div class="fg"><label>⏱️ Heures</label>
-                        <input type="number" name="nb_heures" id="edit-heures" step="0.5" min="0.5" max="12" required></div>
-                    <div class="fg"><label>🔬 Matière</label>
-                        <select name="matiere" id="edit-matiere"></select></div>
-                    <div class="fg"><label>🎓 Niveau</label>
-                        <select name="niveau" id="edit-niveau"></select></div>
-                    <div class="fg full"><label>📝 Note</label>
-                        <input type="text" name="note" id="edit-note" placeholder="Remarque..."></div>
+
+                <div class="sp-section-label">🕐 Date & Durée</div>
+                <div class="sc-grid-3">
+                    <div class="fg">
+                        <label>📅 Date</label>
+                        <input type="date" name="date" id="edit-date" required>
+                    </div>
+                    <div class="fg">
+                        <label>🕐 Heure</label>
+                        <input type="time" name="heure" id="edit-heure">
+                    </div>
+                    <div class="fg">
+                        <label>⏱️ Durée (h)</label>
+                        <div class="sp-num-wrap">
+                            <button class="sp-num-btn" type="button" onclick="changeEditHrs(-0.5)">−</button>
+                            <input class="sp-num-input" type="number" name="nb_heures" id="edit-heures" step="0.5" min="0.5" max="12" value="2" required>
+                            <button class="sp-num-btn" type="button" onclick="changeEditHrs(0.5)">+</button>
+                        </div>
+                    </div>
                 </div>
+
+                <div class="sp-section-label">📊 Statut</div>
+                <div class="sp-statut-group">
+                    <label class="sp-statut-pill s-passee">
+                        <input type="radio" name="statut" value="passee" id="edit-s-passee" checked>
+                        <span class="sdot"></span> Passée
+                    </label>
+                    <label class="sp-statut-pill s-annulee">
+                        <input type="radio" name="statut" value="annulee" id="edit-s-annulee">
+                        <span class="sdot"></span> Annulée
+                    </label>
+                    <label class="sp-statut-pill s-rattrapage">
+                        <input type="radio" name="statut" value="rattrapage" id="edit-s-rattrapage">
+                        <span class="sdot"></span> Rattrapage
+                    </label>
+                </div>
+
+                <div class="sp-section-label">🏠 Lieu & Matière</div>
+                <div class="sc-grid-2">
+                    <div class="fg">
+                        <label>🏠 Dar Talib</label>
+                        <select name="dar_id" id="edit-dar">
+                            <option value="">— Aucune —</option>
+                            {% for d in dours %}
+                            <option value="{{ d.id }}">{{ d.nom }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="fg">
+                        <label>🔬 Matière</label>
+                        <select name="matiere" id="edit-matiere">
+                            <option value="">— Non défini —</option>
+                            {% for m in matieres %}<option value="{{ m }}">{{ m }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="fg full">
+                        <label>🎓 Niveau</label>
+                        <select name="niveau" id="edit-niveau">
+                            <option value="">— Non défini —</option>
+                            {% for n in niveaux %}<option value="{{ n }}">{{ n }}</option>{% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="sp-section-label">🎓 Professeur</div>
+                <input type="hidden" name="prof" id="edit-prof-hidden">
+                <div class="prof-search-wrapper">
+                    <span class="prof-search-icon">🔍</span>
+                    <input type="text" id="edit-prof-search" class="prof-search-input"
+                           placeholder="Rechercher un professeur…" autocomplete="off">
+                    <div class="prof-dropdown" id="edit-prof-dropdown"></div>
+                </div>
+
+                <div class="sp-section-label">📝 Présence & Notes</div>
+                <div class="sc-grid-2">
+                    <div class="fg">
+                        <label>👥 Élèves présents</label>
+                        <input type="number" name="nb_eleves" id="edit-eleves" min="0" placeholder="0">
+                    </div>
+                    <div class="fg">
+                        <label>🏷️ Note interne</label>
+                        <input type="text" name="note" id="edit-note" placeholder="Note courte…">
+                    </div>
+                    <div class="fg full">
+                        <label>💬 Remarque</label>
+                        <textarea name="remarque" id="edit-remarque" placeholder="Remarques sur la séance…"></textarea>
+                    </div>
+                </div>
+
                 <input type="hidden" name="redirect_url" id="edit-redirect">
             </div>
             <div class="modal-footer">
@@ -430,9 +603,7 @@ body { font-family: 'DM Sans', sans-serif; }
     {% endfor %}
 {% endwith %}
 
-<!-- ══════════════════════════════════════════
-     VIEW 1 — LISTE COORDINATEURS
-══════════════════════════════════════════ -->
+<!-- ══ VIEW 1 — LISTE COORDINATEURS ══ -->
 <div class="view-select" id="view-select">
     <div class="page-header">
         <div>
@@ -479,6 +650,12 @@ body { font-family: 'DM Sans', sans-serif; }
                     <div class="ccs-val" style="color:var(--teal);">{{ "%.1f"|format(row.nb_heures) }}h</div>
                     <div class="ccs-lbl">heures</div>
                 </div>
+                {% if row.nb_passees is defined and row.nb_passees > 0 %}
+                <div class="ccs-item">
+                    <div class="ccs-val" style="color:#16a34a;">{{ row.nb_passees }}</div>
+                    <div class="ccs-lbl">passées</div>
+                </div>
+                {% endif %}
             </div>
             {% if row.matieres_uniq or row.niveaux_uniq %}
             <div class="coord-card-pills">
@@ -498,9 +675,7 @@ body { font-family: 'DM Sans', sans-serif; }
     </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     VIEW 2 — CALENDRIER
-══════════════════════════════════════════ -->
+<!-- ══ VIEW 2 — CALENDRIER ══ -->
 <div class="view-calendar" id="view-calendar">
 
     <form method="GET" action="{{ url_for('calendrier_coordinateurs') }}" id="filter-form" style="display:none;">
@@ -538,12 +713,18 @@ body { font-family: 'DM Sans', sans-serif; }
     </div>
 </div>
 
-</div>
+</div><!-- /page-wrap -->
 
 <script>
 const MATIERES  = {{ matieres  | tojson }};
 const NIVEAUX   = {{ niveaux   | tojson }};
 const MOIS_NOMS = {{ mois_noms | tojson }};
+const DOURS     = {{ dours | map(attribute='id') | list | tojson }};
+
+// Professeurs list
+const PROFS_DATA = [
+    {% for p in professeurs %}{{ p.nom | tojson }}{% if not loop.last %},{% endif %}{% endfor %}
+];
 
 // Coordinator data
 const COORDS = {};
@@ -559,7 +740,7 @@ COORDS[{{ row.coord.id }}] = {
 };
 {% endfor %}
 
-// Séances per coordinator per date
+// Séances per coordinator per date — avec tous les champs
 const SBY = {};
 {% for row in stats %}
 SBY[{{ row.coord.id }}] = {};
@@ -568,12 +749,18 @@ SBY[{{ row.coord.id }}] = {};
     const k = "{{ s.date.strftime('%Y-%m-%d') }}";
     if (!SBY[{{ row.coord.id }}][k]) SBY[{{ row.coord.id }}][k] = [];
     SBY[{{ row.coord.id }}][k].push({
-        id:     {{ s.id }},
-        heures: {{ s.nb_heures }},
-        matiere:"{{ s.matiere or '' }}",
-        niveau: "{{ s.niveau or '' }}",
-        note:   "{{ (s.note or '')|replace('"','\\\"') }}",
-        date:   "{{ s.date.strftime('%Y-%m-%d') }}",
+        id:       {{ s.id }},
+        heures:   {{ s.nb_heures }},
+        heure:    "{{ s.heure or '' }}",
+        statut:   "{{ s.statut or 'passee' }}",
+        matiere:  "{{ s.matiere or '' }}",
+        niveau:   "{{ s.niveau or '' }}",
+        prof:     "{{ (s.prof or '')|replace('"','\\"') }}",
+        note:     "{{ (s.note or '')|replace('"','\\"') }}",
+        remarque: "{{ (s.remarque or '')|replace('"','\\"') }}",
+        nb_eleves: {{ s.nb_eleves or 0 }},
+        dar_id:   "{{ s.dar_id or '' }}",
+        date:     "{{ s.date.strftime('%Y-%m-%d') }}",
     });
 })();
 {% endfor %}
@@ -583,7 +770,14 @@ let curCoord = null;
 let curMois  = {{ mois }};
 let curAnnee = {{ annee }};
 
-// ── Search ──────────────────────────────────────────────────────────────────
+/* ── Chip color by statut ── */
+function chipColor(s, coordColor) {
+    if (s.statut === 'annulee')   return '#dc2626';
+    if (s.statut === 'rattrapage') return '#f5a623';
+    return coordColor;
+}
+
+/* ── Search ── */
 function filterCoords(q) {
     const lq = q.toLowerCase().trim();
     document.querySelectorAll('.coord-card').forEach(c => {
@@ -591,17 +785,15 @@ function filterCoords(q) {
     });
 }
 
-// ── Open calendar ────────────────────────────────────────────────────────────
+/* ── Open calendar ── */
 function openCalendar(id) {
     curCoord = COORDS[id];
     document.getElementById('badge-av').textContent   = curCoord.initiales;
     document.getElementById('badge-name').textContent = curCoord.name;
     document.getElementById('coord-badge').style.background = curCoord.color;
     document.getElementById('hci').value = id;
-
     document.getElementById('view-select').classList.add('hidden');
     document.getElementById('view-calendar').classList.add('active');
-
     buildCalendar();
     buildSummary();
 }
@@ -612,14 +804,19 @@ function goBack() {
     curCoord = null;
 }
 
-// ── Summary ──────────────────────────────────────────────────────────────────
+/* ── Summary ── */
 function buildSummary() {
     if (!curCoord) return;
     const all = Object.values(SBY[curCoord.id] || {}).flat();
-    const nbS = all.length;
-    const nbH = all.reduce((a,s) => a + s.heures, 0);
-    const mats = [...new Set(all.map(s=>s.matiere).filter(Boolean))];
-    const nivs = [...new Set(all.map(s=>s.niveau).filter(Boolean))];
+    const nbS      = all.length;
+    const nbH      = all.filter(s=>s.statut!=='annulee').reduce((a,s)=>a+s.heures,0);
+    const nbPass   = all.filter(s=>s.statut==='passee').length;
+    const nbAnn    = all.filter(s=>s.statut==='annulee').length;
+    const nbRatt   = all.filter(s=>s.statut==='rattrapage').length;
+    const nbEleves = all.filter(s=>s.statut!=='annulee').reduce((a,s)=>a+(s.nb_eleves||0),0);
+    const mats     = [...new Set(all.map(s=>s.matiere).filter(Boolean))];
+    const nivs     = [...new Set(all.map(s=>s.niveau).filter(Boolean))];
+
     document.getElementById('sum-strip').innerHTML = `
         <div class="sum-item" style="border-color:${curCoord.color}">
             <div class="sum-val" style="color:${curCoord.color}">${nbS}</div>
@@ -627,33 +824,48 @@ function buildSummary() {
         </div>
         <div class="sum-item" style="border-color:var(--teal)">
             <div class="sum-val" style="color:var(--teal)">${nbH.toFixed(1)}h</div>
-            <div class="sum-lbl">⏱️ Heures</div>
+            <div class="sum-lbl">⏱️ Heures eff.</div>
         </div>
+        ${nbPass ? `<div class="sum-item" style="border-color:#16a34a">
+            <div class="sum-val" style="color:#16a34a">${nbPass}</div>
+            <div class="sum-lbl">✅ Passées</div>
+        </div>` : ''}
+        ${nbAnn ? `<div class="sum-item" style="border-color:var(--red)">
+            <div class="sum-val" style="color:var(--red)">${nbAnn}</div>
+            <div class="sum-lbl">❌ Annulées</div>
+        </div>` : ''}
+        ${nbRatt ? `<div class="sum-item" style="border-color:var(--orange)">
+            <div class="sum-val" style="color:var(--orange)">${nbRatt}</div>
+            <div class="sum-lbl">🔄 Rattrapages</div>
+        </div>` : ''}
+        ${nbEleves ? `<div class="sum-item" style="border-color:var(--purple)">
+            <div class="sum-val" style="color:var(--purple)">${nbEleves}</div>
+            <div class="sum-lbl">👥 Élèves</div>
+        </div>` : ''}
         ${mats.length ? `<div class="sum-item" style="border-color:var(--teal)">
-            <div class="sum-val" style="color:var(--teal);font-size:12px;line-height:1.4">${mats.join(', ')}</div>
+            <div class="sum-val" style="color:var(--teal);font-size:11px;line-height:1.5">${mats.join(', ')}</div>
             <div class="sum-lbl">🔬 Matières</div>
         </div>` : ''}
         ${nivs.length ? `<div class="sum-item" style="border-color:var(--purple)">
-            <div class="sum-val" style="color:var(--purple);font-size:12px;line-height:1.4">${nivs.join(', ')}</div>
+            <div class="sum-val" style="color:var(--purple);font-size:11px;line-height:1.5">${nivs.join(', ')}</div>
             <div class="sum-lbl">🎓 Niveaux</div>
         </div>` : ''}
     `;
 }
 
-// ── Build calendar ────────────────────────────────────────────────────────────
+/* ── Build calendar ── */
 function buildCalendar() {
     const grid = document.getElementById('cal-grid');
     grid.innerHTML = '';
     if (!curCoord) return;
 
-    const sm = SBY[curCoord.id] || {};
+    const sm    = SBY[curCoord.id] || {};
     const first = new Date(curAnnee, curMois-1, 1);
     const last  = new Date(curAnnee, curMois, 0);
     const today = new Date();
 
     let startDow = first.getDay();
     startDow = startDow === 0 ? 6 : startDow - 1;
-
     const total = Math.ceil((startDow + last.getDate()) / 7) * 7;
 
     for (let i = 0; i < total; i++) {
@@ -673,27 +885,25 @@ function buildCalendar() {
             (isToday ? ' today-cell' : '') +
             (isWeekend && isCur ? ' weekend' : '');
 
-        // Num
         const nd = document.createElement('div');
         nd.className = 'cell-num';
         nd.textContent = cellDate.getDate();
         cell.appendChild(nd);
 
-        // Add btn
         const ab = document.createElement('button');
         ab.className = 'cell-add-btn';
         ab.textContent = '+';
         ab.onclick = e => { e.stopPropagation(); openAdd(ds); };
         cell.appendChild(ab);
 
-        // Chips
         const seances = sm[ds] || [];
         seances.slice(0, 3).forEach(s => {
             const chip = document.createElement('div');
             chip.className = 'seance-chip';
-            chip.style.background = curCoord.color;
+            chip.style.background = chipColor(s, curCoord.color);
             const label = s.matiere ? s.matiere.substring(0,12) : 'Séance';
-            chip.innerHTML = `<span class="chip-h">${s.heures}h</span><span class="chip-t">${label}</span>`;
+            const statutIcon = s.statut === 'annulee' ? '❌' : s.statut === 'rattrapage' ? '🔄' : '';
+            chip.innerHTML = `<span class="chip-h">${s.heures}h</span><span class="chip-t">${statutIcon}${label}</span>`;
             chip.onclick = e => { e.stopPropagation(); openDet(s, ds); };
             cell.appendChild(chip);
         });
@@ -713,7 +923,7 @@ function buildCalendar() {
     document.getElementById('nav-lbl').textContent = MOIS_NOMS[curMois] + ' ' + curAnnee;
 }
 
-// ── Navigation ────────────────────────────────────────────────────────────────
+/* ── Navigation ── */
 function changeMonth(d) {
     curMois += d;
     if (curMois > 12) { curMois = 1;  curAnnee++; }
@@ -723,7 +933,6 @@ function changeMonth(d) {
     if (curCoord) sessionStorage.setItem('lastCoordId', curCoord.id);
     document.getElementById('filter-form').submit();
 }
-
 function goToday() {
     const t = new Date();
     document.getElementById('inp-mois').value  = t.getMonth() + 1;
@@ -732,43 +941,144 @@ function goToday() {
     document.getElementById('filter-form').submit();
 }
 
-// ── Add modal ─────────────────────────────────────────────────────────────────
+/* ══════════════════════════════════════
+   MODAL ADD — avec tous les champs
+══════════════════════════════════════ */
 let sc = 0, prefDate = '';
-const MO = () => '<option value="">— Matière —</option>' + MATIERES.map(m=>`<option value="${m}">${m}</option>`).join('');
-const NO = () => '<option value="">— Niveau —</option>'  + NIVEAUX.map(n=>`<option value="${n}">${n}</option>`).join('');
+
+const MO = (sel) => '<option value="">— Matière —</option>' + MATIERES.map(m=>
+    `<option value="${m}"${m===sel?' selected':''}>${m}</option>`).join('');
+const NO = (sel) => '<option value="">— Niveau —</option>' + NIVEAUX.map(n=>
+    `<option value="${n}"${n===sel?' selected':''}>${n}</option>`).join('');
+const DO = (sel) => '<option value="">— Aucune —</option>' + {{ dours_json | tojson }}.map(d=>
+    `<option value="${d.id}"${String(d.id)===String(sel)?' selected':''}>${d.nom}</option>`).join('');
 
 function addSession(date) {
     sc++;
     const idx  = sc;
     const list = document.getElementById('sessions-list');
     const d    = date || prefDate || new Date().toISOString().split('T')[0];
+    const isFirst = list.children.length === 0;
     const card = document.createElement('div');
     card.className = 'session-card'; card.id = `sc-${idx}`;
     card.innerHTML = `
         <div class="sc-hdr">
             <span class="sc-num">Séance ${list.children.length+1}</span>
             <button type="button" class="btn-rm" onclick="rmSc(${idx})"
-                style="${list.children.length===0?'display:none':''}">✕ Supprimer</button>
+                style="${isFirst?'display:none':''}">✕ Retirer</button>
         </div>
-        <div class="sc-grid">
-            <div class="fg"><label>📅 Date</label>
-                <input type="date" name="seances[${idx}][date]" value="${d}" required></div>
-            <div class="fg"><label>⏱️ Heures</label>
-                <input type="number" name="seances[${idx}][nb_heures]" step="0.5" min="0.5" max="12" placeholder="ex: 2" required></div>
-            <div class="fg"><label>🔬 Matière</label>
-                <select name="seances[${idx}][matiere]">${MO()}</select></div>
-            <div class="fg"><label>🎓 Niveau</label>
-                <select name="seances[${idx}][niveau]">${NO()}</select></div>
-            <div class="fg full"><label>📝 Note</label>
-                <input type="text" name="seances[${idx}][note]" placeholder="Remarque..."></div>
-        </div>`;
+
+        <div class="sp-section-label" style="margin-top:0;">🕐 Date & Durée</div>
+        <div class="sc-grid-3">
+            <div class="fg">
+                <label>📅 Date</label>
+                <input type="date" name="seances[${idx}][date]" value="${d}" required>
+            </div>
+            <div class="fg">
+                <label>🕐 Heure</label>
+                <input type="time" name="seances[${idx}][heure]">
+            </div>
+            <div class="fg">
+                <label>⏱️ Durée (h)</label>
+                <div class="sp-num-wrap">
+                    <button class="sp-num-btn" type="button" onclick="chgH(this,-0.5)">−</button>
+                    <input class="sp-num-input" type="number" name="seances[${idx}][nb_heures]"
+                           step="0.5" min="0.5" max="12" value="2" required>
+                    <button class="sp-num-btn" type="button" onclick="chgH(this,0.5)">+</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="sp-section-label">📊 Statut</div>
+        <div class="sp-statut-group">
+            <label class="sp-statut-pill s-passee">
+                <input type="radio" name="seances[${idx}][statut]" value="passee" checked>
+                <span class="sdot"></span> Passée
+            </label>
+            <label class="sp-statut-pill s-annulee">
+                <input type="radio" name="seances[${idx}][statut]" value="annulee">
+                <span class="sdot"></span> Annulée
+            </label>
+            <label class="sp-statut-pill s-rattrapage">
+                <input type="radio" name="seances[${idx}][statut]" value="rattrapage">
+                <span class="sdot"></span> Rattrapage
+            </label>
+        </div>
+
+        <div class="sp-section-label">🏠 Lieu & Matière</div>
+        <div class="sc-grid-2">
+            <div class="fg">
+                <label>🏠 Dar Talib</label>
+                <select name="seances[${idx}][dar_id]">${DO('')}</select>
+            </div>
+            <div class="fg">
+                <label>🔬 Matière</label>
+                <select name="seances[${idx}][matiere]">${MO('')}</select>
+            </div>
+            <div class="fg full">
+                <label>🎓 Niveau</label>
+                <select name="seances[${idx}][niveau]">${NO('')}</select>
+            </div>
+        </div>
+
+        <div class="sp-section-label">🎓 Professeur</div>
+        <input type="hidden" name="seances[${idx}][prof]" class="prof-hidden-${idx}">
+        <div class="prof-search-wrapper">
+            <span class="prof-search-icon">🔍</span>
+            <input type="text" class="prof-search-input prof-inp-${idx}"
+                   placeholder="Rechercher un professeur…" autocomplete="off"
+                   data-idx="${idx}">
+            <div class="prof-dropdown" id="pdrop-${idx}"></div>
+        </div>
+
+        <div class="sp-section-label">📝 Présence & Notes</div>
+        <div class="sc-grid-2">
+            <div class="fg">
+                <label>👥 Élèves présents</label>
+                <input type="number" name="seances[${idx}][nb_eleves]" min="0" placeholder="0">
+            </div>
+            <div class="fg">
+                <label>🏷️ Note</label>
+                <input type="text" name="seances[${idx}][note]" placeholder="Note courte…">
+            </div>
+            <div class="fg full">
+                <label>💬 Remarque</label>
+                <textarea name="seances[${idx}][remarque]" placeholder="Remarques…"></textarea>
+            </div>
+        </div>
+    `;
     list.appendChild(card);
+
+    // bind prof search for this session
+    const inp  = card.querySelector(`.prof-inp-${idx}`);
+    const drop = card.querySelector(`#pdrop-${idx}`);
+    const hid  = card.querySelector(`.prof-hidden-${idx}`);
+    bindProfSearch(inp, drop, hid);
+
     updRm(); updBadge();
 }
+
+/* ── Stepper helpers ── */
+function chgH(btn, delta) {
+    const inp = btn.parentElement.querySelector('.sp-num-input');
+    let v = parseFloat(inp.value) || 2;
+    v = Math.min(12, Math.max(0.5, v + delta));
+    inp.value = (v % 1 === 0) ? v : v.toFixed(1);
+}
+function changeEditHrs(delta) {
+    const el = document.getElementById('edit-heures');
+    let v = parseFloat(el.value) || 2;
+    v = Math.min(12, Math.max(0.5, v + delta));
+    el.value = (v % 1 === 0) ? v : v.toFixed(1);
+}
+
 function rmSc(idx) {
     const c = document.getElementById(`sc-${idx}`);
     if(c) c.remove();
-    document.querySelectorAll('.session-card').forEach((c,i)=>{ const b=c.querySelector('.sc-num'); if(b) b.textContent=`Séance ${i+1}`; });
+    document.querySelectorAll('.session-card').forEach((c,i)=>{
+        const b = c.querySelector('.sc-num');
+        if(b) b.textContent = `Séance ${i+1}`;
+    });
     updRm(); updBadge();
 }
 function updRm() {
@@ -789,7 +1099,7 @@ function openAdd(ds) {
     document.getElementById('hru').value = window.location.href;
     document.getElementById('add-hdr').style.background = curCoord.color;
     if (ds) {
-        const d = new Date(ds+'T00:00:00');
+        const d  = new Date(ds+'T00:00:00');
         const dl = d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
         document.getElementById('add-sub').textContent = '📅 ' + dl + '  ·  👤 ' + curCoord.name;
     }
@@ -803,14 +1113,57 @@ function closeAdd(evt) {
     document.body.style.overflow = '';
 }
 
-// ── Detail modal ──────────────────────────────────────────────────────────────
+/* ══════════════════════════════════════
+   PROF SEARCH — générique
+══════════════════════════════════════ */
+function bindProfSearch(inp, drop, hid) {
+    function render(filter) {
+        const lower = (filter||'').toLowerCase();
+        const list  = PROFS_DATA.filter(p=>p.toLowerCase().includes(lower));
+        drop.innerHTML = '';
+        const empty = document.createElement('div');
+        empty.className = 'prof-option'; empty.textContent = '— Aucun prof —'; empty.dataset.value = '';
+        drop.appendChild(empty);
+        list.forEach(p => {
+            const opt = document.createElement('div');
+            opt.className = 'prof-option' + (p === hid.value ? ' selected' : '');
+            opt.textContent = p; opt.dataset.value = p;
+            drop.appendChild(opt);
+        });
+        drop.querySelectorAll('.prof-option').forEach(opt => {
+            opt.addEventListener('mousedown', e => {
+                e.preventDefault();
+                hid.value = opt.dataset.value;
+                inp.value = opt.dataset.value || '';
+                drop.classList.remove('open');
+            });
+        });
+    }
+    inp.addEventListener('focus', () => { render(inp.value); drop.classList.add('open'); });
+    inp.addEventListener('input', () => { render(inp.value); drop.classList.add('open'); hid.value=''; });
+    inp.addEventListener('blur',  () => { setTimeout(()=>drop.classList.remove('open'), 150); });
+}
+
+/* Edit modal prof search */
+const editProfSearch = document.getElementById('edit-prof-search');
+const editProfDrop   = document.getElementById('edit-prof-dropdown');
+const editProfHid    = document.getElementById('edit-prof-hidden');
+bindProfSearch(editProfSearch, editProfDrop, editProfHid);
+
+/* ══════════════════════════════════════
+   DETAIL MODAL
+══════════════════════════════════════ */
 function fmtDate(ds) {
     return new Date(ds+'T00:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 }
-
-// Store séances by temp key for button handlers
 const _SEANCE_CACHE = {};
 let _seanceCacheKey = 0;
+
+function statutBadge(statut) {
+    if (statut === 'annulee')    return `<span class="dr-badge dr-annulee">❌ Annulée</span>`;
+    if (statut === 'rattrapage') return `<span class="dr-badge dr-rattrapage">🔄 Rattrapage</span>`;
+    return `<span class="dr-badge dr-passee">✅ Passée</span>`;
+}
 
 function drHtml(s, color) {
     const key = ++_seanceCacheKey;
@@ -821,15 +1174,22 @@ function drHtml(s, color) {
             <span class="dr-h">${s.heures}h</span>
         </div>
         <div class="dr-badges">
-            ${s.matiere ? `<span class="dr-badge dr-mat">🔬 ${s.matiere}</span>` : ''}
-            ${s.niveau  ? `<span class="dr-badge dr-niv">🎓 ${s.niveau}</span>`  : ''}
+            ${statutBadge(s.statut)}
+            ${s.matiere  ? `<span class="dr-badge dr-mat">🔬 ${s.matiere}</span>` : ''}
+            ${s.niveau   ? `<span class="dr-badge dr-niv">🎓 ${s.niveau}</span>`  : ''}
+            ${s.nb_eleves ? `<span class="dr-badge" style="background:var(--purple)">👥 ${s.nb_eleves}</span>` : ''}
         </div>
-        ${s.note ? `<div class="dr-note">📝 ${s.note}</div>` : ''}
+        ${s.heure   ? `<div class="dr-note">🕐 ${s.heure}</div>` : ''}
+        ${s.prof    ? `<div class="dr-note">🎓 Prof: ${s.prof}</div>` : ''}
+        ${s.note    ? `<div class="dr-note">📝 ${s.note}</div>` : ''}
+        ${s.remarque ? `<div class="dr-note">💬 ${s.remarque}</div>` : ''}
         <div class="dr-actions">
-            <button type="button" class="btn-edit-s" data-skey="${key}" onclick="closeDet();openEdit(_SEANCE_CACHE[this.dataset.skey])">
+            <button type="button" class="btn-edit-s" data-skey="${key}"
+                onclick="closeDet();openEdit(_SEANCE_CACHE[this.dataset.skey])">
                 ✏️ Modifier
             </button>
-            <button type="button" class="btn-del-s" data-skey="${key}" onclick="closeDet();openDel(_SEANCE_CACHE[this.dataset.skey])">
+            <button type="button" class="btn-del-s" data-skey="${key}"
+                onclick="closeDet();openDel(_SEANCE_CACHE[this.dataset.skey])">
                 🗑️ Supprimer
             </button>
         </div>
@@ -858,22 +1218,49 @@ function closeDet(evt) {
     document.body.style.overflow = '';
 }
 
-// ── Edit modal ────────────────────────────────────────────────────────────────
-const MO2 = (sel) => '<option value="">— Matière —</option>' + MATIERES.map(m =>
-    `<option value="${m}"${m === sel ? ' selected' : ''}>${m}</option>`).join('');
-const NO2 = (sel) => '<option value="">— Niveau —</option>' + NIVEAUX.map(n =>
-    `<option value="${n}"${n === sel ? ' selected' : ''}>${n}</option>`).join('');
+/* ══════════════════════════════════════
+   EDIT MODAL — avec tous les champs
+══════════════════════════════════════ */
+function setEditStatut(val) {
+    ['passee','annulee','rattrapage'].forEach(v => {
+        document.getElementById(`edit-s-${v}`).checked = (v === val);
+    });
+}
 
 function openEdit(s) {
     document.getElementById('edit-hdr').style.background = curCoord ? curCoord.color : 'var(--teal)';
     document.getElementById('edit-sub').textContent = '📅 ' + fmtDate(s.date) + (curCoord ? '  ·  👤 ' + curCoord.name : '');
-    document.getElementById('edit-form').action = `/heures/modifier/${s.id}`;
+
+    // Route vers suivi_partenariat_modifier pour avoir tous les champs
+    document.getElementById('edit-form').action = `/suivi_partenariat/modifier/${s.id}`;
+
     document.getElementById('edit-date').value    = s.date;
+    document.getElementById('edit-heure').value   = s.heure   || '';
     document.getElementById('edit-heures').value  = s.heures;
-    document.getElementById('edit-note').value    = s.note || '';
-    document.getElementById('edit-matiere').innerHTML = MO2(s.matiere);
-    document.getElementById('edit-niveau').innerHTML  = NO2(s.niveau);
-    document.getElementById('edit-redirect').value    = window.location.href;
+    document.getElementById('edit-eleves').value  = s.nb_eleves || '';
+    document.getElementById('edit-note').value    = s.note    || '';
+    document.getElementById('edit-remarque').value= s.remarque|| '';
+
+    // Statut
+    setEditStatut(s.statut || 'passee');
+
+    // Dar
+    const darSel = document.getElementById('edit-dar');
+    darSel.value = s.dar_id || '';
+
+    // Matière
+    const matSel = document.getElementById('edit-matiere');
+    matSel.value = s.matiere || '';
+
+    // Niveau
+    const nivSel = document.getElementById('edit-niveau');
+    nivSel.value = s.niveau || '';
+
+    // Prof
+    editProfHid.value    = s.prof || '';
+    editProfSearch.value = s.prof || '';
+
+    document.getElementById('edit-redirect').value = window.location.href;
     document.getElementById('modal-edit').classList.add('open');
     document.body.style.overflow = 'hidden';
 }
@@ -883,7 +1270,7 @@ function closeEdit(evt) {
     document.body.style.overflow = '';
 }
 
-// ── Delete modal ──────────────────────────────────────────────────────────────
+/* ── Delete modal ── */
 function openDel(s) {
     document.getElementById('del-form').action = `/heures/supprimer/${s.id}`;
     document.getElementById('del-redirect').value = window.location.href;
@@ -894,9 +1281,11 @@ function openDel(s) {
                 <span class="dr-h">${s.heures}h</span>
             </div>
             <div class="dr-badges">
+                ${statutBadge(s.statut)}
                 ${s.matiere ? `<span class="dr-badge dr-mat">🔬 ${s.matiere}</span>` : ''}
                 ${s.niveau  ? `<span class="dr-badge dr-niv">🎓 ${s.niveau}</span>`  : ''}
             </div>
+            ${s.prof ? `<div class="dr-note">🎓 Prof: ${s.prof}</div>` : ''}
             ${s.note ? `<div class="dr-note">📝 ${s.note}</div>` : ''}
         </div>`;
     document.getElementById('modal-del').classList.add('open');
@@ -908,7 +1297,7 @@ function closeDel(evt) {
     document.body.style.overflow = '';
 }
 
-// ── Keyboard ──────────────────────────────────────────────────────────────────
+/* ── Keyboard ── */
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
         ['modal-add','modal-det','modal-edit','modal-del'].forEach(id =>
@@ -917,7 +1306,7 @@ document.addEventListener('keydown', e => {
     }
 });
 
-// ── Restore calendar after month nav ─────────────────────────────────────────
+/* ── Restore calendar after month nav ── */
 window.addEventListener('load', () => {
     const sid = sessionStorage.getItem('lastCoordId');
     if (sid && COORDS[sid]) {

@@ -261,15 +261,26 @@ def heures():
     )
 
 
+# ── PATCH 1: ajouter_seance — tous les champs suivi partenariat ───────────────
 @app.route('/heures/ajouter', methods=['POST'])
 @login_required
 def ajouter_seance():
     coord_id  = int(request.form['coordinateur_id'])
     date_str  = request.form['date']
     nb_heures = float(request.form['nb_heures'])
-    note      = request.form.get('note', '').strip() or None
-    matiere   = request.form.get('matiere', '').strip() or None
-    niveau    = request.form.get('niveau',  '').strip() or None
+    note      = request.form.get('note',     '').strip() or None
+    matiere   = request.form.get('matiere',  '').strip() or None
+    niveau    = request.form.get('niveau',   '').strip() or None
+    heure     = request.form.get('heure',    '').strip() or None
+    prof      = request.form.get('prof',     '').strip() or None
+    remarque  = request.form.get('remarque', '').strip() or None
+    statut    = normalise_statut(request.form.get('statut', 'passee'))
+
+    nb_eleves_str = request.form.get('nb_eleves', '').strip()
+    nb_eleves = int(nb_eleves_str) if nb_eleves_str.isdigit() else None
+
+    dar_id_str = request.form.get('dar_id', '').strip()
+    dar_id = int(dar_id_str) if dar_id_str.isdigit() else None
 
     coord = Coordinateur.query.get_or_404(coord_id)
     if not current_user.is_admin:
@@ -286,6 +297,12 @@ def ajouter_seance():
         note=note,
         matiere=matiere,
         niveau=niveau,
+        statut=statut,
+        heure=heure,
+        prof=prof,
+        nb_eleves=nb_eleves,
+        dar_id=dar_id,
+        remarque=remarque,
     )
     db.session.add(s)
     db.session.commit()
@@ -293,6 +310,7 @@ def ajouter_seance():
     return redirect(url_for('heures', mois=date_obj.month, annee=date_obj.year, coord_id=coord_id))
 
 
+# ── PATCH 2: modifier_seance — tous les champs suivi partenariat ──────────────
 @app.route('/heures/modifier/<int:id>', methods=['POST'])
 @login_required
 def modifier_seance(id):
@@ -301,14 +319,26 @@ def modifier_seance(id):
     if not current_user.is_admin:
         if not current_user.responsable or coord.responsable_id != current_user.responsable.id:
             abort(403)
+
     date_obj    = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
     s.date      = date_obj
     s.mois      = date_obj.month
     s.annee     = date_obj.year
     s.nb_heures = float(request.form['nb_heures'])
-    s.note      = request.form.get('note', '').strip() or None
-    s.matiere   = request.form.get('matiere', '').strip() or None
-    s.niveau    = request.form.get('niveau',  '').strip() or None
+    s.note      = request.form.get('note',     '').strip() or None
+    s.matiere   = request.form.get('matiere',  '').strip() or None
+    s.niveau    = request.form.get('niveau',   '').strip() or None
+    s.heure     = request.form.get('heure',    '').strip() or None
+    s.prof      = request.form.get('prof',     '').strip() or None
+    s.remarque  = request.form.get('remarque', '').strip() or None
+    s.statut    = normalise_statut(request.form.get('statut', 'passee'))
+
+    nb_eleves_str = request.form.get('nb_eleves', '').strip()
+    s.nb_eleves = int(nb_eleves_str) if nb_eleves_str.isdigit() else None
+
+    dar_id_str = request.form.get('dar_id', '').strip()
+    s.dar_id   = int(dar_id_str) if dar_id_str.isdigit() else None
+
     db.session.commit()
     flash('Séance modifiée!', 'success')
     redirect_url = request.form.get('redirect_url', '').strip()
@@ -335,6 +365,7 @@ def supprimer_seance(id):
     return redirect(url_for('heures', mois=mois, annee=annee, coord_id=coord_id))
 
 
+# ── PATCH 3: ajouter_seances_multiple — tous les champs suivi partenariat ─────
 @app.route('/heures/ajouter_multiple', methods=['POST'])
 @login_required
 def ajouter_seances_multiple():
@@ -366,11 +397,21 @@ def ajouter_seances_multiple():
     errors = []
 
     for idx, data in sessions.items():
-        date_str  = data.get('date', '').strip()
+        date_str  = data.get('date',      '').strip()
         nb_heures = data.get('nb_heures', '').strip()
-        matiere   = data.get('matiere', '').strip() or None
-        niveau    = data.get('niveau',  '').strip() or None
-        note      = data.get('note',    '').strip() or None
+        matiere   = data.get('matiere',   '').strip() or None
+        niveau    = data.get('niveau',    '').strip() or None
+        note      = data.get('note',      '').strip() or None
+        heure     = data.get('heure',     '').strip() or None
+        prof      = data.get('prof',      '').strip() or None
+        remarque  = data.get('remarque',  '').strip() or None
+        statut    = normalise_statut(data.get('statut', 'passee'))
+
+        nb_eleves_str = data.get('nb_eleves', '').strip()
+        nb_eleves = int(nb_eleves_str) if nb_eleves_str.isdigit() else None
+
+        dar_id_str = data.get('dar_id', '').strip()
+        dar_id = int(dar_id_str) if dar_id_str.isdigit() else None
 
         if not date_str or not nb_heures:
             errors.append(f'Séance {idx}: date ou heures manquantes.')
@@ -394,6 +435,12 @@ def ajouter_seances_multiple():
             matiere=matiere,
             niveau=niveau,
             note=note,
+            statut=statut,
+            heure=heure,
+            prof=prof,
+            nb_eleves=nb_eleves,
+            dar_id=dar_id,
+            remarque=remarque,
         )
         db.session.add(s)
         added += 1
@@ -925,7 +972,7 @@ def stats_coordinateurs():
     )
 
 
-# ─── Calendrier Coordinateurs ─────────────────────────────────────────────────
+# ── PATCH 4: calendrier_coordinateurs — sync complet avec suivi partenariat ───
 @app.route('/calendrier_coordinateurs')
 @login_required
 def calendrier_coordinateurs():
@@ -936,15 +983,24 @@ def calendrier_coordinateurs():
     annee = request.args.get('annee', now.year,   type=int)
     filtre_matiere = request.args.get('filtre_matiere', '').strip()
     filtre_niveau  = request.args.get('filtre_niveau',  '').strip()
+    filtre_statut  = request.args.get('filtre_statut',  '').strip()
+    filtre_dar     = request.args.get('filtre_dar',     '').strip()
 
     mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin',
                  'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
+
+    dours_objs = Dour.query.order_by(Dour.nom).all()
+    dours = dours_objs  # kept for template loops
+    dours_json = [{'id': d.id, 'nom': d.nom, 'type': d.type} for d in dours_objs]
 
     if current_user.is_admin:
         coordinateurs = Coordinateur.query.order_by(Coordinateur.nom).all()
     else:
         resp = current_user.responsable
         coordinateurs = sorted(resp.coordinateurs, key=lambda c: c.nom) if resp else []
+
+    # ── Professeurs actifs pour le dropdown ──
+    professeurs = Professeur.query.filter_by(actif=True).order_by(Professeur.nom).all()
 
     stats = []
     heures_par_mat       = defaultdict(float)
@@ -954,37 +1010,105 @@ def calendrier_coordinateurs():
 
     for coord in coordinateurs:
         seances = coord.seances_mois(mois, annee)
+
+        # ── Filtres identiques à suivi_partenariat ──
         if filtre_matiere:
             seances = [s for s in seances if s.matiere == filtre_matiere]
         if filtre_niveau:
             seances = [s for s in seances if s.niveau == filtre_niveau]
-        nb_h = sum(s.nb_heures for s in seances)
+        if filtre_statut:
+            seances = [s for s in seances if s.statut == filtre_statut]
+        if filtre_dar:
+            try:
+                filtre_dar_int = int(filtre_dar)
+                seances = [s for s in seances if s.dar_id == filtre_dar_int]
+            except ValueError:
+                pass
+
+        nb_h = sum(s.nb_heures for s in seances if s.statut != 'annulee')
         mats = sorted({s.matiere for s in seances if s.matiere})
         nivs = sorted({s.niveau  for s in seances if s.niveau})
         matieres_actives_set.update(mats)
         niveaux_actifs_set.update(nivs)
+
         for s in seances:
             if s.matiere: heures_par_mat[s.matiere] += s.nb_heures
             if s.niveau:  heures_par_niv[s.niveau]  += s.nb_heures
+
         stats.append({
-            'coord': coord, 'seances': seances,
-            'nb_seances': len(seances), 'nb_heures': nb_h,
-            'initiales': (coord.prenom[0] + coord.nom[0]).upper() if coord.prenom and coord.nom else '?',
-            'matieres_uniq': mats, 'niveaux_uniq': nivs,
+            'coord':          coord,
+            'seances':        seances,
+            'nb_seances':     len(seances),
+            'nb_heures':      nb_h,
+            'initiales':      (coord.prenom[0] + coord.nom[0]).upper() if coord.prenom and coord.nom else '?',
+            'matieres_uniq':  mats,
+            'niveaux_uniq':   nivs,
+            # ── champs suivi partenariat ──────────────────────────
+            'nb_passees':     sum(1 for s in seances if s.statut == 'passee'),
+            'nb_annulees':    sum(1 for s in seances if s.statut == 'annulee'),
+            'nb_rattrapage':  sum(1 for s in seances if s.statut == 'rattrapage'),
+            'total_eleves':   sum(s.nb_eleves for s in seances if s.nb_eleves and s.statut != 'annulee'),
         })
 
     stats.sort(key=lambda x: x['nb_heures'], reverse=True)
     breakdown_mat = sorted(heures_par_mat.items(), key=lambda x: x[1], reverse=True)
     breakdown_niv = sorted(heures_par_niv.items(), key=lambda x: x[1], reverse=True)
 
+    # ── Totaux globaux ──
+    total_heures     = sum(s['nb_heures']    for s in stats)
+    total_seances    = sum(s['nb_seances']   for s in stats)
+    total_passees    = sum(s['nb_passees']   for s in stats)
+    total_annulees   = sum(s['nb_annulees']  for s in stats)
+    total_rattrapage = sum(s['nb_rattrapage']for s in stats)
+    total_eleves     = sum(s['total_eleves'] for s in stats)
+
+    # ── seances_json pour modal modifier (même format que suivi_partenariat) ──
+    all_seances_flat = []
+    for st in stats:
+        all_seances_flat.extend(st['seances'])
+
+    seances_json = []
+    for s in all_seances_flat:
+        seances_json.append({
+            'id':              s.id,
+            'date':            s.date.isoformat() if s.date else '',
+            'heure':           s.heure or '',
+            'statut':          s.statut or 'passee',
+            'matiere':         s.matiere or '',
+            'niveau':          s.niveau or '',
+            'prof':            s.prof or '',
+            'coordinateur_id': s.coordinateur_id,
+            'nb_heures':       s.nb_heures or 0,
+            'nb_eleves':       s.nb_eleves or 0,
+            'remarque':        s.remarque or '',
+            'note':            s.note or '',
+            'dar_id':          s.dar_id or '',
+        })
+
     return render_template('calendrier_coordinateurs.html',
-        stats=stats, mois=mois, annee=annee, mois_noms=mois_noms,
+        stats=stats,
+        mois=mois, annee=annee,
+        mois_noms=mois_noms,
         annees=list(range(now.year - 2, now.year + 2)),
-        filtre_matiere=filtre_matiere, filtre_niveau=filtre_niveau,
-        matieres=MATIERES, niveaux=NIVEAUX,
-        total_heures=sum(s['nb_heures'] for s in stats),
-        total_seances=sum(s['nb_seances'] for s in stats),
-        breakdown_mat=breakdown_mat, breakdown_niv=breakdown_niv,
+        filtre_matiere=filtre_matiere,
+        filtre_niveau=filtre_niveau,
+        filtre_statut=filtre_statut,
+        filtre_dar=filtre_dar,
+        matieres=MATIERES,
+        niveaux=NIVEAUX,
+        statuts=STATUTS_SEANCE,
+        dours=dours,
+        dours_json=dours_json,
+        professeurs=professeurs,
+        seances_json=seances_json,
+        total_heures=total_heures,
+        total_seances=total_seances,
+        total_passees=total_passees,
+        total_annulees=total_annulees,
+        total_rattrapage=total_rattrapage,
+        total_eleves=total_eleves,
+        breakdown_mat=breakdown_mat,
+        breakdown_niv=breakdown_niv,
         matieres_actives=sorted(matieres_actives_set),
         niveaux_actifs=sorted(niveaux_actifs_set),
     )
@@ -1109,7 +1233,6 @@ def suivi_partenariat():
         resp = current_user.responsable
         coordinateurs = sorted(resp.coordinateurs, key=lambda c: c.nom) if resp else []
 
-    # ── Professeurs actifs pour le dropdown ──
     professeurs = Professeur.query.filter_by(actif=True).order_by(Professeur.nom).all()
 
     coord_ids = [c.id for c in coordinateurs]
