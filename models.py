@@ -45,6 +45,58 @@ NIVEAUX = [
     'Alphabétisation',
 ]
 
+STATUTS_SEANCE = [
+    ('passee',     'Passée'),
+    ('annulee',    'Annulée'),
+    ('rattrapage', 'Rattrapage'),
+]
+
+PROFESSEURS_LISTE = [
+    "Rahmouni Abdessalam", "Benani Abderahim", "Yassine Hajoubi",
+    "Faouzi Abdellah", "Mohamed Nouali", "Yassine Staili",
+    "Guenoun Abdessamad", "Handiz Rachid", "Aziz Errachidi",
+    "Akad Youssef", "Rachid Allali", "Lahcen Jaoufi",
+    "Houssam Lamkadmi", "Taouil Abdelouhab", "Hajhouji Zakariat",
+    "Khaoula EL AANI", "Houari Mohamed", "Charara Said",
+    "Hamdach Ismail", "Jawad Himafi", "Abdelatif Barakat",
+    "Hafsa Azouzi", "Said Asrou", "Abdelaziz Chemsi",
+    "Zakaria Qouhafa", "El Mokhtar El Hadi", "Latifa Azour",
+    "Oussama Amrani", "Baghour Mohamed", "Said Ben Rahman",
+    "Zineb Sadiki", "Rachid Ayouhammou", "Agamoud Mohamed",
+    "El Moussaoui Lahoussine", "El Maheni Abdellah", "Mehdi Youssefi",
+    "Mustafa Jazil", "Jaoui Lahcen", "Fatim Zahra Belbass",
+    "Anouar Belkacem", "Rabii Abidar", "Benaliat Abdelali",
+    "Najia Gouzouli", "Omar Aroug", "Jamaa Anajjar",
+    "Said Abaran", "Youssef Benchorfi", "FANAOUI Hamid",
+    "Slimane Oudaoudi", "Aicha Chaguiri", "Mohamed Chouhouch",
+    "Ayoub Bensaad", "Hassan Benabdi", "Hanane Daba",
+    "Mohamed Alla", "Ibrahim Aadi", "Oushfa Mohamed",
+    "Youssef Bouabdillah", "Mohamed Hani", "Abdelaali Himadani",
+    "Wissal Rahman", "Najat Rahman", "Akassousse Abdallah",
+    "Abdelaziz El Oaya", "Kamal Ryane", "Mohamed Rhazaoui",
+    "Naimi Abdelouahad", "Nabil Assais", "Abdelhadi Moukabil",
+    "Abderrazak Ait Hamdi", "Abdelmajid Ait Abbou", "Fatima Aadiem",
+    "Salem Talhout", "Lahcen Afaadas", "Soukaina El Alaoui",
+    "Yahya Elmazlouli", "Fadlo Said", "Ouchaib Brahim Laabali",
+    "Lamiae Mansor", "Mbark Tizgui", "Youssef Tazavguit",
+    "Imane Elgrawi", "Salma Jouroumati", "Khadija Ikhrazn",
+    "Idriss Maarir", "Amina Diani", "Ayoub Bidah",
+    "Idriss Zouine", "Ibrahim Salbi", "Ait Mona",
+    "Salahdine Hadar", "Imane Ouchibi", "Mohamed Ghafiri",
+    "Houssein Masskouri", "Kamal Chafii", "Ayoub Laaouni",
+    "Latifa Bougaba", "Assia Saleh", "Meryem Bougaba",
+    "Kamal Mousaid", "Maryam El Boudani", "Youssef Zahie",
+    "Rachid Ghafiri", "Siham Boujoujou", "Benzayma Mohamed",
+    "Fatima Gazi", "Fatim Zahra Al Idrissi", "Nawal Iflississ",
+    "Mouad Aarab", "Ismail Masaad", "Youssefi Abdeljalil",
+    "Mohamed Ouadou", "Lahbib Lbihi", "Kawtar Kacimi",
+    "Awatif Lmalyani", "Monir Lhadad", "Taoufik Chaquir",
+    "Laila Bouhouch", "ELMEHDI SALEH", "Taheri Hamid",
+    "Nourdine Ahrouy", "Hicham Janih", "Khalid Morachik",
+    "Ali Eladaoui", "Lhoucine Oubaadi", "Omar Habib",
+    "Ahmed Soussi", "Abdelaali Tifaout",
+]
+
 
 class User(db.Model, UserMixin):
     __tablename__ = 'user'
@@ -126,8 +178,61 @@ class Seance(db.Model):
     annee           = db.Column(db.Integer, nullable=False)
     nb_heures       = db.Column(db.Float, nullable=False, default=0)
     note            = db.Column(db.String(300), nullable=True)
-    # ── NOUVEAUX CHAMPS ──────────────────────────────────────────────────────
-    matiere         = db.Column(db.String(100), nullable=True)   # ex: 'Arabe'
-    niveau          = db.Column(db.String(100), nullable=True)   # ex: '3ème année'
-    # ─────────────────────────────────────────────────────────────────────────
+    matiere         = db.Column(db.String(100), nullable=True)
+    niveau          = db.Column(db.String(100), nullable=True)
     created_at      = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # ── CHAMPS SUIVI PARTENARIAT ──────────────────────────────────────────────
+    statut   = db.Column(db.String(20), nullable=False, default='passee')
+    heure    = db.Column(db.String(5),   nullable=True)
+    prof     = db.Column(db.String(200), nullable=True)
+    nb_eleves= db.Column(db.Integer,     nullable=True)
+    dar_id   = db.Column(db.Integer, db.ForeignKey('dour.id'), nullable=True)
+    remarque = db.Column(db.String(500), nullable=True)
+    # ─────────────────────────────────────────────────────────────────────────
+
+    dar = db.relationship('Dour', foreign_keys=[dar_id])
+
+    @property
+    def statut_label(self):
+        mapping = {
+            'passee':     'Passée',
+            'annulee':    'Annulée',
+            'rattrapage': 'Rattrapage',
+            'Passée':     'Passée',
+            'Annulée':    'Annulée',
+            'Rattrapage': 'Rattrapage',
+        }
+        return mapping.get(self.statut, self.statut or 'Passée')
+
+    @property
+    def statut_normalise(self):
+        mapping = {
+            'passee':     'passee',
+            'annulee':    'annulee',
+            'rattrapage': 'rattrapage',
+            'Passée':     'passee',
+            'Annulée':    'annulee',
+            'Rattrapage': 'rattrapage',
+        }
+        return mapping.get(self.statut, 'passee')
+
+    @property
+    def statut_color(self):
+        s = self.statut_normalise
+        mapping = {
+            'passee':     'success',
+            'annulee':    'danger',
+            'rattrapage': 'warning',
+        }
+        return mapping.get(s, 'secondary')
+
+
+class Professeur(db.Model):
+    __tablename__ = 'professeur'
+    id    = db.Column(db.Integer, primary_key=True)
+    nom   = db.Column(db.String(200), nullable=False)
+    actif = db.Column(db.Boolean, default=True, nullable=False)
+
+    def __repr__(self):
+        return f'<Professeur {self.nom}>'

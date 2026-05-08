@@ -166,6 +166,9 @@
             <a href="{{ url_for('stats_coordinateurs') }}" class="nav-item {% if request.endpoint == 'stats_coordinateurs' %}active{% endif %}">
                 <span class="nav-icon">📈</span><span class="nav-label">Stats Coordinateurs</span>
             </a>
+            <a href="{{ url_for('suivi_partenariat') }}" class="nav-item {% if request.endpoint == 'suivi_partenariat' %}active{% endif %}">
+                <span class="nav-icon">📈</span><span class="nav-label">suivi_partenariat</span>
+            </a>
             {% endif %}
             <a href="{{ url_for('impression_seances') }}" class="nav-item {% if request.endpoint == 'impression_seances' %}active{% endif %}">
                 <span class="nav-icon">🖨️</span><span class="nav-label">Impression</span>
