@@ -337,8 +337,8 @@
         </div>
         {% else %}
         <div style="padding:30px;text-align:center;color:#bbb;font-size:13px;">
-            📭 Aucune séance enregistrée pour {{ mois_nom_actuel }} —
-            <a href="{{ url_for('heures') }}" style="color:#9b59b6;font-weight:600;">Zid séances</a>
+            📭 Aucune séance enregistrée pour  {{ mois_nom_actuel }} —
+            <a href="{{ url_for('heures') }}" style="color:#9b59b6;font-weight:600;">Ajoutez des séances</a>
         </div>
         {% endif %}
     </div>
@@ -382,7 +382,7 @@
                                 </div>
                                 <div>
                                     {% if coord.dours %}{% for d in coord.dours %}
-                                    <span style="display:inline-block;margin:2px;padding:2px 8px;border-radius:10px;font-size:10px;color:white;font-weight:500;background:{% if d.type == 'talib' %}#1a3a6b{% elif d.type == 'taliba' %}#e91e8c{% else %}#f5a623{% endif %};">{{ d.nom }}</span>
+                                    <span style="display:inline-block;margin:2px;padding:2px 8px;border-radius:10px;font-size:10px;color:white;font-weight:500;background:{% if d.type == 'talib' %}#1a3a6b{% elif d.type == 'taliba' %}#e91e8c{% else %}#f5a623{% endif %};">dar {{ d.type }} {{ d.nom }}</span>
                                     {% endfor %}{% else %}
                                     <span style="color:#bbb;font-size:11px;font-style:italic;">Mazal ma zidti dour</span>
                                     {% endif %}
