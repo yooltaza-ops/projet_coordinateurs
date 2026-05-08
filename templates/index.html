@@ -268,7 +268,20 @@
                     <div class="action-icon">👥</div><div class="action-title">Gérer Coordinateurs</div><div class="action-desc">Voir, modifier, supprimer</div>
                 </a>
                 <a href="{{ url_for('heures') }}" class="action-card" style="border-color:#e8d5f5;">
-                    <div class="action-icon">⏱️</div><div class="action-title" style="color:#9b59b6;">Séances & Heures</div><div class="action-desc">Gérer les séances par coordinateur</div>
+                    <div class="action-icon">⏱️</div>
+                    <div class="action-title" style="color:#9b59b6;">Séances & Heures</div>
+                    <div class="action-desc">Gérer les séances par coordinateur</div>
+                </a>
+                <a href="{{ url_for('rapport_coordinateurs') }}" class="action-card">
+                    <div class="action-icon">📊</div>
+                    <div class="action-title">Rapport</div>
+                    <div class="action-desc">Sti3mal zaman w matière</div>
+                </a>
+
+                <a href="{{ url_for('impression_seances') }}" class="action-card">
+                    <div class="action-icon">🖨️</div>
+                    <div class="action-title">Impression</div>
+                    <div class="action-desc">Imprimer rapport séances</div>
                 </a>
                 {% if current_user.is_admin %}
                 <a href="{{ url_for('ajouter_responsable_page') }}" class="action-card">

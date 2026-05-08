@@ -17,11 +17,7 @@
             margin:26px 0 14px; padding-bottom:10px;
             border-bottom:2px solid #e8edf5;
         }
-        .section-count {
-            background:#1a3a6b; color:white;
-            font-size:11px; font-weight:700;
-            padding:2px 9px; border-radius:20px;
-        }
+        .section-count { background:#1a3a6b; color:white; font-size:11px; font-weight:700; padding:2px 9px; border-radius:20px; }
         .section-count.orange { background:#f5a623; }
 
         .resp-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px,1fr)); gap:16px; }
@@ -51,20 +47,14 @@
         .btn-add  { padding:10px 20px; background:#f5a623; color:white; border:none; border-radius:25px; font-size:13px; font-weight:600; cursor:pointer; font-family:'Poppins',sans-serif; text-decoration:none; transition:all 0.2s; display:inline-flex; align-items:center; gap:6px; }
         .btn-add:hover { background:#15305c; transform:translateY(-1px); box-shadow:0 4px 14px rgba(26,58,107,0.3); }
 
-        .admin-pur-card {
-            background:white; border-radius:14px;
-            box-shadow:0 4px 15px rgba(0,0,0,0.07);
-            padding:14px 18px;
-            display:flex; align-items:center; gap:14px;
-            border-left:4px solid #f5a623;
-            transition:transform 0.2s;
-        }
+        .admin-pur-card { background:white; border-radius:14px; box-shadow:0 4px 15px rgba(0,0,0,0.07); padding:14px 18px; display:flex; align-items:center; gap:14px; border-left:4px solid #f5a623; transition:transform 0.2s; }
         .admin-pur-card:hover { transform:translateY(-2px); }
         .admin-purs-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap:12px; }
 
         .empty-state { text-align:center; padding:40px 20px; color:#bbb; }
         .empty-state .big-icon { font-size:40px; margin-bottom:10px; }
 
+        /* ══ MODALS ══ */
         .mod-overlay {
             display:none; position:fixed; inset:0;
             background:rgba(26,58,107,0.5); z-index:9000;
@@ -86,37 +76,40 @@
             border-radius:18px 18px 0 0; position:sticky; top:0; z-index:1;
         }
         .mod-top h2 { color:white; font-size:15px; font-weight:600; }
-        .mod-close {
-            background:rgba(255,255,255,0.2); border:none; color:white;
-            width:30px; height:30px; border-radius:50%; cursor:pointer;
-            font-size:15px; display:flex; align-items:center; justify-content:center;
-        }
+        .mod-close { background:rgba(255,255,255,0.2); border:none; color:white; width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:15px; display:flex; align-items:center; justify-content:center; }
         .mod-close:hover { background:rgba(255,255,255,0.35); }
         .mod-body { padding:22px 26px; }
         .mod-body label { display:block; margin-bottom:5px; color:#1a3a6b; font-size:12px; font-weight:600; }
-        .mod-body input {
-            width:100%; padding:10px 13px; border:2px solid #e8edf5;
-            border-radius:10px; margin-bottom:14px; font-size:13px;
-            font-family:'Poppins',sans-serif; outline:none;
-            transition:border 0.2s; box-sizing:border-box;
-        }
+        .mod-body input { width:100%; padding:10px 13px; border:2px solid #e8edf5; border-radius:10px; margin-bottom:14px; font-size:13px; font-family:'Poppins',sans-serif; outline:none; transition:border 0.2s; box-sizing:border-box; }
         .mod-body input:focus { border-color:#f5a623; }
         .role-cards { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
-        .role-card {
-            padding:12px; border:2px solid #e8edf5; border-radius:12px;
-            cursor:pointer; transition:all 0.2s; text-align:center; display:block;
-        }
+        .role-card { padding:12px; border:2px solid #e8edf5; border-radius:12px; cursor:pointer; transition:all 0.2s; text-align:center; display:block; }
         .role-card:hover { border-color:#f5a623; }
         .role-card.selected { border-color:#1a3a6b; background:#e8f0ff; }
         .role-card input[type="radio"] { display:none; }
         .role-card-icon  { font-size:20px; margin-bottom:4px; }
         .role-card-title { font-size:12px; font-weight:700; color:#1a3a6b; }
-        .mod-submit {
-            width:100%; padding:12px; border:none; border-radius:25px;
-            font-size:13px; font-weight:600; cursor:pointer; color:white;
-            background:#f5a623; font-family:'Poppins',sans-serif; transition:all 0.2s;
-        }
+        .mod-submit { width:100%; padding:12px; border:none; border-radius:25px; font-size:13px; font-weight:600; cursor:pointer; color:white; background:#f5a623; font-family:'Poppins',sans-serif; transition:all 0.2s; }
         .mod-submit:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(245,166,35,0.35); }
+
+        /* ══ DELETE MODAL ══ */
+        .del-modal-icon {
+            width:80px; height:80px; background:#fdecea; border-radius:50%;
+            display:flex; align-items:center; justify-content:center;
+            margin:0 auto 20px; font-size:36px;
+        }
+        .del-modal-title { font-size:19px; font-weight:700; color:#1a3a6b; margin-bottom:10px; text-align:center; }
+        .del-modal-sub { font-size:13px; color:#888; margin-bottom:22px; line-height:1.6; text-align:center; }
+        .del-modal-name-box { background:#f8fafc; border-radius:12px; padding:14px 18px; margin-bottom:14px; text-align:center; }
+        .del-modal-name-label { font-size:11px; color:#aaa; font-weight:600; margin-bottom:5px; }
+        .del-modal-name { font-size:15px; font-weight:700; color:#1a3a6b; }
+        .del-modal-warning { background:#fff8ee; border:1.5px solid #fce8c3; border-radius:10px; padding:12px 16px; margin-bottom:24px; display:flex; align-items:flex-start; gap:8px; }
+        .del-modal-warning span { font-size:12px; color:#b8740a; font-weight:500; line-height:1.5; }
+        .del-modal-btns { display:flex; gap:10px; }
+        .btn-cancel-del { flex:1; padding:12px; background:#f0f4f8; border:none; border-radius:25px; font-size:13px; font-weight:600; color:#555; cursor:pointer; font-family:'Poppins',sans-serif; transition:all 0.2s; }
+        .btn-cancel-del:hover { background:#e8edf5; }
+        .btn-confirm-del { flex:1; padding:12px; background:#e74c3c; border:none; border-radius:25px; font-size:13px; font-weight:700; color:white; cursor:pointer; font-family:'Poppins',sans-serif; transition:all 0.2s; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px; }
+        .btn-confirm-del:hover { background:#c0392b; transform:translateY(-1px); box-shadow:0 4px 14px rgba(231,76,60,0.35); }
 
         @media (max-width:768px) {
             .resp-grid, .admin-purs-grid { grid-template-columns:1fr; }
@@ -127,6 +120,29 @@
 {% endblock %}
 
 {% block content %}
+
+<!-- ══ MODAL CONFIRM SUPPRIMER RESPONSABLE ══ -->
+<div class="mod-overlay" id="mod-del-overlay" onclick="if(event.target===this)closeDelModal()" style="z-index:9500;">
+    <div class="mod-box" style="max-width:440px;">
+        <div style="padding:36px 30px;">
+            <div class="del-modal-icon">🗑️</div>
+            <div class="del-modal-title">Supprimer ce responsable ?</div>
+            <div class="del-modal-sub">Cette action est définitive et ne peut pas être annulée.</div>
+            <div class="del-modal-name-box">
+                <div class="del-modal-name-label">Responsable à supprimer</div>
+                <div class="del-modal-name" id="del-resp-name">—</div>
+            </div>
+            <div class="del-modal-warning">
+                <span style="font-size:18px; flex-shrink:0;">⚠️</span>
+                <span>Tous les coordinateurs et séances associés à ce responsable seront définitivement supprimés.</span>
+            </div>
+            <div class="del-modal-btns">
+                <button class="btn-cancel-del" onclick="closeDelModal()">Annuler</button>
+                <a id="del-resp-link" href="#" class="btn-confirm-del">🗑️ Supprimer</a>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- ══ MODAL MODIFIER ══ -->
 <div class="mod-overlay" id="mod-overlay" onclick="handleOverlayClick(event)">
@@ -194,7 +210,7 @@
                         <div class="role-card-title">Admin</div>
                     </label>
                 </div>
-                <button type="submit" class="mod-submit" style="background:##f5a623;">➕ Ajouter</button>
+                <button type="submit" class="mod-submit" style="background:#1a3a6b;">➕ Ajouter</button>
             </form>
         </div>
     </div>
@@ -246,9 +262,7 @@
         {% set ini2 = (r.nom or '')[0].upper() if r.nom else '' %}
         <div class="resp-card">
             <div class="resp-card-header">
-                <div class="resp-avatar" style="background:{{ color }};">
-                    {{ ini1 }}{{ ini2 }}
-                </div>
+                <div class="resp-avatar" style="background:{{ color }};">{{ ini1 }}{{ ini2 }}</div>
                 <div class="resp-info">
                     <div class="resp-name">{{ r.prenom }} {{ r.nom }}</div>
                     <div class="resp-email">{{ r.email or '—' }}</div>
@@ -279,10 +293,13 @@
                         onclick="openModifier({{ r.id }}, '{{ r.nom|replace("'", "\\'") }}', '{{ r.prenom|replace("'", "\\'") }}', '{{ (r.email or '')|replace("'", "\\'") }}', 'responsable')">
                         ✏️ Modifier
                     </button>
-                    <a href="{{ url_for('supprimer_responsable', id=r.id) }}" class="btn-del"
-                       onclick="return confirm('Wash bghi thda {{ r.prenom }} {{ r.nom }} w kol coordinateurs dyalo?')">
+                    <button class="btn-del"
+                        onclick="openDelModal(
+                            '{{ url_for('supprimer_responsable', id=r.id) }}',
+                            '👤 {{ r.prenom }} {{ r.nom }}'
+                        )">
                         🗑️ Supprimer
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>
@@ -305,9 +322,7 @@
         {% for u in admins_purs %}
         {% set ini = (u.prenom or u.nom or u.email or '?')[0].upper() %}
         <div class="admin-pur-card">
-            <div class="resp-avatar" style="background:#f5a623; width:42px; height:42px; font-size:15px; flex-shrink:0;">
-                {{ ini }}
-            </div>
+            <div class="resp-avatar" style="background:#f5a623; width:42px; height:42px; font-size:15px; flex-shrink:0;">{{ ini }}</div>
             <div style="flex:1; min-width:0;">
                 <div style="font-weight:700; color:#1a3a6b; font-size:13px;">
                     {% if u.prenom and u.nom %}{{ u.prenom }} {{ u.nom }}{% else %}{{ u.email.split('@')[0] }}{% endif %}
@@ -324,6 +339,18 @@
 {% endblock %}
 
 {% block extra_js %}
+/* ── Delete confirmation modal ── */
+function openDelModal(url, nom) {
+    document.getElementById('del-resp-name').textContent = nom;
+    document.getElementById('del-resp-link').href = url;
+    document.getElementById('mod-del-overlay').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+function closeDelModal() {
+    document.getElementById('mod-del-overlay').classList.remove('active');
+    document.body.style.overflow = '';
+}
+
 /* ── Modifier modal ── */
 function openModifier(id, nom, prenom, email, role) {
     document.getElementById('form-modifier').action = '/modifier_responsable/' + id;
@@ -362,7 +389,12 @@ function selectAddRole(role) {
     document.getElementById('add-card-' + role).querySelector('input').checked = true;
 }
 
+/* ── ESC key close ── */
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') { closeModal(); closeAddModal(); }
+    if (e.key === 'Escape') {
+        closeModal();
+        closeAddModal();
+        closeDelModal();
+    }
 });
 {% endblock %}

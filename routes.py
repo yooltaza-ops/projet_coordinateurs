@@ -59,7 +59,7 @@ def index():
     mois  = now.month
     annee = now.year
     mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin',
-                 'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
+                'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
 
     dours = Dour.query.all()
 
@@ -137,17 +137,17 @@ def index():
         responsables_select = [resp] if resp else []
 
     return render_template('index.html',
-                           data=data,
-                           responsables=responsables_select,
-                           dours=dours,
-                           total_heures_mois=total_heures_mois,
-                           total_seances_mois=total_seances_mois,
-                           mois_nom_actuel=mois_noms[mois],
-                           annee_actuel=annee,
-                           recap_seances=recap_seances,
-                           admins=admins,
-                           nb_admins=nb_admins,
-                           nb_responsables=nb_responsables)
+                        data=data,
+                        responsables=responsables_select,
+                        dours=dours,
+                        total_heures_mois=total_heures_mois,
+                        total_seances_mois=total_seances_mois,
+                        mois_nom_actuel=mois_noms[mois],
+                        annee_actuel=annee,
+                        recap_seances=recap_seances,
+                        admins=admins,
+                        nb_admins=nb_admins,
+                        nb_responsables=nb_responsables)
 
 
 # ─── Pages dédiées ────────────────────────────────────────────────────────────
@@ -192,8 +192,8 @@ def gerer_coordinateurs():
         responsables = [resp] if resp else []
         coordinateurs = resp.coordinateurs if resp else []
     return render_template('gerer_coordinateurs.html',
-                           coordinateurs=coordinateurs,
-                           responsables=responsables, dours=dours)
+                        coordinateurs=coordinateurs,
+                        responsables=responsables, dours=dours)
 
 
 # ─── Heures / Séances ─────────────────────────────────────────────────────────
@@ -212,7 +212,7 @@ def heures():
         coordinateurs = sorted(resp.coordinateurs, key=lambda c: c.nom) if resp else []
 
     mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin',
-                 'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
+                'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
 
     if current_user.is_admin:
         all_seances_mois = Seance.query.filter_by(mois=mois, annee=annee).all()
@@ -515,14 +515,14 @@ def gerer_responsables():
     all_resp = Responsable.query.order_by(Responsable.nom).all()
     responsables_only = [r for r in all_resp if r.user and r.user.role == 'responsable']
     admins_purs = User.query.filter_by(role='admin').filter(
-                      User.responsable_id == None
-                  ).order_by(User.nom).all()
+                    User.responsable_id == None
+                ).order_by(User.nom).all()
     total_coordinateurs = Coordinateur.query.count()
     return render_template('gerer_responsables.html',
-                           responsables_only=responsables_only,
-                           admins_only=[],
-                           admins_purs=admins_purs,
-                           total_coordinateurs=total_coordinateurs)
+                        responsables_only=responsables_only,
+                        admins_only=[],
+                        admins_purs=admins_purs,
+                        total_coordinateurs=total_coordinateurs)
 
 
 @app.route('/modifier_responsable/<int:id>', methods=['POST'])
@@ -771,42 +771,42 @@ def supprimer_dour(id):
 def impression_seances():
     from collections import defaultdict
     from datetime import datetime
- 
+
     now   = datetime.now()
     mois  = request.args.get('mois',  now.month,  type=int)
     annee = request.args.get('annee', now.year,   type=int)
     filtre_matiere = request.args.get('filtre_matiere', '').strip()
     filtre_niveau  = request.args.get('filtre_niveau',  '').strip()
- 
+
     mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin',
-                 'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
- 
+                'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
+
     # Coordinateurs selon rôle
     if current_user.is_admin:
         coordinateurs = Coordinateur.query.order_by(Coordinateur.nom).all()
     else:
         resp = current_user.responsable
         coordinateurs = sorted(resp.coordinateurs, key=lambda c: c.nom) if resp else []
- 
+
     stats = []
     heures_par_mat = defaultdict(float)
     heures_par_niv = defaultdict(float)
- 
+
     for coord in coordinateurs:
         seances = coord.seances_mois(mois, annee)
         if filtre_matiere:
             seances = [s for s in seances if s.matiere == filtre_matiere]
         if filtre_niveau:
             seances = [s for s in seances if s.niveau == filtre_niveau]
- 
+
         nb_h = sum(s.nb_heures for s in seances)
         mats = sorted({s.matiere for s in seances if s.matiere})
         nivs = sorted({s.niveau  for s in seances if s.niveau})
- 
+
         for s in seances:
             if s.matiere: heures_par_mat[s.matiere] += s.nb_heures
             if s.niveau:  heures_par_niv[s.niveau]  += s.nb_heures
- 
+
         # Inclure TOUS les coordinateurs (même sans séances) pour le rapport complet
         stats.append({
             'coord':         coord,
@@ -814,24 +814,24 @@ def impression_seances():
             'nb_seances':    len(seances),
             'nb_heures':     nb_h,
             'initiales':     (coord.prenom[0] + coord.nom[0]).upper()
-                             if coord.prenom and coord.nom else '?',
+                            if coord.prenom and coord.nom else '?',
             'matieres_uniq': mats,
             'niveaux_uniq':  nivs,
         })
- 
+
     # Trier par heures décroissant
     stats.sort(key=lambda x: x['nb_heures'], reverse=True)
- 
+
     total_heures  = sum(s['nb_heures']  for s in stats)
     total_seances = sum(s['nb_seances'] for s in stats)
     # Coordinateurs avec au moins 1 séance
     total_coords  = sum(1 for s in stats if s['nb_seances'] > 0)
- 
+
     breakdown_mat = sorted(heures_par_mat.items(), key=lambda x: x[1], reverse=True)
     breakdown_niv = sorted(heures_par_niv.items(), key=lambda x: x[1], reverse=True)
- 
+
     generated_at = now.strftime('%d/%m/%Y à %H:%M')
- 
+
     return render_template('impression_seances.html',
         stats=stats,
         mois=mois, annee=annee,
@@ -864,7 +864,7 @@ def stats_coordinateurs():
     annee = request.args.get('annee', now.year,   type=int)
 
     mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin',
-                 'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
+                'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
 
     if current_user.is_admin:
         coordinateurs = Coordinateur.query.order_by(Coordinateur.nom).all()
@@ -929,7 +929,7 @@ def rapport_coordinateurs():
     filtre_niveau  = request.args.get('filtre_niveau',  '').strip()
 
     mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin',
-                 'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
+                'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
 
     if current_user.is_admin:
         coordinateurs = Coordinateur.query.order_by(Coordinateur.nom).all()
