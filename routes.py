@@ -483,7 +483,7 @@ def ajouter_responsable():
 
     if User.query.filter_by(email=email_resp).first():
         flash('Cet email est déjà utilisé.', 'error')
-        return redirect(url_for('ajouter_responsable_page'))
+        return redirect(url_for('gerer_responsables'))
 
     if role == 'responsable':
         r = Responsable(nom=request.form['nom'], prenom=request.form['prenom'], email=email_resp)
@@ -505,7 +505,7 @@ def ajouter_responsable():
 
     db.session.commit()
     flash(f'{"Responsable" if role == "responsable" else "Admin"} ajouté avec succès!', 'success')
-    return redirect(url_for('ajouter_responsable_page'))
+    return redirect(url_for('gerer_responsables'))
 
 
 @app.route('/gerer_responsables')
@@ -572,7 +572,7 @@ def modifier_responsable(id):
             db.session.commit()
 
     flash(f'Compte modifié avec succès!', 'success')
-    return redirect(url_for('gerer_responsables_page'))
+    return redirect(url_for('gerer_responsables'))
 
 
 @app.route('/supprimer_responsable/<int:id>')

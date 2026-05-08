@@ -2,39 +2,44 @@
 {% block title %}Ajouter Responsable — Yool{% endblock %}
 
 {% block extra_css %}
-        .main-content { flex:1; padding:28px; overflow-x:hidden; }
-        .page-title { font-size:21px; font-weight:700; color:#1a3a6b; margin-bottom:22px; display:flex; align-items:center; gap:10px; }
+        .page-title { font-size:21px; font-weight:700; color:#1a3a6b; margin-bottom:28px; display:flex; align-items:center; gap:10px; }
         .alert { padding:13px 18px; background:#27ae60; color:white; border-radius:10px; margin-bottom:18px; font-size:13px; display:flex; align-items:center; gap:10px; }
         .alert-error { background:#e74c3c; }
-        .form-wrapper { max-width:560px; }
-        .form-card { background:white; border-radius:16px; box-shadow:0 4px 15px rgba(0,0,0,0.07); overflow:hidden; }
-        .form-card-header { padding:20px 28px; display:flex; align-items:center; gap:10px; }
-        .form-card-header h2 { color:white; font-size:16px; font-weight:600; }
-        .form-card-body { padding:26px 28px; }
-        .form-card-body label { display:block; margin-bottom:5px; color:#1a3a6b; font-size:12px; font-weight:600; }
-        .form-card-body input, .form-card-body select {
-            width:100%; padding:10px 13px; border:2px solid #e8edf5; border-radius:10px;
-            margin-bottom:16px; font-size:13px; font-family:'Poppins',sans-serif;
-            transition:border 0.2s; outline:none; color:#333; box-sizing:border-box;
+        .fg { display:flex; flex-direction:column; gap:5px; margin-bottom:18px; }
+        .fg label { color:#1a3a6b; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; }
+        .fg input {
+            padding:11px 14px; border:2px solid #e8edf5; border-radius:10px;
+            font-size:13px; font-family:'Poppins',sans-serif; outline:none;
+            transition:border .2s; color:#333; background:white;
         }
-        .form-card-body input:focus, .form-card-body select:focus { border-color:#f5a623; }
-        .role-cards { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; }
-        .role-card { padding:14px; border:2px solid #e8edf5; border-radius:12px; cursor:pointer; transition:all 0.2s; text-align:center; }
+        .fg input:focus { border-color:#f5a623; box-shadow:0 0 0 3px rgba(245,166,35,.1); }
+        .role-cards { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px; }
+        .role-card { padding:16px; border:2px solid #e8edf5; border-radius:14px; cursor:pointer; transition:all .2s; text-align:center; background:white; }
         .role-card:hover { border-color:#f5a623; background:#fffbf2; }
         .role-card.selected { border-color:#1a3a6b; background:#e8f0ff; }
         .role-card input[type="radio"] { display:none; }
-        .role-card-icon { font-size:24px; margin-bottom:6px; }
+        .role-card-icon { font-size:26px; margin-bottom:6px; }
         .role-card-title { font-size:13px; font-weight:700; color:#1a3a6b; }
-        .role-card-desc { font-size:11px; color:#aaa; margin-top:2px; }
-        .form-actions { display:flex; gap:12px; margin-top:6px; }
-        .submit-btn { flex:1; padding:12px; border:none; border-radius:25px; font-size:13px; font-weight:600; cursor:pointer; color:white; font-family:'Poppins',sans-serif; transition:all 0.2s; }
-        .submit-btn:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.15); }
-        .back-btn { padding:12px 20px; border:2px solid #e8edf5; border-radius:25px; font-size:13px; font-weight:600; color:#888; font-family:'Poppins',sans-serif; background:white; text-decoration:none; display:flex; align-items:center; gap:6px; transition:all 0.2s; }
+        .role-card-desc { font-size:11px; color:#aaa; margin-top:3px; }
+        .form-actions { display:flex; gap:12px; margin-top:8px; }
+        .submit-btn { flex:1; padding:13px; border:none; border-radius:25px; font-size:13px; font-weight:700; cursor:pointer; color:white; background:#f5a623; font-family:'Poppins',sans-serif; transition:all .2s; }
+        .submit-btn:hover { background:#15305c; transform:translateY(-1px); box-shadow:0 6px 20px rgba(26,58,107,.25); }
+        .back-btn { padding:13px 22px; border:2px solid #e8edf5; border-radius:25px; font-size:13px; font-weight:600; color:#888; font-family:'Poppins',sans-serif; background:white; text-decoration:none; display:flex; align-items:center; gap:6px; transition:all .2s; }
         .back-btn:hover { border-color:#1a3a6b; color:#1a3a6b; }
+        .section-divider { font-size:13px; font-weight:700; color:#1a3a6b; margin:22px 0 16px; padding-bottom:8px; border-bottom:2px solid #e8edf5; }
+        @media(max-width:768px){
+            div[style*="grid-template-columns:1fr 1fr"] {
+                grid-template-columns: 1fr !important;
+            }
+            .role-cards { grid-template-columns: 1fr !important; }
+            .form-actions { flex-direction: column; }
+            .back-btn { justify-content: center; }
+        }
 {% endblock %}
 
 {% block content %}
-<div class="main-content">
+<div style="padding:32px; min-width:0;">
+
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}
             <div class="alert {% if category == 'error' %}alert-error{% endif %}">
@@ -45,49 +50,47 @@
 
     <div class="page-title">👤 Ajouter un Responsable</div>
 
-    <div class="form-wrapper">
-        <div class="form-card">
-            <div class="form-card-header" style="background:linear-gradient(135deg,#1a3a6b,#2a5298);">
-                <span style="font-size:20px;">👤</span>
-                <h2>Nouveau Responsable</h2>
+    <form method="POST" action="{{ url_for('ajouter_responsable') }}">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+            <div class="fg">
+                <label>Nom</label>
+                <input type="text" name="nom" placeholder="Ex: Alami" required>
             </div>
-            <div class="form-card-body">
-                <form method="POST" action="{{ url_for('ajouter_responsable') }}">
-                    <label>Nom</label>
-                    <input type="text" name="nom" placeholder="Ex: Alami" required>
-                    <label>Prénom</label>
-                    <input type="text" name="prenom" placeholder="Ex: Mohammed" required>
-                    <label>Email</label>
-                    <input type="email" name="email" placeholder="Ex: m.alami@email.com" required>
-                    <label>Mot de passe</label>
-                    <input type="password" name="password" placeholder="Mot de passe initial" required>
-
-                    <label>Rôle</label>
-                    <div class="role-cards">
-                        <label class="role-card selected" id="card-responsable">
-                            <input type="radio" name="role" value="responsable" checked
-                                   onchange="selectRole('responsable')">
-                            <div class="role-card-icon">👤</div>
-                            <div class="role-card-title">Responsable</div>
-                            <div class="role-card-desc">Gère ses coordinateurs uniquement</div>
-                        </label>
-                        <label class="role-card" id="card-admin">
-                            <input type="radio" name="role" value="admin"
-                                   onchange="selectRole('admin')">
-                            <div class="role-card-icon">🛡️</div>
-                            <div class="role-card-title">Admin</div>
-                            <div class="role-card-desc">Accès complet à tout le système</div>
-                        </label>
-                    </div>
-
-                    <div class="form-actions">
-                        <a href="{{ url_for('index') }}" class="back-btn">← Retour</a>
-                        <button type="submit" class="submit-btn" style="background:#1a3a6b;">💾 Enregistrer</button>
-                    </div>
-                </form>
+            <div class="fg">
+                <label>Prénom</label>
+                <input type="text" name="prenom" placeholder="Ex: Mohammed" required>
+            </div>
+            <div class="fg">
+                <label>Email</label>
+                <input type="email" name="email" placeholder="Ex: m.alami@email.com" required>
+            </div>
+            <div class="fg">
+                <label>Mot de passe</label>
+                <input type="password" name="password" placeholder="Mot de passe initial" required>
             </div>
         </div>
-    </div>
+
+        <div class="section-divider">🎭 Rôle</div>
+        <div class="role-cards">
+            <label class="role-card selected" id="card-responsable" onclick="selectRole('responsable')">
+                <input type="radio" name="role" value="responsable" checked>
+                <div class="role-card-icon">👤</div>
+                <div class="role-card-title">Responsable</div>
+                <div class="role-card-desc">Gère ses coordinateurs uniquement</div>
+            </label>
+            <label class="role-card" id="card-admin" onclick="selectRole('admin')">
+                <input type="radio" name="role" value="admin">
+                <div class="role-card-icon">🛡️</div>
+                <div class="role-card-title">Admin</div>
+                <div class="role-card-desc">Accès complet à tout le système</div>
+            </label>
+        </div>
+
+        <div class="form-actions">
+            <a href="{{ url_for('gerer_responsables') }}" class="back-btn">← Retour</a>
+            <button type="submit" class="submit-btn">💾 Enregistrer</button>
+        </div>
+    </form>
 </div>
 {% endblock %}
 

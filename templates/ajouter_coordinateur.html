@@ -2,32 +2,33 @@
 {% block title %}Ajouter Coordinateur — Yool{% endblock %}
 
 {% block extra_css %}
-        .main-content { flex:1; padding:28px; overflow-x:hidden; }
-        .page-title { font-size:21px; font-weight:700; color:#1a3a6b; margin-bottom:22px; display:flex; align-items:center; gap:10px; }
+        .page-title { font-size:21px; font-weight:700; color:#1a3a6b; margin-bottom:28px; display:flex; align-items:center; gap:10px; }
         .alert { padding:13px 18px; background:#27ae60; color:white; border-radius:10px; margin-bottom:18px; font-size:13px; display:flex; align-items:center; gap:10px; box-shadow:0 4px 12px rgba(39,174,96,0.25); }
         .alert-error { background:#e74c3c; }
-        .form-wrapper { max-width:560px; }
-        .form-card { background:white; border-radius:16px; box-shadow:0 4px 15px rgba(0,0,0,0.07); overflow:hidden; }
-        .form-card-header { padding:20px 28px; display:flex; align-items:center; gap:10px; }
-        .form-card-header h2 { color:white; font-size:16px; font-weight:600; }
-        .form-card-body { padding:26px 28px; }
-        .form-card-body label { display:block; margin-bottom:5px; color:#1a3a6b; font-size:12px; font-weight:600; }
-        .form-card-body input, .form-card-body select { width:100%; padding:10px 13px; border:2px solid #e8edf5; border-radius:10px; margin-bottom:16px; font-size:13px; font-family:'Poppins',sans-serif; transition:border 0.2s; outline:none; color:#333; box-sizing:border-box; }
-        .form-card-body input:focus, .form-card-body select:focus { border-color:#f5a623; }
-        .multi-select { height:auto !important; padding:5px !important; }
-        .multi-select option { padding:7px 9px; margin:2px; border-radius:5px; }
-        .multi-select option:checked { background:#1a3a6b; color:white; }
-        .hint { font-size:11px; color:#aaa; margin-top:-13px; margin-bottom:16px; }
-        .form-actions { display:flex; gap:12px; margin-top:6px; }
-        .submit-btn { flex:1; padding:12px; border:none; border-radius:25px; font-size:13px; font-weight:600; cursor:pointer; color:white; font-family:'Poppins',sans-serif; transition:all 0.2s; }
-        .submit-btn:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.15); }
-        .back-btn { padding:12px 20px; border:2px solid #e8edf5; border-radius:25px; font-size:13px; font-weight:600; color:#888; font-family:'Poppins',sans-serif; background:white; text-decoration:none; display:flex; align-items:center; gap:6px; transition:all 0.2s; }
+        .fg { display:flex; flex-direction:column; gap:5px; margin-bottom:18px; }
+        .fg label { color:#1a3a6b; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; }
+        .fg input, .fg select {
+            padding:11px 14px; border:2px solid #e8edf5; border-radius:10px;
+            font-size:13px; font-family:'Poppins',sans-serif; outline:none;
+            transition:border .2s; color:#333; background:white;
+        }
+        .fg input:focus, .fg select:focus { border-color:#f5a623; box-shadow:0 0 0 3px rgba(245,166,35,.1); }
+        .fg select[multiple] { height:auto; padding:5px; }
+        .fg select[multiple] option { padding:7px 9px; margin:2px; border-radius:5px; }
+        .fg select[multiple] option:checked { background:#1a3a6b; color:white; }
+        .hint { font-size:11px; color:#aaa; margin-top:-12px; margin-bottom:18px; }
+        .section-divider { font-size:13px; font-weight:700; color:#1a3a6b; margin:22px 0 16px; padding-bottom:8px; border-bottom:2px solid #e8edf5; }
+        .form-actions { display:flex; gap:12px; margin-top:8px; }
+        .submit-btn { flex:1; padding:13px; border:none; border-radius:25px; font-size:13px; font-weight:700; cursor:pointer; color:white; background:#f5a623; font-family:'Poppins',sans-serif; transition:all .2s; }
+        .submit-btn:hover { background:#15305c; transform:translateY(-1px); box-shadow:0 6px 20px rgba(26,58,107,.25); }
+        .back-btn { padding:13px 22px; border:2px solid #e8edf5; border-radius:25px; font-size:13px; font-weight:600; color:#888; font-family:'Poppins',sans-serif; background:white; text-decoration:none; display:flex; align-items:center; gap:6px; transition:all .2s; }
         .back-btn:hover { border-color:#1a3a6b; color:#1a3a6b; }
-        @media (max-width:768px) { .main-content { padding:14px; } }
+        @media(max-width:768px){ .two-col { grid-template-columns:1fr !important; } }
 {% endblock %}
 
 {% block content %}
-<div class="main-content">
+<div style="padding:32px; min-width:0;">
+
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}
             <div class="alert {% if category == 'error' %}alert-error{% endif %}">
@@ -38,54 +39,61 @@
 
     <div class="page-title">➕ Ajouter un Coordinateur</div>
 
-    <div class="form-wrapper">
-        <div class="form-card">
-            <div class="form-card-header" style="background:linear-gradient(135deg,#1a3a6b,#2a5298);">
-                <span style="font-size:20px;">👤</span>
-                <h2>Nouveau Coordinateur</h2>
+    <form method="POST" action="{{ url_for('ajouter_coordinateur') }}">
+
+        <div class="two-col" style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+            <div class="fg">
+                <label>Nom</label>
+                <input type="text" name="nom" placeholder="Ex: Idrissi" required>
             </div>
-            <div class="form-card-body">
-                <form method="POST" action="{{ url_for('ajouter_coordinateur') }}">
-                    <label>Nom</label>
-                    <input type="text" name="nom" placeholder="Ex: Idrissi" required>
-                    <label>Prénom</label>
-                    <input type="text" name="prenom" placeholder="Ex: Karim" required>
-                    <label>Genre</label>
-                    <select name="genre" required>
-                        <option value="">-- Choisir --</option>
-                        <option value="M">👨 Coordinateur (Homme)</option>
-                        <option value="F">👩 Coordinatrice (Femme)</option>
-                    </select>
-                    <label>Responsable</label>
-                    <select name="responsable_id" required>
-                        <option value="">-- Choisir un responsable --</option>
-                        {% if current_user.is_admin %}
-                            {% for r in responsables %}
-                            <option value="{{ r.id }}">{{ r.prenom }} {{ r.nom }}</option>
-                            {% endfor %}
-                        {% else %}
-                            {% if current_user.responsable %}
-                            <option value="{{ current_user.responsable.id }}" selected>{{ current_user.responsable.prenom }} {{ current_user.responsable.nom }}</option>
-                            {% endif %}
-                        {% endif %}
-                    </select>
-                    <label>🏠 Dours</label>
-                    <select name="dours" multiple class="multi-select" size="5">
-                        {% for d in dours %}
-                        <option value="{{ d.id }}">
-                            {% if d.type == 'talib' %}🧒{% elif d.type == 'taliba' %}👧{% else %}👩{% endif %}
-                            {{ d.nom }} ({{ d.type }})
-                        </option>
+            <div class="fg">
+                <label>Prénom</label>
+                <input type="text" name="prenom" placeholder="Ex: Karim" required>
+            </div>
+            <div class="fg">
+                <label>Genre</label>
+                <select name="genre" required>
+                    <option value="">-- Choisir --</option>
+                    <option value="M">👨 Coordinateur (Homme)</option>
+                    <option value="F">👩 Coordinatrice (Femme)</option>
+                </select>
+            </div>
+            <div class="fg">
+                <label>Responsable</label>
+                <select name="responsable_id" required>
+                    <option value="">-- Choisir un responsable --</option>
+                    {% if current_user.is_admin %}
+                        {% for r in responsables %}
+                        <option value="{{ r.id }}">{{ r.prenom }} {{ r.nom }}</option>
                         {% endfor %}
-                    </select>
-                    <p class="hint">💡 Ctrl + Click bach tzid aktar men wahda</p>
-                    <div class="form-actions">
-                        <a href="{{ url_for('index') }}" class="back-btn">← Retour</a>
-                        <button type="submit" class="submit-btn" style="background:#27ae60;">💾 Enregistrer</button>
-                    </div>
-                </form>
+                    {% else %}
+                        {% if current_user.responsable %}
+                        <option value="{{ current_user.responsable.id }}" selected>{{ current_user.responsable.prenom }} {{ current_user.responsable.nom }}</option>
+                        {% endif %}
+                    {% endif %}
+                </select>
             </div>
         </div>
-    </div>
+
+        <div class="section-divider">🏠 Dours</div>
+        <div class="fg">
+            <label>Sélectionner les Dours</label>
+            <select name="dours" multiple size="6">
+                {% for d in dours %}
+                <option value="{{ d.id }}">
+                    {% if d.type == 'talib' %}🧒{% elif d.type == 'taliba' %}👧{% else %}👩{% endif %}
+                    {{ d.nom }} ({{ d.type }})
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <p class="hint">💡 Ctrl + Click bach tzid aktar men wahda</p>
+
+        <div class="form-actions">
+            <a href="{{ url_for('gerer_coordinateurs') }}" class="back-btn">← Retour</a>
+            <button type="submit" class="submit-btn">💾 Enregistrer</button>
+        </div>
+
+    </form>
 </div>
 {% endblock %}

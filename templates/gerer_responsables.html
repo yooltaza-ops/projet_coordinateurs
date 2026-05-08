@@ -48,7 +48,7 @@
         .btn-edit:hover { border-color:#1a3a6b; background:#e8edf5; }
         .btn-del  { padding:6px 14px; background:#fdecea; border:none; border-radius:20px; font-size:12px; font-weight:600; color:#e74c3c; cursor:pointer; font-family:'Poppins',sans-serif; text-decoration:none; transition:all 0.2s; }
         .btn-del:hover { background:#e74c3c; color:white; }
-        .btn-add  { padding:10px 20px; background:#1a3a6b; color:white; border:none; border-radius:25px; font-size:13px; font-weight:600; cursor:pointer; font-family:'Poppins',sans-serif; text-decoration:none; transition:all 0.2s; display:inline-flex; align-items:center; gap:6px; }
+        .btn-add  { padding:10px 20px; background:#f5a623; color:white; border:none; border-radius:25px; font-size:13px; font-weight:600; cursor:pointer; font-family:'Poppins',sans-serif; text-decoration:none; transition:all 0.2s; display:inline-flex; align-items:center; gap:6px; }
         .btn-add:hover { background:#15305c; transform:translateY(-1px); box-shadow:0 4px 14px rgba(26,58,107,0.3); }
 
         .admin-pur-card {
@@ -128,7 +128,7 @@
 
 {% block content %}
 
-<!-- ══ MODAL ══ -->
+<!-- ══ MODAL MODIFIER ══ -->
 <div class="mod-overlay" id="mod-overlay" onclick="handleOverlayClick(event)">
     <div class="mod-box" id="mod-box">
         <div class="mod-top">
@@ -164,6 +164,42 @@
     </div>
 </div>
 
+<!-- ══ MODAL AJOUTER ══ -->
+<div class="mod-overlay" id="mod-add-overlay" onclick="if(event.target===this)closeAddModal()">
+    <div class="mod-box">
+        <div class="mod-top" style="background:#1a3a6b;">
+            <h2>➕ Ajouter un Compte</h2>
+            <button class="mod-close" onclick="closeAddModal()">✕</button>
+        </div>
+        <div class="mod-body">
+            <form method="POST" action="{{ url_for('ajouter_responsable') }}">
+                <label>Nom</label>
+                <input type="text" name="nom" required placeholder="Nom">
+                <label>Prénom</label>
+                <input type="text" name="prenom" required placeholder="Prénom">
+                <label>Email</label>
+                <input type="email" name="email" required placeholder="email@exemple.com">
+                <label>Mot de passe</label>
+                <input type="password" name="password" required placeholder="••••••••" minlength="6">
+                <label>Rôle</label>
+                <div class="role-cards">
+                    <label class="role-card selected" id="add-card-responsable" onclick="selectAddRole('responsable')">
+                        <input type="radio" name="role" value="responsable" checked>
+                        <div class="role-card-icon">👤</div>
+                        <div class="role-card-title">Responsable</div>
+                    </label>
+                    <label class="role-card" id="add-card-admin" onclick="selectAddRole('admin')">
+                        <input type="radio" name="role" value="admin">
+                        <div class="role-card-icon">🛡️</div>
+                        <div class="role-card-title">Admin</div>
+                    </label>
+                </div>
+                <button type="submit" class="mod-submit" style="background:##f5a623;">➕ Ajouter</button>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- ══ PAGE ══ -->
 <div style="padding:28px; min-width:0;">
 
@@ -177,7 +213,7 @@
 
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; flex-wrap:wrap; gap:12px;">
         <div class="page-title" style="margin-bottom:0;">👥 Gérer les Comptes</div>
-        <a href="{{ url_for('ajouter_responsable_page') }}" class="btn-add">➕ Ajouter</a>
+        <button class="btn-add" onclick="openAddModal()">➕ Ajouter</button>
     </div>
 
     <div class="stats-row">
@@ -288,6 +324,7 @@
 {% endblock %}
 
 {% block extra_js %}
+/* ── Modifier modal ── */
 function openModifier(id, nom, prenom, email, role) {
     document.getElementById('form-modifier').action = '/modifier_responsable/' + id;
     document.getElementById('mod-nom').value    = nom;
@@ -309,7 +346,23 @@ function selectModRole(role) {
     document.getElementById('mod-card-admin').classList.toggle('selected', role === 'admin');
     document.getElementById('mod-role-' + role).checked = true;
 }
+
+/* ── Ajouter modal ── */
+function openAddModal() {
+    document.getElementById('mod-add-overlay').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+function closeAddModal() {
+    document.getElementById('mod-add-overlay').classList.remove('active');
+    document.body.style.overflow = '';
+}
+function selectAddRole(role) {
+    document.getElementById('add-card-responsable').classList.toggle('selected', role === 'responsable');
+    document.getElementById('add-card-admin').classList.toggle('selected', role === 'admin');
+    document.getElementById('add-card-' + role).querySelector('input').checked = true;
+}
+
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeModal();
+    if (e.key === 'Escape') { closeModal(); closeAddModal(); }
 });
 {% endblock %}
