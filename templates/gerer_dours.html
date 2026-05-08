@@ -28,10 +28,58 @@
         .fatat  { background:#f5a623; }
         .dours-count { font-size:12px; color:#888; font-weight:500; margin-bottom:14px; padding-bottom:10px; border-bottom:1.5px solid #f0f4f8; }
         .empty-state { text-align:center; padding:30px 20px; color:#bbb; font-size:13px; font-style:italic; }
+
+        /* ══ CONFIRM MODAL ══ */
+        .confirm-overlay { display:none; position:fixed; inset:0; background:rgba(15,23,42,0.55); backdrop-filter:blur(6px); z-index:9999; align-items:center; justify-content:center; }
+        .confirm-overlay.open { display:flex; }
+        .confirm-box { background:white; border-radius:20px; width:100%; max-width:380px; margin:16px; box-shadow:0 28px 70px rgba(0,0,0,0.22); overflow:hidden; animation:confirmIn .28s cubic-bezier(0.34,1.56,0.64,1); }
+        @keyframes confirmIn { from { opacity:0; transform:scale(0.88) translateY(20px); } to { opacity:1; transform:scale(1) translateY(0); } }
+        .confirm-icon-wrap { display:flex; align-items:center; justify-content:center; padding:28px 20px 16px; }
+        .confirm-icon { width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:28px; background:#fdecea; }
+        .confirm-content { padding:0 26px 22px; text-align:center; }
+        .confirm-title { font-size:16px; font-weight:700; color:#1a3a6b; margin-bottom:8px; }
+        .confirm-msg { font-size:13px; color:#64748b; line-height:1.6; }
+        .confirm-name-box { margin-top:14px; background:#f0f4f8; border-radius:10px; padding:9px 14px; border:1.5px solid #e8edf5; }
+        .confirm-name-label { font-size:12px; color:#888; display:block; margin-bottom:3px; }
+        .confirm-name-value { font-size:13px; font-weight:700; color:#1a3a6b; }
+        .confirm-warn { margin-top:12px; background:#fff8ee; border:1.5px solid #fce8c3; border-radius:10px; padding:10px 14px; display:flex; align-items:flex-start; gap:8px; text-align:left; }
+        .confirm-warn-text { font-size:11px; color:#b8740a; line-height:1.5; }
+        .confirm-actions { display:flex; gap:10px; padding:16px 22px 22px; }
+        .confirm-btn-cancel { flex:1; padding:11px; background:#f1f5f9; color:#64748b; border:2px solid #e2e8f0; border-radius:12px; font-size:13px; font-weight:700; cursor:pointer; font-family:'Poppins',sans-serif; transition:all 0.2s; }
+        .confirm-btn-cancel:hover { background:#e2e8f0; }
+        .confirm-btn-ok { flex:1; padding:11px; background:linear-gradient(135deg,#e74c3c,#c0392b); color:white; border:none; border-radius:12px; font-size:13px; font-weight:700; cursor:pointer; font-family:'Poppins',sans-serif; transition:all 0.2s; box-shadow:0 4px 14px rgba(231,76,60,0.3); }
+        .confirm-btn-ok:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(231,76,60,0.45); }
+
         @media (max-width:768px) { .main-content { padding:14px; } }
 {% endblock %}
 
 {% block content %}
+
+<!-- ══ CONFIRM DELETE MODAL ══ -->
+<div class="confirm-overlay" id="confirm-overlay">
+    <div class="confirm-box">
+        <div class="confirm-icon-wrap">
+            <div class="confirm-icon">🏠</div>
+        </div>
+        <div class="confirm-content">
+            <div class="confirm-title">Supprimer cette dour ?</div>
+            <div class="confirm-msg">Cette action est définitive et ne peut pas être annulée.</div>
+            <div class="confirm-name-box">
+                <span class="confirm-name-label">Dour à supprimer</span>
+                <span id="confirm-dour-name" class="confirm-name-value"></span>
+            </div>
+            <div class="confirm-warn">
+                <span style="font-size:14px; flex-shrink:0;">⚠️</span>
+                <span class="confirm-warn-text">Cette dour sera retirée de tous les coordinateurs qui lui sont associés.</span>
+            </div>
+        </div>
+        <div class="confirm-actions">
+            <button class="confirm-btn-cancel" onclick="confirmCancel()">Annuler</button>
+            <button class="confirm-btn-ok" onclick="confirmOk()">🗑️ Supprimer</button>
+        </div>
+    </div>
+</div>
+
 <div class="main-content">
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}
@@ -44,6 +92,7 @@
     <div class="page-title">🏠 Gérer les Dours</div>
 
     <div class="content-grid">
+        <!-- Ajouter -->
         <div class="card">
             <div class="card-header" style="background:linear-gradient(135deg,#e67e22,#f5a623);">
                 <span style="font-size:20px;">➕</span>
@@ -65,6 +114,7 @@
             </div>
         </div>
 
+        <!-- Liste -->
         <div class="card">
             <div class="card-header" style="background:linear-gradient(135deg,#1a3a6b,#2a5298);">
                 <span style="font-size:20px;">📋</span>
@@ -82,16 +132,46 @@
                                 <span class="dar-tag {{ d.type }}">dar {{ d.type }}</span>
                             </div>
                         </div>
-                        <a href="{{ url_for('supprimer_dour', id=d.id) }}"
-                           style="background:#e74c3c; color:white; font-size:11px; padding:4px 12px; border-radius:12px; text-decoration:none; font-weight:600;"
-                           onclick="return confirm('Wash bghi thda had dour?')">🗑️</a>
+                        <button
+                            onclick="confirmDelete('{{ url_for('supprimer_dour', id=d.id) }}', '{{ d.nom }} ({{ d.type }})')"
+                            style="background:#e74c3c; color:white; font-size:11px; padding:4px 12px; border-radius:12px; border:none; cursor:pointer; font-weight:600; font-family:'Poppins',sans-serif; transition:background 0.2s;"
+                            onmouseover="this.style.background='#c0392b'" onmouseout="this.style.background='#e74c3c'">
+                            🗑️
+                        </button>
                     </div>
                     {% endfor %}
                 {% else %}
-                    <div class="empty-state"><div style="font-size:36px; margin-bottom:10px;">🏠</div>Mazal ma zidti aucune dour</div>
+                    <div class="empty-state">
+                        <div style="font-size:36px; margin-bottom:10px;">🏠</div>
+                        Mazal ma zidti aucune dour
+                    </div>
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+var _confirmDeleteUrl = null;
+
+function confirmDelete(url, nom) {
+    _confirmDeleteUrl = url;
+    document.getElementById('confirm-dour-name').textContent = '🏠 ' + nom;
+    document.getElementById('confirm-overlay').classList.add('open');
+}
+
+function confirmCancel() {
+    _confirmDeleteUrl = null;
+    document.getElementById('confirm-overlay').classList.remove('open');
+}
+
+function confirmOk() {
+    if (_confirmDeleteUrl) window.location.href = _confirmDeleteUrl;
+    document.getElementById('confirm-overlay').classList.remove('open');
+}
+
+document.getElementById('confirm-overlay').addEventListener('click', function(e) {
+    if (e.target === this) confirmCancel();
+});
 {% endblock %}

@@ -299,10 +299,13 @@ def modifier_seance(id):
     s.niveau    = request.form.get('niveau',  '').strip() or None
     db.session.commit()
     flash('Séance modifiée!', 'success')
+    redirect_url = request.form.get('redirect_url', '').strip()
+    if redirect_url:
+        return redirect(redirect_url)
     return redirect(url_for('heures', mois=s.mois, annee=s.annee, coord_id=coord.id))
 
 
-@app.route('/heures/supprimer/<int:id>')
+@app.route('/heures/supprimer/<int:id>', methods=['GET', 'POST'])
 @login_required
 def supprimer_seance(id):
     s = Seance.query.get_or_404(id)
@@ -314,6 +317,9 @@ def supprimer_seance(id):
     db.session.delete(s)
     db.session.commit()
     flash('Séance supprimée!', 'success')
+    redirect_url = request.form.get('redirect_url', '').strip()
+    if redirect_url:
+        return redirect(redirect_url)
     return redirect(url_for('heures', mois=mois, annee=annee, coord_id=coord_id))
 
 
@@ -480,7 +486,6 @@ def ajouter_responsable():
         return redirect(url_for('ajouter_responsable_page'))
 
     if role == 'responsable':
-        # خلق Responsable + User مربوطين
         r = Responsable(nom=request.form['nom'], prenom=request.form['prenom'], email=email_resp)
         db.session.add(r)
         db.session.flush()
@@ -488,7 +493,6 @@ def ajouter_responsable():
         u.set_password(pwd)
         db.session.add(u)
     else:
-        # Admin فقط — بلا Responsable row
         u = User(
             email=email_resp,
             role='admin',
@@ -549,7 +553,6 @@ def modifier_responsable(id):
             r.email = new_email
             db.session.commit()
         else:
-            # Responsable → Admin — detach user then delete responsable row
             u = r.user
             u.responsable_id = None
             u.nom    = r.nom
@@ -557,7 +560,6 @@ def modifier_responsable(id):
             u.email  = new_email
             u.role   = 'admin'
             db.session.flush()
-            # حذف coordinateurs ديالو أولا
             for c in r.coordinateurs:
                 Seance.query.filter_by(coordinateur_id=c.id).delete()
                 db.session.execute(
@@ -710,7 +712,6 @@ def modifier_coordinateur(id):
     c.prenom = request.form['prenom']
     c.genre = request.form['genre']
     c.responsable_id = request.form['responsable_id']
-    # حذف relations قديمة مباشرة بـ SQL
     db.session.execute(
         db.text("DELETE FROM coordinateur_dour WHERE coordinateur_id = :cid"),
         {"cid": c.id}
@@ -896,6 +897,7 @@ def rapport_coordinateurs():
         matieres_actives=sorted(matieres_actives_set),
         niveaux_actifs=sorted(niveaux_actifs_set),
     )
+
 
 @app.route('/update_social', methods=['POST'])
 @login_required

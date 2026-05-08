@@ -199,7 +199,7 @@ body { font-family: 'DM Sans', sans-serif; }
     display: flex; flex-direction: column; max-height: 90vh;
     animation: modalIn .28s cubic-bezier(0.34,1.56,0.64,1);
 }
-.modal-box.sm { max-width: 400px; }
+.modal-box.sm { max-width: 420px; }
 @keyframes modalIn {
     from { opacity:0; transform:scale(0.91) translateY(22px); }
     to   { opacity:1; transform:scale(1) translateY(0); }
@@ -289,6 +289,19 @@ body { font-family: 'DM Sans', sans-serif; }
 .dr-mat { background: var(--teal); }
 .dr-niv { background: var(--purple); }
 .dr-note { font-size: 11px; color: var(--grey); margin-top: 4px; font-style: italic; }
+.dr-actions { display: flex; gap: 8px; margin-top: 10px; }
+.btn-edit-s {
+    flex: 1; padding: 7px; background: #e0f2fe; color: #0369a1;
+    border: none; border-radius: 8px; font-size: 12px; font-weight: 700;
+    cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .15s;
+}
+.btn-edit-s:hover { background: #0369a1; color: white; }
+.btn-del-s {
+    flex: 1; padding: 7px; background: #fee2e2; color: var(--red);
+    border: none; border-radius: 8px; font-size: 12px; font-weight: 700;
+    cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .15s;
+}
+.btn-del-s:hover { background: var(--red); color: white; }
 
 /* Alert */
 .alert {
@@ -310,6 +323,7 @@ body { font-family: 'DM Sans', sans-serif; }
 <div class="page-wrap">
 
 <!-- ══ MODAL ADD ══ -->
+<!-- ══ MODAL ADD ══ -->
 <div class="modal-overlay" id="modal-add" onclick="closeAdd(event)">
     <div class="modal-box" onclick="event.stopPropagation()">
         <div class="modal-hdr" id="add-hdr">
@@ -319,11 +333,13 @@ body { font-family: 'DM Sans', sans-serif; }
             </div>
             <button class="modal-close" onclick="closeAdd()">✕</button>
         </div>
-        <form method="POST" action="{{ url_for('ajouter_seances_multiple') }}" id="multi-form">
+        <form method="POST" action="{{ url_for('ajouter_seances_multiple') }}" id="multi-form" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
             <input type="hidden" name="coordinateur_id" id="hci">
             <input type="hidden" name="redirect_url"    id="hru">
             <div class="modal-body">
                 <div class="sessions-list" id="sessions-list"></div>
+            </div>
+            <div style="padding:0 22px 10px;">
                 <button type="button" class="btn-add-row" onclick="addSession()">＋ Ajouter une autre séance</button>
             </div>
             <div class="modal-footer">
@@ -331,6 +347,63 @@ body { font-family: 'DM Sans', sans-serif; }
                 <button type="submit" class="btn-save">💾 Enregistrer <span class="save-badge" id="save-badge">1 séance</span></button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- ══ MODAL EDIT SEANCE ══ -->
+<div class="modal-overlay" id="modal-edit" onclick="closeEdit(event)">
+    <div class="modal-box sm" onclick="event.stopPropagation()">
+        <div class="modal-hdr" id="edit-hdr">
+            <div>
+                <h2>✏️ Modifier la Séance</h2>
+                <div class="modal-hdr-sub" id="edit-sub">—</div>
+            </div>
+            <button class="modal-close" onclick="closeEdit()">✕</button>
+        </div>
+        <form method="POST" id="edit-form">
+            <div class="modal-body">
+                <div class="sc-grid">
+                    <div class="fg"><label>📅 Date</label>
+                        <input type="date" name="date" id="edit-date" required></div>
+                    <div class="fg"><label>⏱️ Heures</label>
+                        <input type="number" name="nb_heures" id="edit-heures" step="0.5" min="0.5" max="12" required></div>
+                    <div class="fg"><label>🔬 Matière</label>
+                        <select name="matiere" id="edit-matiere"></select></div>
+                    <div class="fg"><label>🎓 Niveau</label>
+                        <select name="niveau" id="edit-niveau"></select></div>
+                    <div class="fg full"><label>📝 Note</label>
+                        <input type="text" name="note" id="edit-note" placeholder="Remarque..."></div>
+                </div>
+                <input type="hidden" name="redirect_url" id="edit-redirect">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeEdit()">Annuler</button>
+                <button type="submit" class="btn-save">💾 Enregistrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ══ MODAL CONFIRM DELETE ══ -->
+<div class="modal-overlay" id="modal-del" onclick="closeDel(event)">
+    <div class="modal-box sm" onclick="event.stopPropagation()">
+        <div class="modal-hdr" style="background:var(--red)">
+            <div>
+                <h2>🗑️ Supprimer la Séance</h2>
+                <div class="modal-hdr-sub">Cette action est irréversible</div>
+            </div>
+            <button class="modal-close" onclick="closeDel()">✕</button>
+        </div>
+        <div class="modal-body" id="del-body"></div>
+        <div class="modal-footer">
+            <button type="button" class="btn-cancel" onclick="closeDel()">Annuler</button>
+            <form method="POST" id="del-form" style="margin:0">
+                <input type="hidden" name="redirect_url" id="del-redirect">
+                <button type="submit" style="padding:9px 22px;background:var(--red);color:white;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">
+                    🗑️ Confirmer la suppression
+                </button>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -647,7 +720,6 @@ function changeMonth(d) {
     if (curMois < 1)  { curMois = 12; curAnnee--; }
     document.getElementById('inp-mois').value  = curMois;
     document.getElementById('inp-annee').value = curAnnee;
-    // Save current coord before submit
     if (curCoord) sessionStorage.setItem('lastCoordId', curCoord.id);
     document.getElementById('filter-form').submit();
 }
@@ -735,19 +807,35 @@ function closeAdd(evt) {
 function fmtDate(ds) {
     return new Date(ds+'T00:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 }
+
+// Store séances by temp key for button handlers
+const _SEANCE_CACHE = {};
+let _seanceCacheKey = 0;
+
 function drHtml(s, color) {
+    const key = ++_seanceCacheKey;
+    _SEANCE_CACHE[key] = s;
     return `<div class="dr" style="border-left-color:${color}">
         <div class="dr-top">
             <span class="dr-date">${fmtDate(s.date)}</span>
             <span class="dr-h">${s.heures}h</span>
         </div>
         <div class="dr-badges">
-            ${s.matiere?`<span class="dr-badge dr-mat">🔬 ${s.matiere}</span>`:''}
-            ${s.niveau ?`<span class="dr-badge dr-niv">🎓 ${s.niveau}</span>` :''}
+            ${s.matiere ? `<span class="dr-badge dr-mat">🔬 ${s.matiere}</span>` : ''}
+            ${s.niveau  ? `<span class="dr-badge dr-niv">🎓 ${s.niveau}</span>`  : ''}
         </div>
-        ${s.note?`<div class="dr-note">📝 ${s.note}</div>`:''}
+        ${s.note ? `<div class="dr-note">📝 ${s.note}</div>` : ''}
+        <div class="dr-actions">
+            <button type="button" class="btn-edit-s" data-skey="${key}" onclick="closeDet();openEdit(_SEANCE_CACHE[this.dataset.skey])">
+                ✏️ Modifier
+            </button>
+            <button type="button" class="btn-del-s" data-skey="${key}" onclick="closeDet();openDel(_SEANCE_CACHE[this.dataset.skey])">
+                🗑️ Supprimer
+            </button>
+        </div>
     </div>`;
 }
+
 function openDet(s, ds) {
     document.getElementById('det-hdr').style.background = curCoord.color;
     document.getElementById('det-title').textContent = curCoord.name;
@@ -770,14 +858,66 @@ function closeDet(evt) {
     document.body.style.overflow = '';
 }
 
+// ── Edit modal ────────────────────────────────────────────────────────────────
+const MO2 = (sel) => '<option value="">— Matière —</option>' + MATIERES.map(m =>
+    `<option value="${m}"${m === sel ? ' selected' : ''}>${m}</option>`).join('');
+const NO2 = (sel) => '<option value="">— Niveau —</option>' + NIVEAUX.map(n =>
+    `<option value="${n}"${n === sel ? ' selected' : ''}>${n}</option>`).join('');
+
+function openEdit(s) {
+    document.getElementById('edit-hdr').style.background = curCoord ? curCoord.color : 'var(--teal)';
+    document.getElementById('edit-sub').textContent = '📅 ' + fmtDate(s.date) + (curCoord ? '  ·  👤 ' + curCoord.name : '');
+    document.getElementById('edit-form').action = `/heures/modifier/${s.id}`;
+    document.getElementById('edit-date').value    = s.date;
+    document.getElementById('edit-heures').value  = s.heures;
+    document.getElementById('edit-note').value    = s.note || '';
+    document.getElementById('edit-matiere').innerHTML = MO2(s.matiere);
+    document.getElementById('edit-niveau').innerHTML  = NO2(s.niveau);
+    document.getElementById('edit-redirect').value    = window.location.href;
+    document.getElementById('modal-edit').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+function closeEdit(evt) {
+    if (evt && evt.target !== document.getElementById('modal-edit')) return;
+    document.getElementById('modal-edit').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+// ── Delete modal ──────────────────────────────────────────────────────────────
+function openDel(s) {
+    document.getElementById('del-form').action = `/heures/supprimer/${s.id}`;
+    document.getElementById('del-redirect').value = window.location.href;
+    document.getElementById('del-body').innerHTML = `
+        <div class="dr" style="border-left-color:var(--red);margin-bottom:0">
+            <div class="dr-top">
+                <span class="dr-date">${fmtDate(s.date)}</span>
+                <span class="dr-h">${s.heures}h</span>
+            </div>
+            <div class="dr-badges">
+                ${s.matiere ? `<span class="dr-badge dr-mat">🔬 ${s.matiere}</span>` : ''}
+                ${s.niveau  ? `<span class="dr-badge dr-niv">🎓 ${s.niveau}</span>`  : ''}
+            </div>
+            ${s.note ? `<div class="dr-note">📝 ${s.note}</div>` : ''}
+        </div>`;
+    document.getElementById('modal-del').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+function closeDel(evt) {
+    if (evt && evt.target !== document.getElementById('modal-del')) return;
+    document.getElementById('modal-del').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+// ── Keyboard ──────────────────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
-        ['modal-add','modal-det'].forEach(id => document.getElementById(id).classList.remove('open'));
+        ['modal-add','modal-det','modal-edit','modal-del'].forEach(id =>
+            document.getElementById(id).classList.remove('open'));
         document.body.style.overflow = '';
     }
 });
 
-// Restore calendar view after month navigation
+// ── Restore calendar after month nav ─────────────────────────────────────────
 window.addEventListener('load', () => {
     const sid = sessionStorage.getItem('lastCoordId');
     if (sid && COORDS[sid]) {
