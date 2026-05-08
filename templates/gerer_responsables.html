@@ -339,6 +339,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
 /* ── Delete confirmation modal ── */
 function openDelModal(url, nom) {
     document.getElementById('del-resp-name').textContent = nom;
@@ -397,4 +398,5 @@ document.addEventListener('keydown', function(e) {
         closeDelModal();
     }
 });
+</script>
 {% endblock %}

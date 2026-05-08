@@ -282,7 +282,8 @@
 </div>
 {% endblock %}
 
-{% block extra_js %}
+<{% block extra_js %}>
+<script>
 // ── Panel helpers ─────────────────────────────────────────────────────────────
 function openPanel(id) {
     var el = document.getElementById(id);
@@ -336,4 +337,5 @@ function confirmOk() {
 document.getElementById('confirm-overlay').addEventListener('click', function(e) {
     if (e.target === this) confirmCancel();
 });
+</script>
 {% endblock %}
