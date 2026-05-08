@@ -766,6 +766,88 @@ def supprimer_dour(id):
     flash('Dour supprimée!', 'success')
     return redirect(url_for('gerer_dours_page'))
 
+@app.route('/impression_seances')
+@login_required
+def impression_seances():
+    from collections import defaultdict
+    from datetime import datetime
+ 
+    now   = datetime.now()
+    mois  = request.args.get('mois',  now.month,  type=int)
+    annee = request.args.get('annee', now.year,   type=int)
+    filtre_matiere = request.args.get('filtre_matiere', '').strip()
+    filtre_niveau  = request.args.get('filtre_niveau',  '').strip()
+ 
+    mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin',
+                 'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
+ 
+    # Coordinateurs selon rôle
+    if current_user.is_admin:
+        coordinateurs = Coordinateur.query.order_by(Coordinateur.nom).all()
+    else:
+        resp = current_user.responsable
+        coordinateurs = sorted(resp.coordinateurs, key=lambda c: c.nom) if resp else []
+ 
+    stats = []
+    heures_par_mat = defaultdict(float)
+    heures_par_niv = defaultdict(float)
+ 
+    for coord in coordinateurs:
+        seances = coord.seances_mois(mois, annee)
+        if filtre_matiere:
+            seances = [s for s in seances if s.matiere == filtre_matiere]
+        if filtre_niveau:
+            seances = [s for s in seances if s.niveau == filtre_niveau]
+ 
+        nb_h = sum(s.nb_heures for s in seances)
+        mats = sorted({s.matiere for s in seances if s.matiere})
+        nivs = sorted({s.niveau  for s in seances if s.niveau})
+ 
+        for s in seances:
+            if s.matiere: heures_par_mat[s.matiere] += s.nb_heures
+            if s.niveau:  heures_par_niv[s.niveau]  += s.nb_heures
+ 
+        # Inclure TOUS les coordinateurs (même sans séances) pour le rapport complet
+        stats.append({
+            'coord':         coord,
+            'seances':       seances,
+            'nb_seances':    len(seances),
+            'nb_heures':     nb_h,
+            'initiales':     (coord.prenom[0] + coord.nom[0]).upper()
+                             if coord.prenom and coord.nom else '?',
+            'matieres_uniq': mats,
+            'niveaux_uniq':  nivs,
+        })
+ 
+    # Trier par heures décroissant
+    stats.sort(key=lambda x: x['nb_heures'], reverse=True)
+ 
+    total_heures  = sum(s['nb_heures']  for s in stats)
+    total_seances = sum(s['nb_seances'] for s in stats)
+    # Coordinateurs avec au moins 1 séance
+    total_coords  = sum(1 for s in stats if s['nb_seances'] > 0)
+ 
+    breakdown_mat = sorted(heures_par_mat.items(), key=lambda x: x[1], reverse=True)
+    breakdown_niv = sorted(heures_par_niv.items(), key=lambda x: x[1], reverse=True)
+ 
+    generated_at = now.strftime('%d/%m/%Y à %H:%M')
+ 
+    return render_template('impression_seances.html',
+        stats=stats,
+        mois=mois, annee=annee,
+        mois_noms=mois_noms,
+        annees=list(range(now.year - 2, now.year + 2)),
+        filtre_matiere=filtre_matiere,
+        filtre_niveau=filtre_niveau,
+        matieres=MATIERES,
+        niveaux=NIVEAUX,
+        total_heures=total_heures,
+        total_seances=total_seances,
+        total_coords=total_coords,
+        breakdown_mat=breakdown_mat,
+        breakdown_niv=breakdown_niv,
+        generated_at=generated_at,
+    )
 
 # ─── Erreurs ──────────────────────────────────────────────────────────────────
 @app.errorhandler(403)

@@ -1,0 +1,627 @@
+{% extends "base.html" %}
+{% block title %}Impression — Rapport Séances{% endblock %}
+
+{% block extra_css %}
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+    --ink:     #0f172a;
+    --blue:    #1a3a6b;
+    --blue2:   #2a5298;
+    --orange:  #f5a623;
+    --pink:    #e91e8c;
+    --teal:    #0d9488;
+    --purple:  #7c3aed;
+    --green:   #16a34a;
+    --red:     #dc2626;
+    --grey:    #64748b;
+    --light:   #f8faff;
+    --border:  #e2e8f0;
+    --white:   #ffffff;
+    --shadow:  0 4px 20px rgba(0,0,0,0.07);
+}
+
+* { box-sizing: border-box; }
+body { font-family: 'DM Sans', sans-serif; background: #eef2f7; }
+
+/* ── Screen wrapper ── */
+.ip-screen { padding: 28px; max-width: 1100px; margin: 0 auto; }
+@media(max-width:768px){ .ip-screen { padding: 12px; } }
+
+/* ── Toolbar ── */
+.toolbar {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: var(--white); border-radius: 14px; padding: 13px 18px;
+    box-shadow: var(--shadow); border: 1.5px solid var(--border);
+    margin-bottom: 20px;
+}
+.toolbar-title { font-size: 18px; font-weight: 700; color: var(--blue); flex: 1; font-family: 'Playfair Display', serif; }
+.tb-select {
+    padding: 8px 12px; border: 2px solid var(--border); border-radius: 9px;
+    font-size: 13px; font-family: 'DM Sans', sans-serif; color: var(--blue);
+    font-weight: 600; outline: none; background: var(--light); cursor: pointer; transition: border .2s;
+}
+.tb-select:focus { border-color: var(--orange); }
+.tb-label { font-size: 11px; font-weight: 700; color: var(--grey); text-transform: uppercase; letter-spacing: .5px; white-space: nowrap; }
+.print-btn {
+    display: flex; align-items: center; gap: 7px;
+    padding: 9px 22px; background: linear-gradient(135deg, var(--blue), var(--blue2));
+    color: white; border: none; border-radius: 10px; font-size: 13px; font-weight: 700;
+    font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all .2s;
+    box-shadow: 0 4px 14px rgba(26,58,107,.3); white-space: nowrap;
+}
+.print-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(26,58,107,.4); }
+.filter-btn {
+    padding: 9px 18px; background: var(--orange); color: white; border: none;
+    border-radius: 10px; font-size: 13px; font-weight: 700;
+    font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all .2s;
+}
+.filter-btn:hover { background: #e8941a; }
+
+/* ── PRINT DOCUMENT ── */
+.print-doc {
+    background: var(--white); border-radius: 18px; box-shadow: var(--shadow);
+    overflow: hidden; border: 1.5px solid var(--border);
+}
+
+/* Doc header */
+.doc-header {
+    background: linear-gradient(135deg, var(--blue) 0%, var(--blue2) 60%, #3b6cb7 100%);
+    padding: 36px 44px 28px; position: relative; overflow: hidden;
+}
+.doc-header::before {
+    content: ''; position: absolute; top: -40px; right: -40px;
+    width: 200px; height: 200px; border-radius: 50%;
+    background: rgba(255,255,255,.06);
+}
+.doc-header::after {
+    content: ''; position: absolute; bottom: -20px; right: 80px;
+    width: 120px; height: 120px; border-radius: 50%;
+    background: rgba(245,166,35,.12);
+}
+.doc-org {
+    font-size: 11px; font-weight: 700; letter-spacing: 2px;
+    color: rgba(255,255,255,.65); text-transform: uppercase; margin-bottom: 8px;
+}
+.doc-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 30px; font-weight: 800; color: white; line-height: 1.2;
+    margin-bottom: 6px;
+}
+.doc-subtitle { font-size: 14px; color: rgba(255,255,255,.75); font-weight: 500; }
+.doc-meta {
+    display: flex; gap: 20px; margin-top: 22px; flex-wrap: wrap;
+}
+.doc-meta-item {
+    background: rgba(255,255,255,.12); backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,.2); border-radius: 10px;
+    padding: 8px 16px; color: white;
+}
+.dmi-val { font-size: 18px; font-weight: 700; line-height: 1; }
+.dmi-lbl { font-size: 10px; opacity: .75; margin-top: 2px; text-transform: uppercase; letter-spacing: .5px; }
+
+/* Period band */
+.period-band {
+    background: var(--orange); padding: 10px 44px;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; font-weight: 700; color: white;
+}
+
+/* Summary boxes */
+.summary-section { padding: 28px 44px; border-bottom: 2px solid var(--border); }
+.sum-boxes {
+    display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 22px;
+}
+@media(max-width:768px){ .sum-boxes { grid-template-columns: repeat(2,1fr); } }
+.sum-box {
+    border-radius: 14px; padding: 16px 18px; position: relative; overflow: hidden;
+}
+.sum-box.b1 { background: linear-gradient(135deg,#1a3a6b,#2a5298); }
+.sum-box.b2 { background: linear-gradient(135deg,#0d9488,#0f766e); }
+.sum-box.b3 { background: linear-gradient(135deg,#7c3aed,#6d28d9); }
+.sum-box.b4 { background: linear-gradient(135deg,#f5a623,#e8941a); }
+.sb-val { font-size: 32px; font-weight: 700; color: white; line-height: 1; }
+.sb-lbl { font-size: 11px; color: rgba(255,255,255,.8); margin-top: 4px; font-weight: 500; }
+.sb-icon {
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    font-size: 32px; opacity: .25;
+}
+
+/* Breakdown bars */
+.breakdown-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media(max-width:768px){ .breakdown-row { grid-template-columns: 1fr; } }
+.bk-section { }
+.bk-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--grey); margin-bottom: 10px;
+    display: flex; align-items: center; gap: 6px;
+}
+.bk-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; }
+.bk-lbl  { font-size: 12px; font-weight: 600; color: var(--ink); min-width: 130px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bk-track { flex: 1; height: 7px; background: var(--border); border-radius: 7px; overflow: hidden; }
+.bk-fill  { height: 100%; border-radius: 7px; }
+.bk-val   { font-size: 11px; font-weight: 700; min-width: 40px; text-align: right; }
+
+/* Coordinator table */
+.coord-section { padding: 0 44px 36px; }
+@media(max-width:768px){ .coord-section, .summary-section { padding-left: 16px; padding-right: 16px; } }
+
+.section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px; font-weight: 700; color: var(--blue);
+    margin: 28px 0 16px; display: flex; align-items: center; gap: 10px;
+    border-bottom: 2px solid var(--border); padding-bottom: 10px;
+}
+.section-title span { font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600; color: var(--grey); }
+
+/* Coord block */
+.coord-print-block {
+    border: 1.5px solid var(--border); border-radius: 14px;
+    overflow: hidden; margin-bottom: 18px; break-inside: avoid;
+}
+.cpb-header {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 20px; border-bottom: 1.5px solid var(--border);
+}
+.cpb-av {
+    width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+    color: white; display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700;
+}
+.cpb-info { flex: 1; }
+.cpb-name { font-size: 14px; font-weight: 700; color: var(--blue); }
+.cpb-sub  { font-size: 11px; color: var(--grey); margin-top: 2px; }
+.cpb-pills { display: flex; gap: 5px; margin-top: 5px; flex-wrap: wrap; }
+.cpb-pill {
+    padding: 2px 9px; border-radius: 20px; font-size: 10px;
+    font-weight: 700; color: white;
+}
+.cpb-stats {
+    display: flex; gap: 16px; text-align: center; margin-left: auto; flex-shrink: 0;
+}
+.cpb-stat-val { font-size: 18px; font-weight: 700; line-height: 1; }
+.cpb-stat-lbl { font-size: 10px; color: var(--grey); margin-top: 2px; }
+
+/* Seances mini-table */
+.s-table { width: 100%; border-collapse: collapse; }
+.s-table th {
+    background: #f8faff; color: var(--blue); padding: 8px 16px;
+    text-align: left; font-size: 10px; font-weight: 700; letter-spacing: .5px;
+    text-transform: uppercase; border-bottom: 1.5px solid var(--border);
+}
+.s-table th.r { text-align: right; }
+.s-table td {
+    padding: 9px 16px; border-bottom: 1px solid #f0f4f8;
+    font-size: 12px; color: var(--ink); vertical-align: middle;
+}
+.s-table tr:last-child td { border-bottom: none; }
+.s-table tr:hover td { background: #fafbff; }
+.s-table .r { text-align: right; }
+.mat-chip { display: inline-block; padding: 1px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; color: white; background: var(--teal); }
+.niv-chip { display: inline-block; padding: 1px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; color: white; background: var(--purple); }
+.h-chip   { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; color: var(--teal); background: #e6faf7; }
+.s-total  {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 9px 16px; background: #f0f4ff; border-top: 2px solid var(--border);
+    font-size: 12px; font-weight: 700; color: var(--blue);
+}
+.s-total-h { font-size: 15px; font-weight: 700; color: var(--teal); }
+
+.no-data { padding: 20px; text-align: center; color: #cbd5e1; font-size: 12px; font-style: italic; }
+
+/* Note mobile — caché sur desktop */
+.note-mobile { display: none; }
+
+/* ── Table scroll wrapper ── */
+.s-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* ══ RESPONSIVE MOBILE ══ */
+@media (max-width: 768px) {
+    .doc-header   { padding: 22px 16px 18px; }
+    .doc-title    { font-size: 20px; }
+    .doc-org      { font-size: 10px; }
+    .doc-subtitle { font-size: 12px; }
+    .doc-meta     { gap: 7px; }
+    .doc-meta-item{ padding: 6px 10px; }
+    .dmi-val      { font-size: 14px; }
+    .dmi-lbl      { font-size: 9px; }
+
+    .period-band  { padding: 8px 16px; font-size: 11px; }
+
+    .summary-section { padding: 14px 12px; }
+    .sum-boxes    { grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 14px; }
+    .sum-box      { padding: 12px 12px; }
+    .sb-val       { font-size: 22px; }
+    .sb-lbl       { font-size: 10px; }
+    .sb-icon      { font-size: 22px; right: 10px; }
+
+    .breakdown-row{ grid-template-columns: 1fr; gap: 14px; }
+    .bk-lbl       { min-width: 80px; font-size: 11px; }
+    .bk-val       { font-size: 11px; min-width: 36px; }
+
+    .coord-section{ padding: 0 12px 20px; }
+    .section-title{ font-size: 14px; margin: 18px 0 12px; }
+
+    /* Coord header — 2 lignes sur mobile */
+    .cpb-header   { padding: 12px 12px; gap: 10px; flex-wrap: wrap; }
+    .cpb-av       { width: 38px; height: 38px; font-size: 12px; }
+    .cpb-info     { flex: 1; min-width: 0; }
+    .cpb-name     { font-size: 13px; }
+    .cpb-sub      { font-size: 10px; }
+    .cpb-pill     { font-size: 9px; padding: 1px 7px; }
+    .cpb-stats    {
+        width: 100%; margin-left: 0;
+        justify-content: flex-start; gap: 14px;
+        padding-top: 8px; border-top: 1px solid var(--border);
+    }
+    .cpb-stat-val { font-size: 15px; }
+    .cpb-stat-lbl { font-size: 9px; }
+
+    /* Table — scroll horizontal, kacha note sur mobile */
+    .s-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .s-table      { min-width: unset; width: 100%; font-size: 11px; }
+    .s-table th   { padding: 6px 8px; font-size: 9px; }
+    .s-table td   { padding: 7px 8px; }
+    .mat-chip, .niv-chip { font-size: 9px; padding: 1px 6px; white-space: nowrap; }
+    .h-chip       { font-size: 10px; padding: 2px 6px; }
+    /* Kacha note sur mobile */
+    .s-table .col-note,
+    .s-table .th-note { display: none; }
+    .note-mobile  { display: none; }
+
+    .s-total      { padding: 8px 12px; font-size: 11px; flex-wrap: wrap; gap: 4px; }
+    .s-total-h    { font-size: 13px; }
+
+    .doc-footer   { padding: 12px 14px; flex-direction: column; gap: 4px; text-align: center; font-size: 10px; }
+
+    .ip-screen    { padding: 8px; }
+    .toolbar      { padding: 10px 12px; gap: 7px; flex-wrap: wrap; }
+    .toolbar-title{ font-size: 13px; }
+    .tb-select    { padding: 6px 8px; font-size: 11px; }
+    .print-btn    { padding: 7px 12px; font-size: 11px; }
+    .filter-btn   { padding: 7px 10px; font-size: 11px; }
+}
+
+/* Footer */
+.doc-footer {
+    border-top: 2px solid var(--border); padding: 16px 44px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 11px; color: var(--grey); background: var(--light);
+}
+
+/* Alert */
+.alert {
+    padding: 11px 16px; border-radius: 10px; margin-bottom: 14px;
+    font-size: 13px; display: flex; align-items: center; gap: 8px;
+    background: var(--green); color: white;
+}
+.alert-error { background: var(--red); }
+
+/* ════════════════════ PRINT ════════════════════ */
+@media print {
+    /* ── Kacha les éléments de navigation ── */
+    .navbar,
+    .sidebar,
+    .mob-menu-btn,
+    .mob-sidebar-overlay,
+    .sidebar-toggle,
+    .toolbar { 
+        display: none !important; 
+    }
+    
+    /* ── Logo ── */
+    .navbar-left {
+        display: block !important;
+    }
+    .navbar {
+        display: flex !important;
+        box-shadow: none !important;
+        border-bottom: 1.5px solid #e8edf5 !important;
+        padding: 10px 20px !important;
+        height: auto !important;
+    }
+    /* Kacha gha le user dropdown */
+    .navbar-right {
+        display: none !important;
+    }
+
+    /* ── Layout ── */
+    .dashboard-layout { 
+        display: block !important; 
+    }
+    .main-content { 
+        margin-left: 0 !important; 
+        padding: 0 !important;
+        width: 100% !important;
+    }
+    
+    /* ── Document ── */
+    body { background: white !important; }
+    .ip-screen { padding: 0; max-width: 100%; }
+    .print-doc {
+        border: none; border-radius: 0; box-shadow: none;
+    }
+    
+    /* ── Colors preserved ── */
+    .doc-header  { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .period-band { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .sum-box     { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .bk-fill     { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .cpb-av      { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    
+    /* ── Page breaks ── */
+    .coord-print-block { page-break-inside: avoid; break-inside: avoid; }
+    
+    @page { margin: 1cm; size: A4; }
+}
+{% endblock %}
+
+{% block content %}
+<div class="ip-screen">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+        <div class="alert {% if category == 'error' %}alert-error{% endif %}">
+            {% if category == 'error' %}⚠️{% else %}✅{% endif %} {{ message }}
+        </div>
+        {% endfor %}
+    {% endwith %}
+
+    <!-- ── Toolbar ── -->
+    <div class="toolbar">
+        <div class="toolbar-title">🖨️ Impression — Rapport Séances</div>
+        <form method="GET" action="{{ url_for('impression_seances') }}"
+              style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <span class="tb-label">📅</span>
+            <select name="mois" class="tb-select">
+                {% for i in range(1,13) %}
+                <option value="{{ i }}" {% if i == mois %}selected{% endif %}>{{ mois_noms[i] }}</option>
+                {% endfor %}
+            </select>
+            <select name="annee" class="tb-select">
+                {% for y in annees %}
+                <option value="{{ y }}" {% if y == annee %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="filter-btn">🔍 Actualiser</button>
+        </form>
+        <button class="print-btn" onclick="window.print()">🖨️ Imprimer</button>
+    </div>
+
+    <!-- ══════════════════════════════════
+         PRINT DOCUMENT
+    ══════════════════════════════════ -->
+    <div class="print-doc" id="print-doc">
+
+        <!-- Doc header -->
+        <div class="doc-header">
+            <div class="doc-org">Yool · Système de gestion</div>
+            <div class="doc-title">Rapport des Séances</div>
+            <div class="doc-subtitle">Sti3mal zaman w détail par coordinateur</div>
+            <div class="doc-meta">
+                <div class="doc-meta-item">
+                    <div class="dmi-val">{{ total_coords }}</div>
+                    <div class="dmi-lbl">Coordinateurs</div>
+                </div>
+                <div class="doc-meta-item">
+                    <div class="dmi-val">{{ total_seances }}</div>
+                    <div class="dmi-lbl">Séances</div>
+                </div>
+                <div class="doc-meta-item">
+                    <div class="dmi-val">{{ "%.1f"|format(total_heures) }}h</div>
+                    <div class="dmi-lbl">Heures totales</div>
+                </div>
+                <div class="doc-meta-item">
+                    <div class="dmi-val">{{ generated_at }}</div>
+                    <div class="dmi-lbl">Généré le</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Period band -->
+        <div class="period-band">
+            📅 Période : {{ mois_noms[mois] }} {{ annee }}
+            {% if filtre_matiere or filtre_niveau %}
+            &nbsp;·&nbsp;
+            {% if filtre_matiere %}🔬 {{ filtre_matiere }}{% endif %}
+            {% if filtre_niveau %}&nbsp;🎓 {{ filtre_niveau }}{% endif %}
+            {% endif %}
+        </div>
+
+        <!-- Summary boxes -->
+        <div class="summary-section">
+            <div class="sum-boxes">
+                <div class="sum-box b1">
+                    <div class="sb-val">{{ total_coords }}</div>
+                    <div class="sb-lbl">Coordinateurs actifs</div>
+                    <div class="sb-icon">👥</div>
+                </div>
+                <div class="sum-box b2">
+                    <div class="sb-val">{{ "%.1f"|format(total_heures) }}h</div>
+                    <div class="sb-lbl">Heures totales</div>
+                    <div class="sb-icon">⏱️</div>
+                </div>
+                <div class="sum-box b3">
+                    <div class="sb-val">{{ total_seances }}</div>
+                    <div class="sb-lbl">Séances enregistrées</div>
+                    <div class="sb-icon">📚</div>
+                </div>
+                <div class="sum-box b4">
+                    <div class="sb-val">
+                        {% if total_seances > 0 %}{{ "%.1f"|format(total_heures / total_seances) }}h{% else %}—{% endif %}
+                    </div>
+                    <div class="sb-lbl">Moyenne / séance</div>
+                    <div class="sb-icon">📊</div>
+                </div>
+            </div>
+
+            <!-- Breakdown bars -->
+            <div class="breakdown-row">
+
+                <div class="bk-section">
+                    <div class="bk-title">🔬 Heures par Matière</div>
+                    {% if breakdown_mat %}
+                    {% set max_mat = breakdown_mat[0][1] %}
+                    {% for mat, h in breakdown_mat %}
+                    <div class="bk-bar-row">
+                        <div class="bk-lbl">{{ mat }}</div>
+                        <div class="bk-track">
+                            <div class="bk-fill" style="width:{{ ((h/max_mat)*100)|round|int }}%; background:var(--teal);"></div>
+                        </div>
+                        <div class="bk-val" style="color:var(--teal);">{{ "%.1f"|format(h) }}h</div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div style="font-size:12px; color:#cbd5e1; font-style:italic;">Aucune matière enregistrée</div>
+                    {% endif %}
+                </div>
+
+                <div class="bk-section">
+                    <div class="bk-title">🎓 Heures par Niveau</div>
+                    {% if breakdown_niv %}
+                    {% set max_niv = breakdown_niv[0][1] %}
+                    {% for niv, h in breakdown_niv %}
+                    <div class="bk-bar-row">
+                        <div class="bk-lbl">{{ niv }}</div>
+                        <div class="bk-track">
+                            <div class="bk-fill" style="width:{{ ((h/max_niv)*100)|round|int }}%; background:var(--purple);"></div>
+                        </div>
+                        <div class="bk-val" style="color:var(--purple);">{{ "%.1f"|format(h) }}h</div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div style="font-size:12px; color:#cbd5e1; font-style:italic;">Aucun niveau enregistré</div>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Coordinator details -->
+        <div class="coord-section">
+            <div class="section-title">
+                📋 Détail par Coordinateur
+                <span>{{ mois_noms[mois] }} {{ annee }}</span>
+            </div>
+
+            {% set month_abbr = ['','Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'] %}
+
+            {% for row in stats %}
+            <div class="coord-print-block">
+
+                <!-- Header -->
+                <div class="cpb-header">
+                    <div class="cpb-av"
+                         style="background:{% if row.coord.genre=='M' %}linear-gradient(135deg,#1a3a6b,#2a5298){% else %}linear-gradient(135deg,#e91e8c,#c2185b){% endif %};">
+                        {{ row.initiales }}
+                    </div>
+                    <div class="cpb-info">
+                        <div class="cpb-name">
+                            {% if row.coord.genre=='M' %}👨{% else %}👩{% endif %}
+                            {{ row.coord.prenom }} {{ row.coord.nom }}
+                        </div>
+                        <div class="cpb-sub">
+                            Responsable : {{ row.coord.responsable.prenom }} {{ row.coord.responsable.nom }}
+                        </div>
+                        {% if row.matieres_uniq or row.niveaux_uniq %}
+                        <div class="cpb-pills">
+                            {% for m in row.matieres_uniq %}
+                            <span class="cpb-pill" style="background:var(--teal);">{{ m }}</span>
+                            {% endfor %}
+                            {% for n in row.niveaux_uniq %}
+                            <span class="cpb-pill" style="background:var(--purple);">{{ n }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="cpb-stats">
+                        <div>
+                            <div class="cpb-stat-val" style="color:var(--purple);">{{ row.nb_seances }}</div>
+                            <div class="cpb-stat-lbl">séances</div>
+                        </div>
+                        <div>
+                            <div class="cpb-stat-val" style="color:var(--teal);">{{ "%.1f"|format(row.nb_heures) }}h</div>
+                            <div class="cpb-stat-lbl">heures</div>
+                        </div>
+                        {% if row.nb_seances > 0 %}
+                        <div>
+                            <div class="cpb-stat-val" style="color:var(--grey); font-size:14px;">{{ "%.1f"|format(row.nb_heures / row.nb_seances) }}h</div>
+                            <div class="cpb-stat-lbl">moy/séance</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Séances table -->
+                {% if row.seances %}
+                <div class="s-table-wrap"><table class="s-table">
+                    <thead>
+                        <tr>
+                            <th>📅 Date</th>
+                            <th>🔬 Matière</th>
+                            <th>🎓 Niveau</th>
+                            <th class="th-note">📝 Note</th>
+                            <th class="r">⏱️ Heures</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in row.seances %}
+                        <tr>
+                            <td style="font-family:'DM Mono',monospace; white-space:nowrap;">
+                                {{ s.date.strftime('%A') }}<br>
+                                <strong>{{ s.date.day }} {{ month_abbr[s.date.month] }} {{ s.date.year }}</strong>
+                                {% if s.note %}
+                                <span class="note-mobile">📝 {{ s.note }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if s.matiere %}<span class="mat-chip">{{ s.matiere }}</span>
+                                {% else %}<span style="color:#cbd5e1;font-size:11px;">—</span>{% endif %}
+                            </td>
+                            <td>
+                                {% if s.niveau %}<span class="niv-chip">{{ s.niveau }}</span>
+                                {% else %}<span style="color:#cbd5e1;font-size:11px;">—</span>{% endif %}
+                            </td>
+                            <td class="col-note" style="color:var(--grey);font-size:11px;max-width:180px;">
+                                {% if s.note %}{{ s.note }}
+                                {% else %}<span style="color:#cbd5e1;font-style:italic;">—</span>{% endif %}
+                            </td>
+                            <td class="r"><span class="h-chip">{{ "%.1f"|format(s.nb_heures) }}h</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table></div>
+                <div class="s-total">
+                    <span>🔢 {{ row.nb_seances }} séance{{ 's' if row.nb_seances != 1 }}
+                        {% if row.matieres_uniq %} · {{ row.matieres_uniq|join(', ') }}{% endif %}
+                        {% if row.niveaux_uniq %} · {{ row.niveaux_uniq|join(', ') }}{% endif %}
+                    </span>
+                    <span class="s-total-h">{{ "%.1f"|format(row.nb_heures) }}h</span>
+                </div>
+                {% else %}
+                <div class="no-data">📭 Aucune séance enregistrée pour {{ mois_noms[mois] }} {{ annee }}</div>
+                {% endif %}
+
+            </div><!-- end coord-print-block -->
+            {% endfor %}
+
+            {% if not stats %}
+            <div style="padding:50px;text-align:center;color:#cbd5e1;">
+                <div style="font-size:48px;margin-bottom:12px;opacity:.4;">📭</div>
+                <p>Aucune donnée pour {{ mois_noms[mois] }} {{ annee }}</p>
+            </div>
+            {% endif %}
+
+        </div><!-- end coord-section -->
+
+        <!-- Footer -->
+        <div class="doc-footer">
+            <span>🏢 Yool — Système de gestion coordinateurs</span>
+            <span>📅 {{ mois_noms[mois] }} {{ annee }}</span>
+            <span>Généré le {{ generated_at }}</span>
+        </div>
+
+    </div><!-- end print-doc -->
+</div>
+{% endblock %}
