@@ -1,125 +1,12 @@
 {% extends "base.html" %}
 {% block title %}Séances — Yool{% endblock %}
 
-{% block extra_css %}
-        .main-content { flex:1; overflow-x:hidden; min-width:0; }
-        .main { padding:26px; }
-        .page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; flex-wrap:wrap; gap:12px; }
-        .page-title { font-size:20px; font-weight:700; color:#1a3a6b; display:flex; align-items:center; gap:10px; }
-        .filter-bar { display:flex; align-items:center; gap:10px; background:white; padding:9px 16px; border-radius:25px; box-shadow:0 2px 10px rgba(0,0,0,0.07); flex-wrap:wrap; }
-        .filter-bar select { border:none; outline:none; font-family:'Poppins',sans-serif; font-size:13px; font-weight:600; color:#1a3a6b; background:transparent; cursor:pointer; }
-        .filter-bar label { font-size:12px; color:#888; font-weight:600; }
-        .btn-filter { padding:6px 16px; background:#1a3a6b; color:white; border:none; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; font-family:'Poppins',sans-serif; }
-        .stats-row { display:flex; gap:14px; margin-bottom:20px; flex-wrap:wrap; }
-        .stat-card { flex:1; min-width:120px; background:white; border-radius:13px; padding:16px 18px; box-shadow:0 4px 15px rgba(0,0,0,0.07); border-left:5px solid; display:flex; flex-direction:column; gap:3px; }
-        .stat-card.blue  { border-color:#1a3a6b; }
-        .stat-card.orange{ border-color:#f5a623; }
-        .stat-card.green { border-color:#27ae60; }
-        .stat-card.pink  { border-color:#e91e8c; }
-        .stat-number { font-size:26px; font-weight:700; color:#1a3a6b; line-height:1; }
-        .stat-label  { font-size:11px; color:#888; font-weight:500; }
-        .heures-layout { display:grid; grid-template-columns:300px 1fr; gap:18px; align-items:start; }
-        @media (max-width:900px) { .heures-layout { grid-template-columns:1fr; } }
-        .coord-list { background:white; border-radius:14px; box-shadow:0 4px 15px rgba(0,0,0,0.07); overflow:hidden; }
-        .coord-list-header { background:#1a3a6b; padding:14px 18px; }
-        .coord-list-header h3 { color:white; font-size:14px; font-weight:600; }
-        .coord-item { display:flex; align-items:center; gap:11px; padding:12px 16px; cursor:pointer; border-bottom:1px solid #f0f4f8; transition:all 0.15s; text-decoration:none; }
-        .coord-item:last-child { border-bottom:none; }
-        .coord-item:hover { background:#f8fafc; }
-        .coord-item.selected { background:#e8f0ff; border-left:4px solid #1a3a6b; }
-        .coord-avatar { width:38px; height:38px; border-radius:50%; background:#1a3a6b; color:white; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex-shrink:0; }
-        .coord-avatar.F { background:#e91e8c; }
-        .coord-meta { flex:1; min-width:0; }
-        .coord-name-sm { font-weight:600; color:#1a3a6b; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .coord-stats-sm { font-size:11px; color:#888; margin-top:2px; }
-        .coord-badge { display:inline-block; padding:2px 8px; border-radius:8px; font-size:10px; font-weight:700; background:#e8f0ff; color:#1a3a6b; flex-shrink:0; }
-        .detail-panel { background:white; border-radius:14px; box-shadow:0 4px 15px rgba(0,0,0,0.07); overflow:hidden; }
-        .detail-header { background:linear-gradient(135deg,#1a3a6b,#2a5298); padding:18px 22px; }
-        .detail-header h3 { color:white; font-size:15px; font-weight:600; }
-        .detail-header .sub { color:rgba(255,255,255,0.7); font-size:12px; margin-top:3px; }
-        .add-seance-section { background:#f8fafc; border-bottom:1.5px solid #e8edf5; padding:16px 20px; }
-        .add-seance-title { font-size:12px; font-weight:700; color:#1a3a6b; margin-bottom:12px; display:flex; align-items:center; gap:6px; }
-        .add-seance-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:10px; align-items:end; }
-        .add-field { display:flex; flex-direction:column; gap:4px; }
-        .add-field label { font-size:11px; font-weight:700; color:#1a3a6b; }
-        .add-field input, .add-field select { padding:8px 12px; border:2px solid #e8edf5; border-radius:9px; font-family:'Poppins',sans-serif; font-size:13px; outline:none; transition:border 0.2s; box-sizing:border-box; background:white; color:#1a3a6b; width:100%; }
-        .add-field input:focus, .add-field select:focus { border-color:#f5a623; }
-        .add-field.note-field { grid-column: span 2; }
-        @media (max-width:600px) { .add-field.note-field { grid-column: span 1; } }
-        .btn-add { padding:9px 22px; background:#27ae60; color:white; border:none; border-radius:20px; font-size:13px; font-weight:700; cursor:pointer; font-family:'Poppins',sans-serif; transition:all 0.2s; white-space:nowrap; align-self:end; }
-        .btn-add:hover { background:#219a52; transform:translateY(-1px); }
-        .seances-table { width:100%; border-collapse:collapse; }
-        .seances-table th { background:#f8fafc; color:#1a3a6b; padding:10px 16px; text-align:left; font-size:12px; font-weight:700; border-bottom:2px solid #e8edf5; }
-        .seances-table td { padding:10px 16px; border-bottom:1px solid #f0f4f8; font-size:13px; vertical-align:middle; }
-        .seances-table tr:last-child td { border-bottom:none; }
-        .seances-table tr:hover td { background:#fafbfc; }
-        .date-chip { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; background:#e8f0ff; border-radius:10px; font-size:12px; font-weight:600; color:#1a3a6b; }
-        .heures-chip { display:inline-block; padding:3px 11px; background:#fff3e0; border-radius:10px; font-size:12px; font-weight:700; color:#f5a623; }
-        .mat-badge { display:inline-block; padding:2px 9px; border-radius:20px; font-size:10px; font-weight:700; color:white; background:#0d9488; white-space:nowrap; }
-        .niv-badge { display:inline-block; padding:2px 9px; border-radius:20px; font-size:10px; font-weight:700; color:white; background:#7c3aed; white-space:nowrap; }
-        .note-text { font-size:11px; color:#888; font-style:italic; }
-        .btn-edit-sm { padding:4px 10px; background:#f0f4f8; color:#1a3a6b; border:1.5px solid #e8edf5; border-radius:8px; font-size:11px; font-weight:600; cursor:pointer; font-family:'Poppins',sans-serif; }
-        .btn-edit-sm:hover { background:#e8edf5; }
-        .btn-del-sm { padding:4px 10px; background:#fdecea; color:#e74c3c; border:none; border-radius:8px; font-size:11px; font-weight:600; cursor:pointer; font-family:'Poppins',sans-serif; }
-        .btn-del-sm:hover { background:#e74c3c; color:white; }
-        .empty-box { padding:32px; text-align:center; color:#bbb; font-size:13px; }
-        .total-row { display:flex; gap:16px; padding:14px 20px; background:#f8fafc; border-top:2px solid #e8edf5; flex-wrap:wrap; }
-        .total-item { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:#1a3a6b; }
-        .select-prompt { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; color:#bbb; gap:12px; }
-        .select-prompt .big-icon { font-size:48px; }
-        .select-prompt p { font-size:14px; text-align:center; }
-
-        /* Edit modal */
-        .modal-overlay { display:none; position:fixed; top:0;left:0;width:100%;height:100%; background:rgba(26,58,107,0.4); z-index:300; backdrop-filter:blur(2px); align-items:center; justify-content:center; }
-        .modal-overlay.active { display:flex; }
-        .modal-box { background:white; border-radius:16px; padding:28px; width:480px; max-width:95vw; box-shadow:0 20px 60px rgba(0,0,0,0.2); }
-        .modal-title { font-size:15px; font-weight:700; color:#1a3a6b; margin-bottom:18px; }
-        .modal-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-        .modal-field { margin-bottom:0; }
-        .modal-field.full { grid-column:1/-1; }
-        .modal-field label { display:block; font-size:11px; font-weight:700; color:#1a3a6b; margin-bottom:5px; text-transform:uppercase; letter-spacing:.3px; }
-        .modal-field input, .modal-field select { width:100%; padding:9px 12px; border:2px solid #e8edf5; border-radius:9px; font-family:'Poppins',sans-serif; font-size:13px; outline:none; box-sizing:border-box; background:white; color:#1a3a6b; transition:border .2s; }
-        .modal-field input:focus, .modal-field select:focus { border-color:#f5a623; }
-        .modal-btns { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; }
-        .btn-cancel { padding:9px 20px; background:#f0f4f8; color:#888; border:none; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; font-family:'Poppins',sans-serif; }
-        .btn-save-mod { padding:9px 20px; background:#f5a623; color:white; border:none; border-radius:20px; font-size:13px; font-weight:700; cursor:pointer; font-family:'Poppins',sans-serif; }
-
-        /* ══ CONFIRM MODAL ══ */
-        .confirm-overlay { display:none; position:fixed; inset:0; background:rgba(15,23,42,0.55); backdrop-filter:blur(6px); z-index:9999; align-items:center; justify-content:center; }
-        .confirm-overlay.open { display:flex; }
-        .confirm-box { background:white; border-radius:20px; width:100%; max-width:380px; margin:16px; box-shadow:0 28px 70px rgba(0,0,0,0.22); overflow:hidden; animation:confirmIn .28s cubic-bezier(0.34,1.56,0.64,1); }
-        @keyframes confirmIn { from { opacity:0; transform:scale(0.88) translateY(20px); } to { opacity:1; transform:scale(1) translateY(0); } }
-        .confirm-icon-wrap { display:flex; align-items:center; justify-content:center; padding:28px 20px 16px; }
-        .confirm-icon { width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:28px; background:#fdecea; }
-        .confirm-content { padding:0 26px 22px; text-align:center; }
-        .confirm-title { font-size:16px; font-weight:700; color:#1a3a6b; margin-bottom:8px; }
-        .confirm-msg { font-size:13px; color:#64748b; line-height:1.6; }
-        .confirm-name-box { margin-top:14px; background:#f0f4f8; border-radius:10px; padding:9px 14px; border:1.5px solid #e8edf5; }
-        .confirm-name-label { font-size:12px; color:#888; display:block; margin-bottom:3px; }
-        .confirm-name-value { font-size:13px; font-weight:700; color:#1a3a6b; }
-        .confirm-warn { margin-top:12px; background:#fff8ee; border:1.5px solid #fce8c3; border-radius:10px; padding:10px 14px; display:flex; align-items:flex-start; gap:8px; text-align:left; }
-        .confirm-warn-text { font-size:11px; color:#b8740a; line-height:1.5; }
-        .confirm-actions { display:flex; gap:10px; padding:16px 22px 22px; }
-        .confirm-btn-cancel { flex:1; padding:11px; background:#f1f5f9; color:#64748b; border:2px solid #e2e8f0; border-radius:12px; font-size:13px; font-weight:700; cursor:pointer; font-family:'Poppins',sans-serif; transition:all 0.2s; }
-        .confirm-btn-cancel:hover { background:#e2e8f0; }
-        .confirm-btn-ok { flex:1; padding:11px; background:linear-gradient(135deg,#e74c3c,#c0392b); color:white; border:none; border-radius:12px; font-size:13px; font-weight:700; cursor:pointer; font-family:'Poppins',sans-serif; transition:all 0.2s; box-shadow:0 4px 14px rgba(231,76,60,0.3); }
-        .confirm-btn-ok:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(231,76,60,0.45); }
-
-        .alert { padding:12px 16px; background:#27ae60; color:white; border-radius:10px; margin-bottom:16px; font-size:13px; display:flex; align-items:center; gap:10px; }
-        .alert-error { background:#e74c3c; }
-        .recap-card { background:white; border-radius:14px; box-shadow:0 4px 15px rgba(0,0,0,0.07); overflow:hidden; margin-top:18px; }
-        .recap-header { background:linear-gradient(135deg,#1a3a6b,#2a5298); padding:14px 20px; }
-        .recap-header h3 { color:white; font-size:14px; font-weight:600; }
-        .recap-table { width:100%; border-collapse:collapse; }
-        .recap-table th { background:#f8fafc; color:#1a3a6b; padding:10px 14px; font-size:11px; font-weight:700; border-bottom:2px solid #e8edf5; text-align:center; }
-        .recap-table th:first-child { text-align:left; }
-        .recap-table td { padding:10px 14px; border-bottom:1px solid #f0f4f8; font-size:12px; text-align:center; }
-        .recap-table td:first-child { text-align:left; font-weight:600; color:#1a3a6b; }
-        .recap-table tr:last-child td { border-bottom:none; }
-        @media (max-width:768px) { .main { padding:12px; } .add-seance-grid { grid-template-columns:1fr 1fr; } }
-{% endblock %}
+{% block extra_css %}{% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/heures.css') }}">
+<script src="{{ url_for('static', filename='js/heures.js') }}" defer></script>
+
 <div class="main-content">
 
 <!-- ══ CONFIRM DELETE MODAL ══ -->
@@ -147,7 +34,7 @@
     </div>
 </div>
 
-<!-- Edit modal -->
+<!-- ══ EDIT MODAL ══ -->
 <div class="modal-overlay" id="edit-modal">
     <div class="modal-box">
         <div class="modal-title">✏️ Modifier la séance</div>
@@ -242,7 +129,6 @@
     </div>
 
     <div class="heures-layout">
-        <!-- Coordinator list -->
         <div class="coord-list">
             <div class="coord-list-header">
                 <h3>👥 {{ mois_noms[mois] }} {{ annee }}</h3>
@@ -265,7 +151,6 @@
             {% endfor %}
         </div>
 
-        <!-- Detail panel -->
         <div>
             {% if coord_selected %}
             <div class="detail-panel">
@@ -332,19 +217,10 @@
                         {% for s in seances_coord %}
                         <tr>
                             <td><span class="date-chip">{{ s.date.strftime('%d %b %Y') }}</span></td>
-                            <td>
-                                {% if s.matiere %}<span class="mat-badge">{{ s.matiere }}</span>
-                                {% else %}<span style="color:#ddd;">—</span>{% endif %}
-                            </td>
-                            <td>
-                                {% if s.niveau %}<span class="niv-badge">{{ s.niveau }}</span>
-                                {% else %}<span style="color:#ddd;">—</span>{% endif %}
-                            </td>
+                            <td>{% if s.matiere %}<span class="mat-badge">{{ s.matiere }}</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}</td>
+                            <td>{% if s.niveau %}<span class="niv-badge">{{ s.niveau }}</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}</td>
                             <td><span class="heures-chip">{{ "%.1f"|format(s.nb_heures) }}h</span></td>
-                            <td>
-                                {% if s.note %}<span class="note-text">{{ s.note }}</span>
-                                {% else %}<span style="color:#ddd;">—</span>{% endif %}
-                            </td>
+                            <td>{% if s.note %}<span class="note-text">{{ s.note }}</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}</td>
                             <td>
                                 <div style="display:flex; gap:6px;">
                                     <button class="btn-edit-sm"
@@ -384,7 +260,6 @@
         </div>
     </div>
 
-    <!-- Recap table -->
     <div class="recap-card">
         <div class="recap-header"><h3>📊 Récapitulatif — {{ mois_noms[mois] }} {{ annee }}</h3></div>
         <div style="overflow-x:auto;">
@@ -424,43 +299,4 @@
 </div>
 {% endblock %}
 
-{% block extra_js %}
-// ── Edit modal ────────────────────────────────────────────────────────────────
-function openEdit(id, date, heures, note, matiere, niveau) {
-    document.getElementById('edit-form').action = '/heures/modifier/' + id;
-    document.getElementById('edit-date').value   = date;
-    document.getElementById('edit-heures').value = heures;
-    document.getElementById('edit-note').value   = note;
-    var selMat = document.getElementById('edit-matiere');
-    for (var i = 0; i < selMat.options.length; i++) selMat.options[i].selected = (selMat.options[i].value === matiere);
-    var selNiv = document.getElementById('edit-niveau');
-    for (var i = 0; i < selNiv.options.length; i++) selNiv.options[i].selected = (selNiv.options[i].value === niveau);
-    document.getElementById('edit-modal').classList.add('active');
-}
-function closeModal() {
-    document.getElementById('edit-modal').classList.remove('active');
-}
-document.getElementById('edit-modal').addEventListener('click', function(e) {
-    if (e.target === this) closeModal();
-});
-
-// ── Confirm Delete Modal ──────────────────────────────────────────────────────
-var _confirmDeleteUrl = null;
-
-function confirmDelete(url, info) {
-    _confirmDeleteUrl = url;
-    document.getElementById('confirm-seance-info').textContent = '📅 ' + info;
-    document.getElementById('confirm-overlay').classList.add('open');
-}
-function confirmCancel() {
-    _confirmDeleteUrl = null;
-    document.getElementById('confirm-overlay').classList.remove('open');
-}
-function confirmOk() {
-    if (_confirmDeleteUrl) window.location.href = _confirmDeleteUrl;
-    document.getElementById('confirm-overlay').classList.remove('open');
-}
-document.getElementById('confirm-overlay').addEventListener('click', function(e) {
-    if (e.target === this) confirmCancel();
-});
-{% endblock %}
+{% block extra_js %}{% endblock %}

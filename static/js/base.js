@@ -1,6 +1,7 @@
-/* ══════════════════════════════════════════════════════
-   app.js — Yool Base JavaScript
-   ══════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════
+   base.js — Yool
+   Navbar dropdown + Sidebar + Panels
+══════════════════════════════════════ */
 
 // ── Navbar dropdown ──────────────────────────────────────────────────────────
 function toggleDropdown() {
@@ -8,16 +9,15 @@ function toggleDropdown() {
 }
 document.addEventListener('click', function(e) {
     var dd = document.getElementById('userDropdown');
-    if (dd && !dd.contains(e.target)) {
+    if (dd && !dd.contains(e.target))
         document.getElementById('dropdownMenu').classList.remove('open');
-    }
 });
 
 // ── Sidebar collapse (desktop) ───────────────────────────────────────────────
 (function() {
     try {
-        var version = localStorage.getItem('sb_ver');
-        if (version !== '2') {
+        var ver = localStorage.getItem('sb_ver');
+        if (ver !== '2') {
             localStorage.removeItem('sb_collapsed');
             localStorage.setItem('sb_ver', '2');
         } else if (localStorage.getItem('sb_collapsed') === 'true' && window.innerWidth > 768) {
@@ -38,7 +38,7 @@ function toggleSidebar() {
     try { localStorage.setItem('sb_collapsed', isCollapsed); } catch (e) {}
 }
 
-// ── Mobile sidebar ───────────────────────────────────────────────────────────
+// ── Mobile sidebar ────────────────────────────────────────────────────────────
 function toggleMobSidebar() {
     var sb = document.getElementById('sidebar');
     var ov = document.getElementById('mob-overlay');
@@ -58,14 +58,13 @@ function closeMobSidebar() {
     btn.textContent = '☰';
     btn.style.background = '#1a3a6b';
 }
-
 document.querySelectorAll('.sidebar .nav-item').forEach(function(item) {
     item.addEventListener('click', function() {
         if (window.innerWidth <= 768) closeMobSidebar();
     });
 });
 
-// ── Panel helpers ────────────────────────────────────────────────────────────
+// ── Panel helpers (للصفحات اللي فيها panels) ─────────────────────────────────
 function openPanel(id) {
     closeAllPanels();
     var el = document.getElementById(id);
