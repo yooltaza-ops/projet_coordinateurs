@@ -827,11 +827,173 @@
     border-bottom: none;
 }
 
-@media (max-width:768px) {
+@media (max-width: 768px) {
     .main {
         padding: 12px;
     }
+    .page-title {
+        font-size: 16px;
+        margin-bottom: 14px;
+    }
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .filter-bar {
+        width: 100%;
+        justify-content: space-between;
+        padding: 8px 12px;
+    }
+    .filter-bar select {
+        font-size: 12px;
+        max-width: 90px;
+    }
+    /* Stats — 2x2 grid */
+    .stats-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 14px;
+    }
+    .stat-card {
+        min-width: unset;
+        padding: 12px 13px;
+    }
+    .stat-number {
+        font-size: 20px;
+    }
+    .stat-label {
+        font-size: 10px;
+    }
+    /* Layout — single column */
+    .heures-layout {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    .coord-list {
+        max-height: 220px;
+        overflow-y: auto;
+        border-radius: 12px;
+    }
+    .coord-item {
+        padding: 10px 13px;
+    }
+    .coord-avatar {
+        width: 34px;
+        height: 34px;
+        font-size: 11px;
+    }
+    .coord-name-sm {
+        font-size: 12px;
+    }
+    .coord-stats-sm {
+        font-size: 10px;
+    }
+    /* Add form — 2 cols */
     .add-seance-grid {
         grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    .add-field.note-field {
+        grid-column: span 2;
+    }
+    .add-field label {
+        font-size: 10px;
+    }
+    .add-field input,
+    .add-field select {
+        padding: 7px 9px;
+        font-size: 12px;
+    }
+    .btn-add {
+        grid-column: span 2;
+        padding: 9px;
+        font-size: 12px;
+    }
+    /* Seances table — scrollable */
+    .seances-table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 0;
+    }
+    .seances-table {
+        min-width: 480px;
+        font-size: 11px;
+    }
+    .seances-table th {
+        padding: 8px 10px;
+        font-size: 10px;
+    }
+    .seances-table td {
+        padding: 8px 10px;
+    }
+    .date-chip {
+        font-size: 10px;
+        padding: 2px 7px;
+    }
+    .heures-chip {
+        font-size: 10px;
+        padding: 2px 7px;
+    }
+    .mat-badge,
+    .niv-badge {
+        font-size: 9px;
+        padding: 1px 6px;
+    }
+    /* Total row */
+    .total-row {
+        padding: 10px 14px;
+        gap: 10px;
+    }
+    .total-item {
+        font-size: 11px;
+    }
+    /* Recap table */
+    .recap-card {
+        margin-top: 12px;
+    }
+    .recap-table th,
+    .recap-table td {
+        padding: 8px 10px;
+        font-size: 11px;
+    }
+    /* Modal */
+    .modal-box {
+        padding: 18px;
+    }
+    .modal-grid {
+        grid-template-columns: 1fr;
+    }
+    .modal-title {
+        font-size: 14px;
+    }
+    /* Select prompt */
+    .select-prompt {
+        padding: 30px 20px;
+    }
+    .select-prompt .big-icon {
+        font-size: 36px;
+    }
+    .select-prompt p {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .add-seance-grid {
+        grid-template-columns: 1fr;
+    }
+    .add-field.note-field {
+        grid-column: span 1;
+    }
+    .btn-add {
+        grid-column: span 1;
+    }
+    .stats-row {
+        grid-template-columns: 1fr 1fr;
+    }
+    .filter-bar select {
+        max-width: 75px;
     }
 }
