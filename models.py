@@ -15,6 +15,8 @@ coordinateur_dour = db.Table('coordinateur_dour',
 MATIERES = [
     'Arabe',
     'Français',
+    'Histoire Géographie',
+    'Philo',
     'Mathématiques',
     'Éducation Islamique',
     'Éveil / Sciences',
@@ -39,6 +41,7 @@ NIVEAUX = [
     'Lycée — 2ème Bac PC',
     'Lycée — 2ème Bac SM',
     'Lycée — 2ème Bac SI',
+    'Lycée — 2ème Bac L',
     'Alphabétisation',
 ]
 
