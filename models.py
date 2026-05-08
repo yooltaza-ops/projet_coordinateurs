@@ -27,9 +27,6 @@ MATIERES = [
 ]
 
 NIVEAUX = [
-    '1ère année',
-    '2ème année',
-    '3ème année',
     'Collège — 1AC',
     'Collège — 2AC',
     'Collège — 3AC',
