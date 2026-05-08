@@ -331,7 +331,7 @@ def ajouter_seances_multiple():
 
     if not coord_id:
         flash('Coordinateur manquant.', 'error')
-        return redirect(url_for('rapport_coordinateurs'))
+        return redirect(url_for('calendrier_coordinateurs'))
 
     coord = Coordinateur.query.get_or_404(coord_id)
     if not current_user.is_admin:
@@ -396,7 +396,7 @@ def ajouter_seances_multiple():
 
     if redirect_url:
         return redirect(redirect_url)
-    return redirect(url_for('rapport_coordinateurs'))
+    return redirect(url_for('calendrier_coordinateurs'))
 
 
 # ─── Paramètres ───────────────────────────────────────────────────────────────
@@ -917,9 +917,9 @@ def stats_coordinateurs():
 
 
 # ─── Rapport Coordinateurs ────────────────────────────────────────────────────
-@app.route('/rapport_coordinateurs')
+@app.route('/calendrier_coordinateurs')
 @login_required
-def rapport_coordinateurs():
+def calendrier_coordinateurs():
     from collections import defaultdict
 
     now   = datetime.now()
@@ -968,7 +968,7 @@ def rapport_coordinateurs():
     breakdown_mat = sorted(heures_par_mat.items(), key=lambda x: x[1], reverse=True)
     breakdown_niv = sorted(heures_par_niv.items(), key=lambda x: x[1], reverse=True)
 
-    return render_template('rapport_coordinateurs.html',
+    return render_template('calendrier_coordinateurs.html',
         stats=stats, mois=mois, annee=annee, mois_noms=mois_noms,
         annees=list(range(now.year - 2, now.year + 2)),
         filtre_matiere=filtre_matiere, filtre_niveau=filtre_niveau,

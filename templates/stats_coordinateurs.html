@@ -1,0 +1,409 @@
+{% extends "base.html" %}
+{% block title %}Stats Coordinateurs — Yool{% endblock %}
+
+{% block extra_css %}
+
+/* ══ PAGE LAYOUT ══ */
+.sc-wrap { padding: 28px; }
+@media (max-width:768px) { .sc-wrap { padding: 12px; } }
+
+.page-title {
+    font-size: 21px; font-weight: 700; color: #1a3a6b;
+    margin-bottom: 22px; display: flex; align-items: center; gap: 10px;
+}
+
+/* ══ FILTER BAR ══ */
+.filter-bar {
+    display: flex; gap: 10px; align-items: center;
+    flex-wrap: wrap; margin-bottom: 22px;
+    background: white; padding: 14px 18px; border-radius: 14px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+}
+.filter-bar select {
+    padding: 8px 13px; border: 2px solid #e8edf5; border-radius: 10px;
+    font-size: 13px; font-family: 'Poppins', sans-serif;
+    color: #1a3a6b; font-weight: 600; outline: none;
+    background: #f8fafc; transition: border 0.2s; cursor: pointer;
+}
+.filter-bar select:focus { border-color: #f5a623; }
+.filter-btn {
+    padding: 8px 20px; background: #1a3a6b; color: white;
+    border: none; border-radius: 10px; font-size: 13px;
+    font-weight: 600; font-family: 'Poppins', sans-serif;
+    cursor: pointer; transition: all 0.2s;
+}
+.filter-btn:hover { background: #f5a623; transform: translateY(-1px); }
+
+/* ══ SUMMARY CARDS ══ */
+.summary-row {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 14px; margin-bottom: 22px;
+}
+@media (max-width:600px) { .summary-row { grid-template-columns: 1fr 1fr; } }
+.sum-card {
+    background: white; border-radius: 14px; padding: 18px 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.07);
+    border-left: 5px solid; display: flex; flex-direction: column; gap: 4px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.sum-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+.sum-card.blue   { border-color: #1a3a6b; }
+.sum-card.purple { border-color: #9b59b6; }
+.sum-card.teal   { border-color: #16a085; }
+.sum-num  { font-size: 28px; font-weight: 700; line-height: 1; color: #1a3a6b; }
+.sum-num.purple { color: #9b59b6; }
+.sum-num.teal   { color: #16a085; }
+.sum-lbl  { font-size: 11px; color: #888; font-weight: 500; }
+
+/* ══ MAIN GRID ══ */
+.sc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+}
+@media (max-width: 960px) {
+    .sc-grid { grid-template-columns: 1fr; }
+}
+
+/* ══ COORDINATOR LIST ══ */
+.card {
+    background: white; border-radius: 14px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.07); overflow: hidden;
+}
+.card-header {
+    padding: 15px 20px; border-bottom: 1.5px solid #f0f4f8;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.card-header h3 { font-size: 14px; font-weight: 700; color: #1a3a6b; }
+
+.coord-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 13px 18px; border-bottom: 1px solid #f5f7fa;
+    cursor: pointer; text-decoration: none; transition: background 0.18s;
+    position: relative;
+}
+.coord-row:last-child { border-bottom: none; }
+.coord-row:hover { background: #f8fafc; }
+.coord-row.active-row { background: #f0f4ff; border-left: 4px solid #1a3a6b; }
+
+.coord-av {
+    width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+    color: white; display: flex; align-items: center;
+    justify-content: center; font-size: 13px; font-weight: 700;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.18);
+}
+.coord-info { flex: 1; min-width: 0; }
+.coord-name { font-size: 13px; font-weight: 700; color: #1a3a6b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.coord-sub  { font-size: 11px; color: #aaa; margin-top: 1px; }
+
+.coord-meta { text-align: right; flex-shrink: 0; }
+.coord-h    { font-size: 15px; font-weight: 700; color: #16a085; }
+.coord-s    { font-size: 11px; color: #aaa; }
+
+/* Progress bar */
+.bar-wrap { margin-top: 6px; height: 4px; background: #f0f4f8; border-radius: 4px; overflow: hidden; width: 100%; }
+.bar-fill  { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+
+.empty-state {
+    padding: 40px; text-align: center; color: #bbb; font-size: 13px;
+}
+
+/* ══ DETAIL PANEL ══ */
+.detail-card { position: sticky; top: 85px; }
+
+.detail-header {
+    background: linear-gradient(135deg, #1a3a6b, #2a5298);
+    padding: 20px 22px; color: white;
+    display: flex; align-items: center; gap: 14px;
+}
+.detail-av {
+    width: 54px; height: 54px; border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.35);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; font-weight: 700; color: white; flex-shrink: 0;
+}
+.detail-name { font-size: 16px; font-weight: 700; }
+.detail-sub  { font-size: 12px; opacity: 0.75; margin-top: 3px; }
+
+.detail-stats {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 0; border-bottom: 1.5px solid #f0f4f8;
+}
+.ds-item {
+    padding: 14px 16px; text-align: center; border-right: 1px solid #f0f4f8;
+}
+.ds-item:last-child { border-right: none; }
+.ds-val { font-size: 20px; font-weight: 700; color: #1a3a6b; }
+.ds-val.purple { color: #9b59b6; }
+.ds-val.teal   { color: #16a085; }
+.ds-lbl { font-size: 10px; color: #aaa; font-weight: 500; margin-top: 2px; }
+
+/* Seances list */
+.seance-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 20px; border-bottom: 1px solid #f5f7fa;
+    transition: background 0.15s;
+}
+.seance-item:last-child { border-bottom: none; }
+.seance-item:hover { background: #fafbfc; }
+
+.seance-date-badge {
+    background: #f0f4f8; border-radius: 10px;
+    padding: 7px 10px; text-align: center; min-width: 46px; flex-shrink: 0;
+}
+.sdb-day  { font-size: 16px; font-weight: 700; color: #1a3a6b; line-height: 1; }
+.sdb-mon  { font-size: 9px;  color: #aaa; font-weight: 600; text-transform: uppercase; }
+
+.seance-info { flex: 1; min-width: 0; }
+.seance-note { font-size: 12px; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.seance-note.empty { color: #bbb; font-style: italic; }
+
+.seance-h {
+    font-size: 14px; font-weight: 700; color: #16a085;
+    background: #e8f8f5; padding: 4px 10px; border-radius: 20px; flex-shrink: 0;
+}
+
+/* ── Placeholder (no coord selected) ── */
+.detail-placeholder {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 60px 20px; text-align: center; color: #ccc;
+}
+.detail-placeholder .ph-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
+.detail-placeholder p { font-size: 13px; line-height: 1.6; }
+
+/* ── Alert ── */
+.alert {
+    padding: 13px 18px; background: #27ae60; color: white;
+    border-radius: 10px; margin-bottom: 18px; font-size: 13px;
+    display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 4px 12px rgba(39,174,96,0.25);
+}
+.alert-error { background: #e74c3c; }
+
+{% endblock %}
+
+{% block content %}
+<div class="sc-wrap">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="alert {% if category == 'error' %}alert-error{% endif %}">
+                {% if category == 'error' %}⚠️{% else %}✅{% endif %} {{ message }}
+            </div>
+        {% endfor %}
+    {% endwith %}
+
+    <div class="page-title">⏱️ Stats Coordinateurs</div>
+
+    <!-- ══ FILTER ══ -->
+    <form class="filter-bar" method="GET" action="{{ url_for('stats_coordinateurs') }}">
+        {% if request.args.get('coord_id') %}
+        <input type="hidden" name="coord_id" value="{{ request.args.get('coord_id') }}">
+        {% endif %}
+        <span style="font-size:13px; font-weight:600; color:#888;">📅</span>
+        <select name="mois">
+            {% for i in range(1,13) %}
+            <option value="{{ i }}" {% if i == mois %}selected{% endif %}>
+                {{ mois_noms[i] }}
+            </option>
+            {% endfor %}
+        </select>
+        <select name="annee">
+            {% for y in annees %}
+            <option value="{{ y }}" {% if y == annee %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="filter-btn">🔍 Afficher</button>
+        <span style="margin-left:auto; font-size:12px; color:#aaa; font-weight:500;">
+            {{ mois_noms[mois] }} {{ annee }}
+        </span>
+    </form>
+
+    <!-- ══ SUMMARY ══ -->
+    <div class="summary-row">
+        <div class="sum-card blue">
+            <div class="sum-num">{{ stats | length }}</div>
+            <div class="sum-lbl">👥 Coordinateurs</div>
+        </div>
+        <div class="sum-card purple">
+            <div class="sum-num purple">{{ total_seances }}</div>
+            <div class="sum-lbl">📚 Séances — {{ mois_noms[mois] }}</div>
+        </div>
+        <div class="sum-card teal">
+            <div class="sum-num teal">{{ "%.1f"|format(total_heures) }}h</div>
+            <div class="sum-lbl">⏱️ Heures — {{ mois_noms[mois] }}</div>
+        </div>
+    </div>
+
+    <!-- ══ MAIN GRID ══ -->
+    <div class="sc-grid">
+
+        <!-- ── LEFT: List ── -->
+        <div class="card">
+            <div class="card-header">
+                <h3>📋 Coordinateurs — {{ mois_noms[mois] }} {{ annee }}</h3>
+                <span style="font-size:12px; color:#aaa;">Cliquer pour plus de détails</span>
+            </div>
+
+            {% if stats %}
+            {% for row in stats %}
+            {% set is_active = (coord_detail and coord_detail.id == row.coord.id) %}
+            <a href="{{ url_for('stats_coordinateurs', mois=mois, annee=annee, coord_id=row.coord.id) }}"
+               class="coord-row {% if is_active %}active-row{% endif %}">
+                <div class="coord-av"
+                     style="background: {% if row.coord.genre == 'M' %}linear-gradient(135deg,#1a3a6b,#2a5298){% else %}linear-gradient(135deg,#e91e8c,#c2185b){% endif %};">
+                    {{ row.initiales }}
+                </div>
+                <div class="coord-info">
+                    <div class="coord-name">
+                        {% if row.coord.genre == 'M' %}👨{% else %}👩{% endif %}
+                        {{ row.coord.prenom }} {{ row.coord.nom }}
+                    </div>
+                    <div class="coord-sub">
+                        {{ row.coord.responsable.prenom }} {{ row.coord.responsable.nom }}
+                        {% if row.coord.dours %}
+                        · {% for d in row.coord.dours[:2] %}{{ d.nom }}{% if not loop.last %}, {% endif %}{% endfor %}
+                        {% if row.coord.dours|length > 2 %}+{{ row.coord.dours|length - 2 }}{% endif %}
+                        {% endif %}
+                    </div>
+                    <!-- Progress bar -->
+                    <div class="bar-wrap">
+                        <div class="bar-fill"
+                             style="width: {{ ((row.nb_heures / max_heures) * 100)|round|int }}%;
+                                    background: {% if row.coord.genre == 'M' %}#1a3a6b{% else %}#e91e8c{% endif %};
+                                    opacity: 0.55;">
+                        </div>
+                    </div>
+                </div>
+                <div class="coord-meta">
+                    <div class="coord-h">{{ "%.1f"|format(row.nb_heures) }}h</div>
+                    <div class="coord-s">{{ row.nb_seances }} séance{{ 's' if row.nb_seances != 1 }}</div>
+                </div>
+            </a>
+            {% endfor %}
+            {% else %}
+            <div class="empty-state">
+                📭 Aucun coordinateur trouvé pour {{ mois_noms[mois] }} {{ annee }}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ── RIGHT: Detail ── -->
+        <div class="card detail-card">
+            {% if coord_detail %}
+
+            <!-- Header -->
+            <div class="detail-header">
+                <div class="detail-av"
+                     style="background: {% if coord_detail.genre == 'M' %}rgba(255,255,255,0.15){% else %}rgba(233,30,140,0.5){% endif %};">
+                    {{ (coord_detail.prenom[0] + coord_detail.nom[0]).upper() if coord_detail.prenom and coord_detail.nom else '?' }}
+                </div>
+                <div>
+                    <div class="detail-name">
+                        {% if coord_detail.genre == 'M' %}👨{% else %}👩{% endif %}
+                        {{ coord_detail.prenom }} {{ coord_detail.nom }}
+                    </div>
+                    <div class="detail-sub">
+                        {{ coord_detail.responsable.prenom }} {{ coord_detail.responsable.nom }}
+                        · {{ mois_noms[mois] }} {{ annee }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary stats -->
+            <div class="detail-stats">
+                <div class="ds-item">
+                    <div class="ds-val purple">{{ seances_detail | length }}</div>
+                    <div class="ds-lbl">Séances</div>
+                </div>
+                <div class="ds-item">
+                    <div class="ds-val teal">{{ "%.1f"|format(seances_detail | sum(attribute='nb_heures')) }}h</div>
+                    <div class="ds-lbl">Total heures</div>
+                </div>
+                <div class="ds-item">
+                    <div class="ds-val">
+                        {% if seances_detail %}
+                        {{ "%.1f"|format(seances_detail | sum(attribute='nb_heures') / seances_detail|length) }}h
+                        {% else %}—{% endif %}
+                    </div>
+                    <div class="ds-lbl">Moy/séance</div>
+                </div>
+            </div>
+
+            <!-- Dours tags -->
+            {% if coord_detail.dours %}
+            <div style="padding: 10px 18px; border-bottom: 1.5px solid #f0f4f8; display: flex; flex-wrap: wrap; gap: 6px;">
+                {% for d in coord_detail.dours %}
+                <span style="padding: 3px 11px; border-radius: 20px; font-size: 11px; font-weight: 600; color: white;
+                             background: {% if d.type == 'talib' %}#1a3a6b{% elif d.type == 'taliba' %}#e91e8c{% else %}#f5a623{% endif %};">
+                    {% if d.type == 'talib' %}🧒{% elif d.type == 'taliba' %}👧{% else %}👩{% endif %}
+                    dar {{ d.type }} {{ d.nom }}
+                </span>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Seances list -->
+            {% if seances_detail %}
+            {% set month_abbr = ['','Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'] %}
+            {% for s in seances_detail %}
+            <div class="seance-item">
+                <div class="seance-date-badge">
+                    <div class="sdb-day">{{ s.date.day }}</div>
+                    <div class="sdb-mon">{{ month_abbr[s.date.month] }}</div>
+                </div>
+                <div class="seance-info">
+                    {% if s.note %}
+                    <div class="seance-note">{{ s.note }}</div>
+                    {% else %}
+                    <div class="seance-note empty">Aucune note</div>
+                    {% endif %}
+                    <div style="font-size: 11px; color: #bbb; margin-top: 2px;">
+                        {{ s.date.strftime('%A') }}
+                    </div>
+                </div>
+                <div class="seance-h">{{ "%.1f"|format(s.nb_heures) }}h</div>
+            </div>
+            {% endfor %}
+
+            <!-- Total row -->
+            <div style="display:flex; justify-content:space-between; align-items:center;
+                        padding: 12px 20px; background: #f8fafc; border-top: 2px solid #f0f4f8;">
+                <span style="font-size: 12px; font-weight: 700; color: #1a3a6b;">
+                    🔢 Total — {{ seances_detail | length }} séance{{ 's' if seances_detail|length != 1 }}
+                </span>
+                <span style="font-size: 15px; font-weight: 700; color: #16a085;">
+                    {{ "%.1f"|format(seances_detail | sum(attribute='nb_heures')) }}h
+                </span>
+            </div>
+
+            {% else %}
+            <div style="padding: 40px; text-align: center; color: #bbb; font-size: 13px;">
+                📭 Aucune séance pour {{ mois_noms[mois] }} {{ annee }}
+            </div>
+            {% endif %}
+
+            <!-- Link to full heures page -->
+            <div style="padding: 14px 20px; border-top: 1.5px solid #f0f4f8;">
+                <a href="{{ url_for('heures', mois=mois, annee=annee, coord_id=coord_detail.id) }}"
+                   style="display: block; text-align: center; padding: 10px; background: #f0f4f8;
+                          border-radius: 10px; color: #1a3a6b; font-size: 13px; font-weight: 700;
+                          text-decoration: none; transition: all 0.2s;"
+                   onmouseover="this.style.background='#1a3a6b'; this.style.color='white';"
+                   onmouseout="this.style.background='#f0f4f8'; this.style.color='#1a3a6b';">
+                    ⏱️ Gérer les séances de {{ coord_detail.prenom }}
+                </a>
+            </div>
+
+            {% else %}
+            <div class="detail-placeholder">
+                <div class="ph-icon">👈</div>
+                <p>Veuillez choisir un coordinateur parmi la liste<br>pour consulter son planning de <strong>{{ mois_noms[mois] }} {{ annee }}</strong></p>
+            </div>
+            {% endif %}
+        </div>
+
+    </div><!-- end sc-grid -->
+</div>
+{% endblock %}
