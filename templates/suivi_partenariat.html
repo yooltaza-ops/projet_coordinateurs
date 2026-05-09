@@ -21,14 +21,9 @@
     --sp-radius-sm: 8px;
   }
 
-  /* ── Global font ── */
-  body, input, select, textarea, button {
-    font-family: 'DM Sans', sans-serif;
-  }
+  body, input, select, textarea, button { font-family: 'DM Sans', sans-serif; }
 
-  /* ════════════════════════════════
-     HEADER
-  ════════════════════════════════ */
+  /* ════ HEADER ════ */
   .sp-header {
     background: linear-gradient(135deg, #1a3a6b 0%, #2a5298 60%, #1a3a6b 100%);
     color: #fff; border-radius: 16px; padding: 28px 32px;
@@ -41,9 +36,7 @@
   .sp-header h2 { font-size: 22px; font-weight: 700; margin: 0 0 4px; }
   .sp-header p  { margin: 0; opacity: .8; font-size: 13px; }
 
-  /* ════════════════════════════════
-     KPI
-  ════════════════════════════════ */
+  /* ════ KPI ════ */
   .sp-kpi-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 22px; }
   .sp-kpi {
     flex: 1; min-width: 130px; background: white;
@@ -64,9 +57,7 @@
   .sp-kpi-val { font-size: 26px; font-weight: 800; line-height: 1; color: var(--sp-text); }
   .sp-kpi-lbl { font-size: 11px; color: var(--sp-muted); margin-top: 2px; font-weight: 500; }
 
-  /* ════════════════════════════════
-     FILTERS
-  ════════════════════════════════ */
+  /* ════ FILTERS ════ */
   .sp-filters {
     background: white; border: 1.5px solid var(--sp-border); border-radius: 14px;
     padding: 16px 20px; margin-bottom: 22px;
@@ -82,7 +73,6 @@
   }
   .sp-filters select:focus { border-color: var(--sp-orange); }
 
-  /* ── Btn filter ── */
   .btn-filter {
     background: #f5a623; color: white; border: none; border-radius: 25px;
     padding: 9px 20px; font-size: 13px; font-weight: 600; cursor: pointer;
@@ -99,9 +89,7 @@
   }
   .btn-clear:hover { background: var(--sp-surface); }
 
-  /* ════════════════════════════════
-     TABS
-  ════════════════════════════════ */
+  /* ════ TABS ════ */
   .sp-tabs {
     display: flex; gap: 8px; margin-bottom: 20px;
     border-bottom: 1.5px solid var(--sp-border);
@@ -115,7 +103,6 @@
   .sp-tab.active { color: #1a3a6b; border-bottom-color: #f5a623; }
   .sp-tab:hover  { color: #1a3a6b; }
 
-  /* ── Btn nouvelle séance ── */
   .btn-new-seance {
     display: inline-flex; align-items: center; gap: 6px;
     background: #f5a623; color: white; border: none; border-radius: 25px;
@@ -124,9 +111,7 @@
   }
   .btn-new-seance:hover { background: #e09415; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(245,166,35,0.35); }
 
-  /* ════════════════════════════════
-     CARDS DAR
-  ════════════════════════════════ */
+  /* ════ CARDS DAR ════ */
   .sp-dar-card {
     background: white; border: 1.5px solid var(--sp-border); border-radius: 14px;
     margin-bottom: 20px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.07);
@@ -148,7 +133,6 @@
   .sp-dar-type { font-size: 11px; color: var(--sp-muted); margin-top: 2px; }
   .sp-dar-pills { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 
-  /* ── Pills ── */
   .sp-pill {
     display: inline-flex; align-items: center; gap: 4px;
     padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700;
@@ -161,9 +145,7 @@
 
   .sp-dar-body { padding: 16px 20px; }
 
-  /* ════════════════════════════════
-     TABLE
-  ════════════════════════════════ */
+  /* ════ TABLE ════ */
   .sp-table { width: 100%; border-collapse: collapse; font-size: 13px; }
   .sp-table th {
     text-align: left; padding: 10px 12px;
@@ -178,7 +160,6 @@
   .sp-table tr:last-child td { border-bottom: none; }
   .sp-table tr:hover td { background: #f8fafc; }
 
-  /* ── Badge statut ── */
   .badge-statut {
     display: inline-block; padding: 3px 10px;
     border-radius: 20px; font-size: 11px; font-weight: 700;
@@ -187,7 +168,6 @@
   .badge-annulee   { background: #fdecea; color: #721c24; }
   .badge-rattrapage{ background: #fff8ee; color: #856404; }
 
-  /* ── Action buttons ── */
   .btn-action {
     padding: 4px 10px; border-radius: 8px; border: none;
     cursor: pointer; font-size: 12px; font-weight: 600;
@@ -199,7 +179,6 @@
   .btn-delete { background: #fdecea; color: #e74c3c; border: 1.5px solid #fad0cc; }
   .btn-delete:hover { background: #e74c3c; color: white; }
 
-  /* ── Btn ajouter dans card ── */
   .btn-add-seance {
     display: inline-flex; align-items: center; gap: 6px;
     background: #f0fdf4; color: #27ae60;
@@ -210,9 +189,7 @@
   }
   .btn-add-seance:hover { background: #d4edda; border-style: solid; }
 
-  /* ════════════════════════════════
-     NIVEAU CARD
-  ════════════════════════════════ */
+  /* ════ NIVEAU CARD ════ */
   .sp-niveau-card {
     background: white; border: 1.5px solid var(--sp-border);
     border-left: 4px solid #f5a623; border-radius: 14px;
@@ -230,26 +207,21 @@
 
   .toggle-icon { transition: transform .2s; color: var(--sp-muted); }
 
-  /* ── Empty ── */
   .sp-empty { text-align: center; padding: 48px 16px; color: var(--sp-muted); }
   .sp-empty .ei { font-size: 40px; margin-bottom: 12px; opacity: .4; }
   .sp-empty p { font-size: 14px; }
 
-  /* ── Alerts ── */
   .sp-alert { padding: 13px 18px; border-radius: 10px; margin-bottom: 18px; font-size: 13px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(0,0,0,.1); }
   .sp-alert.success { background: #27ae60; color: white; }
   .sp-alert.error   { background: #e74c3c; color: white; }
 
-  /* ════════════════════════════════
-     MODAL — REDESIGNÉ
-  ════════════════════════════════ */
+  /* ════ MODAL AJOUTER / MODIFIER ════ */
   .sp-modal-backdrop {
     display: none; position: fixed; inset: 0;
     background: rgba(26,58,107,0.55); z-index: 1050;
     align-items: flex-start; justify-content: center;
     backdrop-filter: blur(4px);
-    padding: 16px;
-    overflow-y: auto;
+    padding: 16px; overflow-y: auto;
   }
   .sp-modal-backdrop.show { display: flex; }
 
@@ -258,8 +230,7 @@
     box-shadow: 0 28px 80px rgba(26,58,107,0.22);
     border: 1px solid var(--sp-border);
     animation: modalIn .28s cubic-bezier(0.34,1.56,0.64,1);
-    margin: auto;
-    overflow: hidden;
+    margin: auto; overflow: hidden;
   }
 
   @keyframes modalIn {
@@ -267,7 +238,6 @@
     to   { opacity:1; transform:scale(1) translateY(0); }
   }
 
-  /* ── Modal Header ── */
   .sp-modal-head {
     background: linear-gradient(135deg, #1a3a6b 0%, #2a5298 100%);
     padding: 20px 24px;
@@ -283,8 +253,7 @@
   .sp-modal-head-icon {
     width: 40px; height: 40px; border-radius: 10px;
     background: rgba(255,255,255,.15);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px;
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
   }
   .sp-modal-head h4 { font-size: 16px; font-weight: 700; color: #fff; margin: 0; }
   .sp-modal-head p  { font-size: 12px; color: rgba(255,255,255,.7); margin: 2px 0 0; }
@@ -297,10 +266,8 @@
   }
   .sp-modal-close:hover { background: rgba(255,255,255,.28); }
 
-  /* ── Modal Body ── */
-  .sp-modal-body { padding: 20px 24px; }
+  .sp-modal-body { padding: 20px 24px; max-height: 72vh; overflow-y: auto; }
 
-  /* ── Section label ── */
   .sp-section-label {
     display: flex; align-items: center; gap: 8px;
     font-size: 11.5px; font-weight: 700; color: #8898aa;
@@ -313,19 +280,13 @@
     background: linear-gradient(to right, #e2e8f0, transparent);
   }
 
-  /* ── Form grid ── */
   .sp-form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .sp-form-grid-1 { display: grid; grid-template-columns: 1fr; gap: 12px; }
 
-  /* ── Form group ── */
   .sp-fg { display: flex; flex-direction: column; gap: 6px; }
-  .sp-fg label {
-    font-size: 12px; font-weight: 600; color: #4a5568;
-    display: flex; align-items: center; gap: 4px; letter-spacing: .01em;
-  }
+  .sp-fg label { font-size: 12px; font-weight: 600; color: #4a5568; display: flex; align-items: center; gap: 4px; }
   .sp-fg label .req { color: #f5a623; font-size: 14px; line-height: 1; }
 
-  /* Base field reset */
   .sp-fg input,
   .sp-fg select,
   .sp-fg textarea {
@@ -333,47 +294,27 @@
     width: 100%; outline: none;
     font-family: 'DM Sans', sans-serif; font-size: 13.5px;
     color: #1a202c; background: #fff;
-    border: 1.5px solid #d1d9e6;
-    border-radius: 10px;
+    border: 1.5px solid #d1d9e6; border-radius: 10px;
     padding: 11px 14px;
     transition: border-color .18s, box-shadow .18s, background .18s;
-    box-shadow: 0 1px 2px rgba(26,58,107,.04), inset 0 1px 2px rgba(26,58,107,.03);
+    box-sizing: border-box;
   }
   .sp-fg select {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7a99' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 13px center;
-    padding-right: 36px;
-    cursor: pointer;
+    background-repeat: no-repeat; background-position: right 13px center;
+    padding-right: 36px; cursor: pointer;
   }
-  .sp-fg textarea {
-    resize: vertical; min-height: 80px; line-height: 1.6;
-  }
+  .sp-fg textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
 
-  /* Hover */
-  .sp-fg input:hover,
-  .sp-fg select:hover,
-  .sp-fg textarea:hover {
-    border-color: #a8b8d0;
-    background: #fafbfd;
+  .sp-fg input:hover, .sp-fg select:hover, .sp-fg textarea:hover {
+    border-color: #a8b8d0; background: #fafbfd;
   }
-
-  /* Focus */
-  .sp-fg input:focus,
-  .sp-fg select:focus,
-  .sp-fg textarea:focus {
-    border-color: #f5a623;
-    background: #fff;
+  .sp-fg input:focus, .sp-fg select:focus, .sp-fg textarea:focus {
+    border-color: #f5a623; background: #fff;
     box-shadow: 0 0 0 3.5px rgba(245,166,35,.14), 0 1px 3px rgba(26,58,107,.06);
   }
+  .sp-fg input::placeholder, .sp-fg textarea::placeholder { color: #b0bac9; font-size: 13px; }
 
-  /* Placeholder */
-  .sp-fg input::placeholder,
-  .sp-fg textarea::placeholder {
-    color: #b0bac9; font-size: 13px;
-  }
-
-  /* ── Input with icon ── */
   .sp-input-icon { position: relative; }
   .sp-input-icon .ico {
     position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
@@ -381,58 +322,40 @@
   }
   .sp-input-icon input { padding-left: 36px; }
 
-  /* ── Statut pills ── */
+  /* Statut pills */
   .sp-statut-group { display: flex; gap: 8px; flex-wrap: wrap; }
   .sp-statut-pill {
     display: flex; align-items: center; gap: 7px;
     padding: 8px 16px; border-radius: 10px;
-    border: 1.5px solid #d1d9e6;
-    background: #fafbfd; cursor: pointer;
-    font-size: 13px; font-weight: 600;
+    border: 1.5px solid #d1d9e6; background: #fafbfd;
+    cursor: pointer; font-size: 13px; font-weight: 600;
     color: #6b7a99; transition: all .18s; user-select: none;
-    box-shadow: 0 1px 2px rgba(26,58,107,.04);
   }
   .sp-statut-pill input[type=radio] { display: none; }
   .sp-statut-pill .sdot {
     width: 9px; height: 9px; border-radius: 50%;
-    background: currentColor; opacity: .35; transition: all .18s;
-    flex-shrink: 0;
+    background: currentColor; opacity: .35; transition: all .18s; flex-shrink: 0;
   }
   .sp-statut-pill:hover { border-color: #a8b8d0; background: #f4f7fb; }
-
-  .sp-statut-pill.s-passee:has(input:checked) {
-    background: #edfdf4; border-color: #4ade80; color: #166534;
-    box-shadow: 0 0 0 3px rgba(74,222,128,.12);
-  }
-  .sp-statut-pill.s-annulee:has(input:checked) {
-    background: #fff0f0; border-color: #f87171; color: #991b1b;
-    box-shadow: 0 0 0 3px rgba(248,113,113,.12);
-  }
-  .sp-statut-pill.s-rattrapage:has(input:checked) {
-    background: #fffbeb; border-color: #fbbf24; color: #92400e;
-    box-shadow: 0 0 0 3px rgba(251,191,36,.12);
-  }
+  .sp-statut-pill.s-passee:has(input:checked)    { background: #edfdf4; border-color: #4ade80; color: #166534; box-shadow: 0 0 0 3px rgba(74,222,128,.12); }
+  .sp-statut-pill.s-annulee:has(input:checked)   { background: #fff0f0; border-color: #f87171; color: #991b1b; box-shadow: 0 0 0 3px rgba(248,113,113,.12); }
+  .sp-statut-pill.s-rattrapage:has(input:checked) { background: #fffbeb; border-color: #fbbf24; color: #92400e; box-shadow: 0 0 0 3px rgba(251,191,36,.12); }
   .sp-statut-pill:has(input:checked) .sdot { opacity: 1; }
 
-  /* ── Number stepper ── */
+  /* Number stepper */
   .sp-num-wrap {
     display: inline-flex; align-items: center;
     border: 1.5px solid #d1d9e6; border-radius: 10px;
-    background: #fff; overflow: hidden;
+    background: #fff; overflow: hidden; max-width: 160px;
     transition: border-color .18s, box-shadow .18s;
-    box-shadow: 0 1px 2px rgba(26,58,107,.04), inset 0 1px 2px rgba(26,58,107,.03);
-    max-width: 160px;
   }
   .sp-num-wrap:hover { border-color: #a8b8d0; }
-  .sp-num-wrap:focus-within {
-    border-color: #f5a623;
-    box-shadow: 0 0 0 3.5px rgba(245,166,35,.14), 0 1px 3px rgba(26,58,107,.06);
-  }
+  .sp-num-wrap:focus-within { border-color: #f5a623; box-shadow: 0 0 0 3.5px rgba(245,166,35,.14); }
   .sp-num-btn {
     width: 40px; min-width: 40px; height: 42px; border: none;
-    background: #f4f7fb; cursor: pointer; font-size: 20px; font-weight: 400;
+    background: #f4f7fb; cursor: pointer; font-size: 20px;
     color: #4a5568; display: flex; align-items: center; justify-content: center;
-    transition: background .15s, color .15s; flex-shrink: 0; line-height: 1;
+    transition: background .15s, color .15s; flex-shrink: 0;
   }
   .sp-num-btn:first-child { border-right: 1.5px solid #e2e8f0; }
   .sp-num-btn:last-child  { border-left:  1.5px solid #e2e8f0; }
@@ -440,11 +363,10 @@
   .sp-num-input {
     border: none; background: transparent; text-align: center;
     font-size: 16px; font-weight: 700; color: #1a202c;
-    flex: 1; outline: none; font-family: 'DM Sans', sans-serif; padding: 0;
-    min-width: 0;
+    flex: 1; outline: none; font-family: 'DM Sans', sans-serif; padding: 0; min-width: 0;
   }
 
-  /* ── Prof search dropdown ── */
+  /* Prof search dropdown */
   .prof-search-wrapper { position: relative; }
   .prof-search-input {
     width: 100%; outline: none; box-sizing: border-box;
@@ -452,14 +374,13 @@
     color: #1a202c; background: #fff;
     border: 1.5px solid #d1d9e6; border-radius: 10px;
     padding: 11px 14px 11px 38px;
-    transition: border-color .18s, box-shadow .18s, background .18s;
-    box-shadow: 0 1px 2px rgba(26,58,107,.04), inset 0 1px 2px rgba(26,58,107,.03);
+    transition: border-color .18s, box-shadow .18s;
   }
   .prof-search-input::placeholder { color: #b0bac9; font-size: 13px; }
   .prof-search-input:hover { border-color: #a8b8d0; background: #fafbfd; }
   .prof-search-input:focus {
     border-color: #f5a623;
-    box-shadow: 0 0 0 3.5px rgba(245,166,35,.14), 0 1px 3px rgba(26,58,107,.06);
+    box-shadow: 0 0 0 3.5px rgba(245,166,35,.14);
     border-radius: 10px 10px 0 0;
   }
   .prof-search-icon {
@@ -468,10 +389,8 @@
   }
   .prof-dropdown {
     display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 200;
-    background: white;
-    border: 1.5px solid #f5a623; border-top: 1px solid #f0e8d4;
-    border-radius: 0 0 10px 10px;
-    max-height: 210px; overflow-y: auto;
+    background: white; border: 1.5px solid #f5a623; border-top: 1px solid #f0e8d4;
+    border-radius: 0 0 10px 10px; max-height: 210px; overflow-y: auto;
     box-shadow: 0 8px 24px rgba(26,58,107,.12);
   }
   .prof-dropdown.open { display: block; }
@@ -481,17 +400,15 @@
     border-bottom: 1px solid #f4f7fb;
   }
   .prof-option:last-child { border-bottom: none; }
-  .prof-option:hover, .prof-option.highlighted { background: #fdf8f0; color: #1a3a6b; }
+  .prof-option:hover { background: #fdf8f0; color: #1a3a6b; }
   .prof-option.selected { background: #fffbeb; font-weight: 600; color: #92400e; }
 
-  /* ── Modal Footer ── */
+  /* Modal Footer */
   .sp-modal-footer {
     display: flex; gap: 10px; justify-content: flex-end;
-    padding: 16px 24px 20px;
-    border-top: 1px solid var(--sp-border);
+    padding: 16px 24px 20px; border-top: 1px solid var(--sp-border);
     background: var(--sp-surface);
   }
-
   .btn-cancel-modal {
     background: #fff; color: var(--sp-muted);
     border: 1.5px solid var(--sp-border); border-radius: 25px;
@@ -499,64 +416,35 @@
     font-size: 13px; font-family: 'DM Sans', sans-serif; transition: all .2s;
   }
   .btn-cancel-modal:hover { background: var(--sp-border); }
-
   .btn-submit {
     background: #f5a623; color: white; border: none; border-radius: 25px;
     padding: 10px 28px; font-weight: 700; cursor: pointer;
     font-size: 13px; font-family: 'DM Sans', sans-serif;
-    display: flex; align-items: center; gap: 7px;
-    transition: all .2s; letter-spacing: .01em;
+    display: flex; align-items: center; gap: 7px; transition: all .2s;
   }
-  .btn-submit:hover {
-    background: #e09415; transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(245,166,35,.4);
-  }
+  .btn-submit:hover { background: #e09415; transform: translateY(-1px); box-shadow: 0 6px 16px rgba(245,166,35,.4); }
 
-  /* ════════════════════════════════
-     RESPONSIVE
-  ════════════════════════════════ */
-  @media (max-width: 600px) {
-    .sp-modal-body { padding: 16px; }
-    .sp-modal-head { padding: 16px; }
-    .sp-modal-footer { padding: 12px 16px 16px; }
-    .sp-form-grid-2 { grid-template-columns: 1fr; }
-    .sp-kpi { min-width: 110px; }
-    .sp-kpi-val { font-size: 20px; }
-    .sp-table th:nth-child(n+6),
-    .sp-table td:nth-child(n+6) { display: none; }
-    .sp-statut-group { flex-direction: column; }
-    .sp-num-wrap { max-width: 100%; }
-  }
-
-  /* ════════════════════════════════
-     MODAL SUPPRIMER
-  ════════════════════════════════ */
+  /* ════ MODAL SUPPRIMER ════ */
   .sp-del-backdrop {
     display: none; position: fixed; inset: 0; z-index: 1100;
-    background: rgba(26,58,107,0.5);
-    backdrop-filter: blur(4px);
-    align-items: center; justify-content: center;
-    padding: 16px;
+    background: rgba(26,58,107,0.5); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center; padding: 16px;
   }
   .sp-del-backdrop.show { display: flex; }
-
   .sp-del-modal {
     background: #fff; border-radius: 20px; width: 100%; max-width: 400px;
     overflow: hidden; box-shadow: 0 28px 80px rgba(26,58,107,0.22);
     border: 1px solid var(--sp-border);
     animation: modalIn .26s cubic-bezier(0.34,1.56,0.64,1);
   }
-
   .sp-del-head {
     background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
-    padding: 20px 24px;
-    display: flex; align-items: center; gap: 12px;
+    padding: 20px 24px; display: flex; align-items: center; gap: 12px;
     position: relative; overflow: hidden;
   }
   .sp-del-head::after {
     content: ''; position: absolute; top: -30px; right: -30px;
-    width: 110px; height: 110px; border-radius: 50%;
-    background: rgba(255,255,255,.07);
+    width: 110px; height: 110px; border-radius: 50%; background: rgba(255,255,255,.07);
   }
   .sp-del-head-icon {
     width: 40px; height: 40px; border-radius: 10px;
@@ -566,26 +454,19 @@
   }
   .sp-del-head h4 { font-size: 16px; font-weight: 700; color: #fff; margin: 0; z-index: 1; }
   .sp-del-head p  { font-size: 12px; color: rgba(255,255,255,.75); margin: 2px 0 0; z-index: 1; }
-
   .sp-del-body {
-    padding: 22px 24px;
-    display: flex; align-items: flex-start; gap: 14px;
+    padding: 22px 24px; display: flex; align-items: flex-start; gap: 14px;
   }
   .sp-del-body-icon {
     width: 44px; height: 44px; border-radius: 12px;
     background: #fdecea; display: flex; align-items: center;
     justify-content: center; font-size: 22px; flex-shrink: 0; margin-top: 2px;
   }
-  .sp-del-body p {
-    font-size: 14px; color: #374151; line-height: 1.6; margin: 0;
-  }
+  .sp-del-body p { font-size: 14px; color: #374151; line-height: 1.6; margin: 0; }
   .sp-del-body strong { color: #1a202c; }
-
   .sp-del-footer {
     display: flex; gap: 10px; justify-content: flex-end;
-    padding: 14px 24px 20px;
-    border-top: 1px solid var(--sp-border);
-    background: var(--sp-surface);
+    padding: 14px 24px 20px; border-top: 1px solid var(--sp-border); background: var(--sp-surface);
   }
   .btn-del-cancel {
     background: #fff; color: var(--sp-muted);
@@ -598,12 +479,19 @@
     background: #e74c3c; color: white; border: none; border-radius: 25px;
     padding: 10px 24px; font-weight: 700; cursor: pointer;
     font-size: 13px; font-family: 'DM Sans', sans-serif;
-    display: flex; align-items: center; gap: 7px;
-    transition: all .2s;
+    display: flex; align-items: center; gap: 7px; transition: all .2s;
   }
-  .btn-del-confirm:hover {
-    background: #c0392b; transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(231,76,60,.35);
+  .btn-del-confirm:hover { background: #c0392b; transform: translateY(-1px); box-shadow: 0 6px 16px rgba(231,76,60,.35); }
+
+  @media (max-width: 600px) {
+    .sp-modal-body { padding: 16px; }
+    .sp-modal-head, .sp-modal-footer { padding: 16px; }
+    .sp-form-grid-2 { grid-template-columns: 1fr; }
+    .sp-kpi { min-width: 110px; }
+    .sp-kpi-val { font-size: 20px; }
+    .sp-table th:nth-child(n+6), .sp-table td:nth-child(n+6) { display: none; }
+    .sp-statut-group { flex-direction: column; }
+    .sp-num-wrap { max-width: 100%; }
   }
 </style>
 {% endblock %}
@@ -852,7 +740,7 @@
                   <td style="max-width:150px;font-size:11px;color:#888;font-style:italic;">{{ s.remarque or (s.note or '—') }}</td>
                   <td style="white-space:nowrap;">
                     <button class="btn-action btn-edit" onclick="openEditModal({{ s.id }})">✏️</button>
-                    <button class="btn-action btn-delete" onclick="openDelModal('{{ url_for('supprimer_seance', id=s.id) }}', '{{ request.url }}')">🗑️</button>
+                    <button class="btn-action btn-delete" onclick="openDelModal('{{ url_for('suivi_partenariat_supprimer', id=s.id) }}', '{{ request.url }}')">🗑️</button>
                   </td>
                 </tr>
                 {% endfor %}
@@ -897,12 +785,11 @@
 </div>
 
 {# ══════════════════════════════════════
-   MODAL — AJOUTER / MODIFIER SÉANCE
+   MODAL AJOUTER / MODIFIER SÉANCE
 ══════════════════════════════════════ #}
 <div class="sp-modal-backdrop" id="spModalBackdrop">
   <div class="sp-modal">
 
-    {# ── Modal Header ── #}
     <div class="sp-modal-head">
       <div class="sp-modal-head-left">
         <div class="sp-modal-head-icon">📅</div>
@@ -914,13 +801,12 @@
       <button class="sp-modal-close" onclick="closeModal()" type="button">✕</button>
     </div>
 
-    {# ── Form ── #}
     <form id="spForm" method="POST">
       <input type="hidden" name="redirect_url" id="spRedirectUrl" value="{{ request.url }}">
 
       <div class="sp-modal-body">
 
-        {# ── Section: Coordinateur ── #}
+        {# ── Coordinateur ── #}
         <div class="sp-section-label">👤 Coordinateur</div>
         <div class="sp-form-grid-1">
           <div class="sp-fg">
@@ -939,7 +825,7 @@
           </div>
         </div>
 
-        {# ── Section: Détails séance ── #}
+        {# ── Détails séance ── #}
         <div class="sp-section-label">🕐 Détails séance</div>
         <div class="sp-form-grid-2">
           <div class="sp-fg">
@@ -990,7 +876,7 @@
           </div>
         </div>
 
-        {# ── Section: Lieu & Matière ── #}
+        {# ── Lieu & Matière ── #}
         <div class="sp-section-label">🏠 Lieu & matière</div>
         <div class="sp-form-grid-2">
           <div class="sp-fg">
@@ -1020,9 +906,9 @@
           </div>
         </div>
 
-        {# ── Section: Professeur ── #}
+        {# ── Professeur — CORRIGÉ : name="professeur_id", stocke l'ID ── #}
         <div class="sp-section-label">🎓 Professeur</div>
-        <input type="hidden" name="prof" id="spProfHidden">
+        <input type="hidden" name="professeur_id" id="spProfHidden">
         <div class="prof-search-wrapper">
           <span class="prof-search-icon">🔍</span>
           <input type="text" id="spProfSearch" class="prof-search-input"
@@ -1030,7 +916,7 @@
           <div class="prof-dropdown" id="spProfDropdown"></div>
         </div>
 
-        {# ── Section: Présence & Notes ── #}
+        {# ── Présence & Notes ── #}
         <div class="sp-section-label">📝 Présence & notes</div>
         <div class="sp-form-grid-2">
           <div class="sp-fg">
@@ -1058,14 +944,12 @@
 
       </div>{# /modal-body #}
 
-      {# ── Footer ── #}
       <div class="sp-modal-footer">
         <button type="button" class="btn-cancel-modal" onclick="closeModal()">Annuler</button>
         <button type="submit" class="btn-submit" id="spSubmitBtn">
           💾 Enregistrer
         </button>
       </div>
-
     </form>
   </div>
 </div>
@@ -1077,25 +961,50 @@
 /* ════════════════════════════════
    Données depuis le serveur
 ════════════════════════════════ */
+
+/* ══ Liste des profs avec ID et nom ══ */
 var PROFS_DATA = [
-  {% for p in professeurs %}
-    {{ p.nom | tojson }}{% if not loop.last %},{% endif %}
-  {% endfor %}
+  {% for p in professeurs %}{ id: {{ p.id }}, nom: {{ p.nom | tojson }} }{% if not loop.last %},{% endif %}{% endfor %}
 ];
 
+/* ══ Séances du mois (toutes) ══ */
 var SEANCES_DATA = {};
 {% for s in seances_json %}
-SEANCES_DATA[{{ s.id }}] = {{ s | tojson }};
+SEANCES_DATA[{{ s.id }}] = {
+    id:              {{ s.id }},
+    coordinateur_id: {{ s.coordinateur_id }},
+    date:            {{ s.date | tojson }},
+    heure:           {{ s.heure | tojson }},
+    nb_heures:       {{ s.nb_heures }},
+    statut:          {{ s.statut | tojson }},
+    dar_id:          {{ s.dar_id | tojson }},
+    matiere:         {{ s.matiere | tojson }},
+    niveau:          {{ s.niveau | tojson }},
+    prof:            {{ s.prof | tojson }},
+    professeur_id:   {{ s.professeur_id if s.professeur_id else 'null' }},
+    nb_eleves:       {{ s.nb_eleves }},
+    note:            {{ s.note | tojson }},
+    remarque:        {{ s.remarque | tojson }},
+};
 {% endfor %}
 
 /* ════════════════════════════════
    Durée stepper
 ════════════════════════════════ */
 function changeHrs(delta) {
-  var el = document.getElementById('spHeures');
-  var v  = parseFloat(el.value) || 2;
-  v = Math.min(12, Math.max(0.5, v + delta));
-  el.value = (v % 1 === 0) ? v : v.toFixed(1);
+    var el = document.getElementById('spHeures');
+    var v  = parseFloat(el.value) || 2;
+    v = Math.min(12, Math.max(0.5, v + delta));
+    el.value = (v % 1 === 0) ? v : v.toFixed(1);
+}
+
+/* ════════════════════════════════
+   Statut pills
+════════════════════════════════ */
+function setStatut(val) {
+    document.querySelectorAll('input[name="statut"]').forEach(function(r) {
+        r.checked = (r.value === val);
+    });
 }
 
 /* ════════════════════════════════
@@ -1106,120 +1015,118 @@ var profDropdown = document.getElementById('spProfDropdown');
 var profHidden   = document.getElementById('spProfHidden');
 
 function renderProfOptions(filter) {
-  var lower    = (filter || '').toLowerCase();
-  var filtered = PROFS_DATA.filter(function(p) { return p.toLowerCase().includes(lower); });
-  profDropdown.innerHTML = '';
+    var lower    = (filter || '').toLowerCase();
+    var filtered = PROFS_DATA.filter(function(p) { return p.nom.toLowerCase().includes(lower); });
+    profDropdown.innerHTML = '';
 
-  var emptyOpt = document.createElement('div');
-  emptyOpt.className = 'prof-option';
-  emptyOpt.textContent = '— Aucun professeur —';
-  emptyOpt.dataset.value = '';
-  profDropdown.appendChild(emptyOpt);
+    /* option vide */
+    var emptyOpt = document.createElement('div');
+    emptyOpt.className    = 'prof-option';
+    emptyOpt.textContent  = '— Aucun professeur —';
+    emptyOpt.dataset.value = '';
+    emptyOpt.dataset.nom   = '';
+    profDropdown.appendChild(emptyOpt);
 
-  filtered.forEach(function(p) {
-    var opt = document.createElement('div');
-    opt.className = 'prof-option' + (p === profHidden.value ? ' selected' : '');
-    opt.textContent = p;
-    opt.dataset.value = p;
-    profDropdown.appendChild(opt);
-  });
-
-  profDropdown.querySelectorAll('.prof-option').forEach(function(opt) {
-    opt.addEventListener('mousedown', function(e) {
-      e.preventDefault();
-      profHidden.value = opt.dataset.value;
-      profSearch.value = opt.dataset.value ? opt.textContent : '';
-      profDropdown.classList.remove('open');
+    filtered.forEach(function(p) {
+        var opt = document.createElement('div');
+        opt.className      = 'prof-option' + (String(p.id) === profHidden.value ? ' selected' : '');
+        opt.textContent    = p.nom;
+        opt.dataset.value  = String(p.id);   /* ← ID numérique */
+        opt.dataset.nom    = p.nom;
+        profDropdown.appendChild(opt);
     });
-  });
+
+    profDropdown.querySelectorAll('.prof-option').forEach(function(opt) {
+        opt.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            profHidden.value = opt.dataset.value;     /* ← stocke l'ID */
+            profSearch.value = opt.dataset.nom || '';  /* ← affiche le nom */
+            profDropdown.classList.remove('open');
+        });
+    });
 }
 
 profSearch.addEventListener('focus', function() {
-  renderProfOptions(profSearch.value);
-  profDropdown.classList.add('open');
+    renderProfOptions(profSearch.value);
+    profDropdown.classList.add('open');
 });
 profSearch.addEventListener('input', function() {
-  renderProfOptions(profSearch.value);
-  profDropdown.classList.add('open');
-  profHidden.value = '';
+    renderProfOptions(profSearch.value);
+    profDropdown.classList.add('open');
+    profHidden.value = '';
 });
 profSearch.addEventListener('blur', function() {
-  setTimeout(function() { profDropdown.classList.remove('open'); }, 150);
+    setTimeout(function() { profDropdown.classList.remove('open'); }, 150);
 });
 
 /* ════════════════════════════════
    Tabs
 ════════════════════════════════ */
 function switchTab(tab, btn) {
-  document.getElementById('view-dar').style.display    = tab === 'dar'    ? '' : 'none';
-  document.getElementById('view-niveau').style.display = tab === 'niveau' ? '' : 'none';
-  document.querySelectorAll('.sp-tab').forEach(function(t) { t.classList.remove('active'); });
-  btn.classList.add('active');
+    document.getElementById('view-dar').style.display    = tab === 'dar'    ? '' : 'none';
+    document.getElementById('view-niveau').style.display = tab === 'niveau' ? '' : 'none';
+    document.querySelectorAll('.sp-tab').forEach(function(t) { t.classList.remove('active'); });
+    btn.classList.add('active');
 }
 
 /* ── Toggle cards ── */
 function toggleCard(header) {
-  var body = header.nextElementSibling;
-  var icon = header.querySelector('.toggle-icon');
-  if (body.style.display === 'none') {
-    body.style.display = '';
-    if (icon) icon.style.transform = 'rotate(0deg)';
-  } else {
-    body.style.display = 'none';
-    if (icon) icon.style.transform = 'rotate(-90deg)';
-  }
+    var body = header.nextElementSibling;
+    var icon = header.querySelector('.toggle-icon');
+    if (body.style.display === 'none') {
+        body.style.display = '';
+        if (icon) icon.style.transform = 'rotate(0deg)';
+    } else {
+        body.style.display = 'none';
+        if (icon) icon.style.transform = 'rotate(-90deg)';
+    }
 }
 
 /* ════════════════════════════════
-   Modal
+   Modal ajouter / modifier
 ════════════════════════════════ */
 var backdrop = document.getElementById('spModalBackdrop');
 
-function setStatut(val) {
-  document.querySelectorAll('input[name="statut"]').forEach(function(r) {
-    r.checked = (r.value === val);
-  });
-}
-
 function openAddModal(darId, niveau) {
-  document.getElementById('spModalTitle').textContent = 'Ajouter une séance';
-  document.getElementById('spForm').action = "{{ url_for('suivi_partenariat_ajouter') }}";
-  document.getElementById('spSubmitBtn').textContent = '💾 Ajouter';
-  document.getElementById('spForm').reset();
-  profHidden.value = '';
-  profSearch.value = '';
-  document.getElementById('spDate').value   = new Date().toISOString().slice(0, 10);
-  document.getElementById('spHeures').value = '2';
-  setStatut('passee');
-  if (darId)  document.getElementById('spDar').value    = darId;
-  if (niveau) document.getElementById('spNiveau').value = niveau;
-  backdrop.classList.add('show');
+    document.getElementById('spModalTitle').textContent  = 'Ajouter une séance';
+    document.getElementById('spForm').action             = "{{ url_for('suivi_partenariat_ajouter') }}";
+    document.getElementById('spSubmitBtn').textContent   = '💾 Ajouter';
+    document.getElementById('spForm').reset();
+    profHidden.value = '';
+    profSearch.value = '';
+    document.getElementById('spDate').value   = new Date().toISOString().slice(0, 10);
+    document.getElementById('spHeures').value = '2';
+    setStatut('passee');
+    if (darId)  document.getElementById('spDar').value    = String(darId);
+    if (niveau) document.getElementById('spNiveau').value = niveau;
+    backdrop.classList.add('show');
 }
 
 function openEditModal(id) {
-  var s = SEANCES_DATA[id];
-  if (!s) { console.warn('Séance introuvable:', id); return; }
+    var s = SEANCES_DATA[id];
+    if (!s) { console.warn('Séance introuvable:', id); return; }
 
-  document.getElementById('spModalTitle').textContent = 'Modifier la séance';
-  document.getElementById('spForm').action = '/suivi_partenariat/modifier/' + id;
-  document.getElementById('spSubmitBtn').textContent = '💾 Enregistrer';
+    document.getElementById('spModalTitle').textContent = 'Modifier la séance';
+    document.getElementById('spForm').action            = '/suivi_partenariat/modifier/' + id;
+    document.getElementById('spSubmitBtn').textContent  = '💾 Enregistrer';
 
-  document.getElementById('spCoord').value    = s.coordinateur_id || '';
-  document.getElementById('spDate').value     = s.date            || '';
-  document.getElementById('spHeure').value    = s.heure           || '';
-  document.getElementById('spHeures').value   = s.nb_heures       || 2;
-  document.getElementById('spDar').value      = s.dar_id          || '';
-  document.getElementById('spMatiere').value  = s.matiere         || '';
-  document.getElementById('spNiveau').value   = s.niveau          || '';
-  document.getElementById('spEleves').value   = s.nb_eleves       || '';
-  document.getElementById('spNote').value     = s.note            || '';
-  document.getElementById('spRemarque').value = s.remarque        || '';
-  setStatut(s.statut || 'passee');
+    document.getElementById('spCoord').value    = s.coordinateur_id || '';
+    document.getElementById('spDate').value     = s.date            || '';
+    document.getElementById('spHeure').value    = s.heure           || '';
+    document.getElementById('spHeures').value   = s.nb_heures       || 2;
+    document.getElementById('spDar').value      = s.dar_id          || '';
+    document.getElementById('spMatiere').value  = s.matiere         || '';
+    document.getElementById('spNiveau').value   = s.niveau          || '';
+    document.getElementById('spEleves').value   = s.nb_eleves       || '';
+    document.getElementById('spNote').value     = s.note            || '';
+    document.getElementById('spRemarque').value = s.remarque        || '';
+    setStatut(s.statut || 'passee');
 
-  profHidden.value = s.prof || '';
-  profSearch.value = s.prof || '';
+    /* ← ID dans le hidden, nom dans le search */
+    profHidden.value = s.professeur_id ? String(s.professeur_id) : '';
+    profSearch.value = s.prof          || '';
 
-  backdrop.classList.add('show');
+    backdrop.classList.add('show');
 }
 
 function closeModal() { backdrop.classList.remove('show'); }
@@ -1233,9 +1140,9 @@ document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { clo
 var delBackdrop = document.getElementById('spDelBackdrop');
 
 function openDelModal(action, redirectUrl) {
-  document.getElementById('spDelForm').action = action;
-  document.getElementById('spDelRedirect').value = redirectUrl;
-  delBackdrop.classList.add('show');
+    document.getElementById('spDelForm').action        = action;
+    document.getElementById('spDelRedirect').value     = redirectUrl;
+    delBackdrop.classList.add('show');
 }
 function closeDelModal() { delBackdrop.classList.remove('show'); }
 delBackdrop.addEventListener('click', function(e) { if (e.target === delBackdrop) closeDelModal(); });

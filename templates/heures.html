@@ -211,7 +211,7 @@
     </div>
 </div>
 
-<!-- ══ ADD / EDIT MODAL (suivi partenariat complet) ══ -->
+<!-- ══ ADD / EDIT MODAL ══ -->
 <div class="sp-modal-overlay" id="sp-modal">
   <div class="sp-modal-box">
     <div class="sp-mhead">
@@ -230,7 +230,6 @@
 
       <div class="sp-mbody">
 
-        {# ── Coordinateur (caché dans le contexte heures car déjà sélectionné) ── #}
         <input type="hidden" name="coordinateur_id" id="spCoordId">
 
         {# ── Date & Heure & Durée ── #}
@@ -300,9 +299,9 @@
           </div>
         </div>
 
-        {# ── Professeur ── #}
+        {# ── Professeur — champ CORRIGÉ : name="professeur_id" stocke l'ID ── #}
         <div class="sp-slabel">🎓 Professeur</div>
-        <input type="hidden" name="prof" id="spProfHidden">
+        <input type="hidden" name="professeur_id" id="spProfHidden">
         <div class="sp-prof-wrap">
           <span class="sp-prof-icon">🔍</span>
           <input type="text" id="spProfSearch" class="sp-prof-input"
@@ -420,7 +419,6 @@
                     <div class="sub">{{ mois_noms[mois] }} {{ annee }} — {{ seances_coord|length }} séance{% if seances_coord|length != 1 %}s{% endif %} · {{ "%.1f"|format(coord_selected.total_heures_mois(mois, annee)) }}h</div>
                 </div>
 
-                {# ── Bouton ajouter ── #}
                 <div style="padding:16px 0 8px;">
                     <button class="sp-btn-save" type="button"
                             onclick="spOpenAdd({{ coord_selected.id }}, '{{ today }}')">
@@ -559,87 +557,112 @@
 </div>
 </div>
 
-{# ── Séances data JSON pour le modal edit ── #}
+{# ── Données JS ── #}
 <script>
+/* ══ Liste des profs avec ID et nom ══ */
 var SP_PROFS = [
-  {% for p in profs_list %}{{ p.nom | tojson }}{% if not loop.last %},{% endif %}{% endfor %}
+  {% for p in profs_list %}{ id: {{ p.id }}, nom: {{ p.nom | tojson }} }{% if not loop.last %},{% endif %}{% endfor %}
 ];
 
+/* ══ Séances du coordinateur sélectionné ══ */
 var SP_SEANCES = {};
 {% for s in seances_coord %}
 SP_SEANCES[{{ s.id }}] = {
-    id: {{ s.id }},
+    id:              {{ s.id }},
     coordinateur_id: {{ s.coordinateur_id }},
-    date: "{{ s.date.isoformat() }}",
-    heure: "{{ s.heure or '' }}",
-    nb_heures: {{ s.nb_heures }},
-    statut: "{{ s.statut or 'passee' }}",
-    dar_id: "{{ s.dar_id or '' }}",
-    matiere: "{{ s.matiere or '' }}",
-    niveau: "{{ s.niveau or '' }}",
-    prof: {{ (s.prof or '') | tojson }},
-    nb_eleves: {{ s.nb_eleves or 0 }},
-    note: {{ (s.note or '') | tojson }},
-    remarque: {{ (s.remarque or '') | tojson }},
+    date:            "{{ s.date.isoformat() }}",
+    heure:           "{{ s.heure or '' }}",
+    nb_heures:       {{ s.nb_heures }},
+    statut:          "{{ s.statut or 'passee' }}",
+    dar_id:          "{{ s.dar_id or '' }}",
+    matiere:         "{{ s.matiere or '' }}",
+    niveau:          "{{ s.niveau or '' }}",
+    prof:            {{ (s.prof or '') | tojson }},
+    professeur_id:   {{ s.professeur_id or 'null' }},
+    nb_eleves:       {{ s.nb_eleves or 0 }},
+    note:            {{ (s.note or '') | tojson }},
+    remarque:        {{ (s.remarque or '') | tojson }},
 };
 {% endfor %}
 
-/* ── Stepper ── */
+/* ══ Stepper heures ══ */
 function spChgH(d) {
     var el = document.getElementById('spHeures');
-    var v = parseFloat(el.value)||2;
-    v = Math.min(12, Math.max(0.5, v+d));
-    el.value = (v%1===0)?v:v.toFixed(1);
+    var v  = parseFloat(el.value) || 2;
+    v = Math.min(12, Math.max(0.5, v + d));
+    el.value = (v % 1 === 0) ? v : v.toFixed(1);
 }
 
-/* ── Statut ── */
+/* ══ Statut pills ══ */
 function spSetStatut(val) {
-    document.querySelectorAll('input[name="statut"]').forEach(function(r){ r.checked=(r.value===val); });
+    document.querySelectorAll('input[name="statut"]').forEach(function(r) {
+        r.checked = (r.value === val);
+    });
 }
 
-/* ── Prof search ── */
+/* ══ Prof search dropdown ══ */
 var spProfSearch = document.getElementById('spProfSearch');
 var spProfDrop   = document.getElementById('spProfDrop');
 var spProfHidden = document.getElementById('spProfHidden');
 
 function spRenderProfs(filter) {
-    var lower = (filter||'').toLowerCase();
-    var list  = SP_PROFS.filter(function(p){ return p.toLowerCase().includes(lower); });
+    var lower = (filter || '').toLowerCase();
+    var list  = SP_PROFS.filter(function(p) { return p.nom.toLowerCase().includes(lower); });
     spProfDrop.innerHTML = '';
+
+    /* option vide */
     var empty = document.createElement('div');
-    empty.className='sp-prof-opt'; empty.textContent='— Aucun prof —'; empty.dataset.value='';
+    empty.className     = 'sp-prof-opt';
+    empty.textContent   = '— Aucun prof —';
+    empty.dataset.value = '';
+    empty.dataset.nom   = '';
     spProfDrop.appendChild(empty);
-    list.forEach(function(p){
-        var opt=document.createElement('div');
-        opt.className='sp-prof-opt'+(p===spProfHidden.value?' selected':'');
-        opt.textContent=p; opt.dataset.value=p;
+
+    list.forEach(function(p) {
+        var opt = document.createElement('div');
+        opt.className     = 'sp-prof-opt' + (String(p.id) === spProfHidden.value ? ' selected' : '');
+        opt.textContent   = p.nom;
+        opt.dataset.value = String(p.id);   /* ← ID numérique */
+        opt.dataset.nom   = p.nom;
         spProfDrop.appendChild(opt);
     });
-    spProfDrop.querySelectorAll('.sp-prof-opt').forEach(function(opt){
-        opt.addEventListener('mousedown',function(e){
+
+    spProfDrop.querySelectorAll('.sp-prof-opt').forEach(function(opt) {
+        opt.addEventListener('mousedown', function(e) {
             e.preventDefault();
-            spProfHidden.value=opt.dataset.value;
-            spProfSearch.value=opt.dataset.value||'';
+            spProfHidden.value = opt.dataset.value;    /* ← stocke l'ID */
+            spProfSearch.value = opt.dataset.nom || '';/* ← affiche le nom */
             spProfDrop.classList.remove('open');
         });
     });
 }
-spProfSearch.addEventListener('focus',function(){ spRenderProfs(spProfSearch.value); spProfDrop.classList.add('open'); });
-spProfSearch.addEventListener('input',function(){ spRenderProfs(spProfSearch.value); spProfDrop.classList.add('open'); spProfHidden.value=''; });
-spProfSearch.addEventListener('blur',function(){ setTimeout(function(){ spProfDrop.classList.remove('open'); },150); });
 
-/* ── Modal open/close ── */
+spProfSearch.addEventListener('focus', function() {
+    spRenderProfs(spProfSearch.value);
+    spProfDrop.classList.add('open');
+});
+spProfSearch.addEventListener('input', function() {
+    spRenderProfs(spProfSearch.value);
+    spProfDrop.classList.add('open');
+    spProfHidden.value = '';
+});
+spProfSearch.addEventListener('blur', function() {
+    setTimeout(function() { spProfDrop.classList.remove('open'); }, 150);
+});
+
+/* ══ Modal open/close ══ */
 var spModal = document.getElementById('sp-modal');
 
 function spOpenAdd(coordId, defaultDate) {
     document.getElementById('spModalTitle').textContent = 'Ajouter une séance';
     document.getElementById('spModalSub').textContent   = 'Séances de travail';
-    document.getElementById('sp-form').action = "{{ url_for('ajouter_seance') }}";
-    document.getElementById('spSubmitBtn').textContent = '💾 Ajouter';
+    document.getElementById('sp-form').action           = "{{ url_for('ajouter_seance') }}";
+    document.getElementById('spSubmitBtn').textContent  = '💾 Ajouter';
     document.getElementById('sp-form').reset();
-    spProfHidden.value=''; spProfSearch.value='';
+    spProfHidden.value = '';
+    spProfSearch.value = '';
     document.getElementById('spCoordId').value  = coordId;
-    document.getElementById('spDate').value     = defaultDate || new Date().toISOString().slice(0,10);
+    document.getElementById('spDate').value     = defaultDate || new Date().toISOString().slice(0, 10);
     document.getElementById('spHeures').value   = '2';
     document.getElementById('spRedirectUrl').value = window.location.href;
     spSetStatut('passee');
@@ -649,30 +672,36 @@ function spOpenAdd(coordId, defaultDate) {
 function spOpenEdit(id) {
     var s = SP_SEANCES[id];
     if (!s) { console.warn('Séance introuvable:', id); return; }
+
     document.getElementById('spModalTitle').textContent = 'Modifier la séance';
     document.getElementById('spModalSub').textContent   = 'Séances de travail';
-    document.getElementById('sp-form').action = '/heures/modifier/' + id;
-    document.getElementById('spSubmitBtn').textContent = '💾 Enregistrer';
-    document.getElementById('spCoordId').value      = s.coordinateur_id;
-    document.getElementById('spDate').value         = s.date;
-    document.getElementById('spHeure').value        = s.heure;
-    document.getElementById('spHeures').value       = s.nb_heures;
-    document.getElementById('spDar').value          = s.dar_id;
-    document.getElementById('spMatiere').value      = s.matiere;
-    document.getElementById('spNiveau').value       = s.niveau;
-    document.getElementById('spEleves').value       = s.nb_eleves||'';
-    document.getElementById('spNote').value         = s.note;
-    document.getElementById('spRemarque').value     = s.remarque;
-    document.getElementById('spRedirectUrl').value  = window.location.href;
-    spProfHidden.value = s.prof||''; spProfSearch.value = s.prof||'';
-    spSetStatut(s.statut||'passee');
+    document.getElementById('sp-form').action           = '/heures/modifier/' + id;
+    document.getElementById('spSubmitBtn').textContent  = '💾 Enregistrer';
+
+    document.getElementById('spCoordId').value     = s.coordinateur_id;
+    document.getElementById('spDate').value        = s.date;
+    document.getElementById('spHeure').value       = s.heure;
+    document.getElementById('spHeures').value      = s.nb_heures;
+    document.getElementById('spDar').value         = s.dar_id;
+    document.getElementById('spMatiere').value     = s.matiere;
+    document.getElementById('spNiveau').value      = s.niveau;
+    document.getElementById('spEleves').value      = s.nb_eleves || '';
+    document.getElementById('spNote').value        = s.note;
+    document.getElementById('spRemarque').value    = s.remarque;
+    document.getElementById('spRedirectUrl').value = window.location.href;
+
+    /* ← professeur_id dans le hidden, nom dans le search */
+    spProfHidden.value = s.professeur_id ? String(s.professeur_id) : '';
+    spProfSearch.value = s.prof || '';
+
+    spSetStatut(s.statut || 'passee');
     spModal.classList.add('show');
 }
 
 function spCloseModal() { spModal.classList.remove('show'); }
 
-spModal.addEventListener('click', function(e){ if(e.target===spModal) spCloseModal(); });
-document.addEventListener('keydown', function(e){ if(e.key==='Escape') spCloseModal(); });
+spModal.addEventListener('click', function(e) { if (e.target === spModal) spCloseModal(); });
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') spCloseModal(); });
 </script>
 
 {% endblock %}

@@ -14,6 +14,7 @@
     --purple:  #7c3aed;
     --green:   #16a34a;
     --red:     #dc2626;
+    --amber:   #d97706;
     --grey:    #64748b;
     --light:   #f8faff;
     --border:  #e2e8f0;
@@ -109,17 +110,25 @@ body { font-family: 'DM Sans', sans-serif; background: #eef2f7; }
 
 /* Summary boxes */
 .summary-section { padding: 28px 44px; border-bottom: 2px solid var(--border); }
+
+/* ── 6 KPI boxes ── */
 .sum-boxes {
-    display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 22px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 22px;
 }
 @media(max-width:768px){ .sum-boxes { grid-template-columns: repeat(2,1fr); } }
+
 .sum-box {
     border-radius: 14px; padding: 16px 18px; position: relative; overflow: hidden;
 }
 .sum-box.b1 { background: linear-gradient(135deg,#1a3a6b,#2a5298); }
 .sum-box.b2 { background: linear-gradient(135deg,#0d9488,#0f766e); }
 .sum-box.b3 { background: linear-gradient(135deg,#7c3aed,#6d28d9); }
-.sum-box.b4 { background: linear-gradient(135deg,#f5a623,#e8941a); }
+.sum-box.b4 { background: linear-gradient(135deg,#16a34a,#15803d); }
+.sum-box.b5 { background: linear-gradient(135deg,#dc2626,#b91c1c); }
+.sum-box.b6 { background: linear-gradient(135deg,#f5a623,#e8941a); }
 .sb-val { font-size: 32px; font-weight: 700; color: white; line-height: 1; }
 .sb-lbl { font-size: 11px; color: rgba(255,255,255,.8); margin-top: 4px; font-weight: 500; }
 .sb-icon {
@@ -162,13 +171,14 @@ body { font-family: 'DM Sans', sans-serif; background: #eef2f7; }
 .cpb-header {
     display: flex; align-items: center; gap: 14px;
     padding: 14px 20px; border-bottom: 1.5px solid var(--border);
+    flex-wrap: wrap;
 }
 .cpb-av {
     width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
     color: white; display: flex; align-items: center; justify-content: center;
     font-size: 14px; font-weight: 700;
 }
-.cpb-info { flex: 1; }
+.cpb-info { flex: 1; min-width: 0; }
 .cpb-name { font-size: 14px; font-weight: 700; color: var(--blue); }
 .cpb-sub  { font-size: 11px; color: var(--grey); margin-top: 2px; }
 .cpb-pills { display: flex; gap: 5px; margin-top: 5px; flex-wrap: wrap; }
@@ -176,6 +186,18 @@ body { font-family: 'DM Sans', sans-serif; background: #eef2f7; }
     padding: 2px 9px; border-radius: 20px; font-size: 10px;
     font-weight: 700; color: white;
 }
+
+/* ── Statut pills dans header coord ── */
+.cpb-statut-pills { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 5px; }
+.csp {
+    font-size: 9px; font-weight: 700; padding: 2px 7px;
+    border-radius: 6px; display: inline-flex; align-items: center; gap: 2px;
+}
+.csp.p { background: #dcfce7; color: #15803d; }
+.csp.a { background: #fee2e2; color: #b91c1c; }
+.csp.r { background: #fef3c7; color: #92400e; }
+.csp.e { background: #ede9fe; color: #6d28d9; }
+
 .cpb-stats {
     display: flex; gap: 16px; text-align: center; margin-left: auto; flex-shrink: 0;
 }
@@ -197,20 +219,31 @@ body { font-family: 'DM Sans', sans-serif; background: #eef2f7; }
 .s-table tr:last-child td { border-bottom: none; }
 .s-table tr:hover td { background: #fafbff; }
 .s-table .r { text-align: right; }
-.mat-chip { display: inline-block; padding: 1px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; color: white; background: var(--teal); }
-.niv-chip { display: inline-block; padding: 1px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; color: white; background: var(--purple); }
-.h-chip   { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; color: var(--teal); background: #e6faf7; }
+
+/* Chips */
+.mat-chip  { display: inline-block; padding: 1px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; color: white; background: var(--teal); }
+.niv-chip  { display: inline-block; padding: 1px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; color: white; background: var(--purple); }
+.h-chip    { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; color: var(--teal); background: #e6faf7; }
+.elv-chip  { display: inline-block; padding: 1px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; color: #6d28d9; background: #ede9fe; }
+
+/* Statut badge dans tableau */
+.st-badge {
+    display: inline-block; padding: 2px 8px; border-radius: 8px;
+    font-size: 10px; font-weight: 700; white-space: nowrap;
+}
+.st-badge.passee    { background: #dcfce7; color: #15803d; }
+.st-badge.annulee   { background: #fee2e2; color: #b91c1c; }
+.st-badge.rattrapage{ background: #fef3c7; color: #92400e; }
+
 .s-total  {
     display: flex; justify-content: space-between; align-items: center;
     padding: 9px 16px; background: #f0f4ff; border-top: 2px solid var(--border);
-    font-size: 12px; font-weight: 700; color: var(--blue);
+    font-size: 12px; font-weight: 700; color: var(--blue); flex-wrap: wrap; gap: 6px;
 }
 .s-total-h { font-size: 15px; font-weight: 700; color: var(--teal); }
+.s-total-pills { display: flex; gap: 5px; flex-wrap: wrap; }
 
 .no-data { padding: 20px; text-align: center; color: #cbd5e1; font-size: 12px; font-style: italic; }
-
-/* Note mobile — caché sur desktop */
-.note-mobile { display: none; }
 
 /* ── Table scroll wrapper ── */
 .s-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -242,10 +275,8 @@ body { font-family: 'DM Sans', sans-serif; background: #eef2f7; }
     .coord-section{ padding: 0 12px 20px; }
     .section-title{ font-size: 14px; margin: 18px 0 12px; }
 
-    /* Coord header — 2 lignes sur mobile */
-    .cpb-header   { padding: 12px 12px; gap: 10px; flex-wrap: wrap; }
+    .cpb-header   { padding: 12px 12px; gap: 10px; }
     .cpb-av       { width: 38px; height: 38px; font-size: 12px; }
-    .cpb-info     { flex: 1; min-width: 0; }
     .cpb-name     { font-size: 13px; }
     .cpb-sub      { font-size: 10px; }
     .cpb-pill     { font-size: 9px; padding: 1px 7px; }
@@ -257,19 +288,16 @@ body { font-family: 'DM Sans', sans-serif; background: #eef2f7; }
     .cpb-stat-val { font-size: 15px; }
     .cpb-stat-lbl { font-size: 9px; }
 
-    /* Table — scroll horizontal, kacha note sur mobile */
-    .s-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .s-table-wrap { overflow-x: auto; }
     .s-table      { min-width: unset; width: 100%; font-size: 11px; }
     .s-table th   { padding: 6px 8px; font-size: 9px; }
     .s-table td   { padding: 7px 8px; }
     .mat-chip, .niv-chip { font-size: 9px; padding: 1px 6px; white-space: nowrap; }
     .h-chip       { font-size: 10px; padding: 2px 6px; }
-    /* Kacha note sur mobile */
     .s-table .col-note,
     .s-table .th-note { display: none; }
-    .note-mobile  { display: none; }
 
-    .s-total      { padding: 8px 12px; font-size: 11px; flex-wrap: wrap; gap: 4px; }
+    .s-total      { padding: 8px 12px; font-size: 11px; }
     .s-total-h    { font-size: 13px; }
 
     .doc-footer   { padding: 12px 14px; flex-direction: column; gap: 4px; text-align: center; font-size: 10px; }
@@ -299,20 +327,15 @@ body { font-family: 'DM Sans', sans-serif; background: #eef2f7; }
 
 /* ════════════════════ PRINT ════════════════════ */
 @media print {
-    /* ── Kacha les éléments de navigation ── */
     .navbar,
     .sidebar,
     .mob-menu-btn,
     .mob-sidebar-overlay,
     .sidebar-toggle,
-    .toolbar { 
-        display: none !important; 
+    .toolbar {
+        display: none !important;
     }
-    
-    /* ── Logo ── */
-    .navbar-left {
-        display: block !important;
-    }
+    .navbar-left { display: block !important; }
     .navbar {
         display: flex !important;
         box-shadow: none !important;
@@ -320,39 +343,21 @@ body { font-family: 'DM Sans', sans-serif; background: #eef2f7; }
         padding: 10px 20px !important;
         height: auto !important;
     }
-    /* Kacha gha le user dropdown */
-    .navbar-right {
-        display: none !important;
-    }
-
-    /* ── Layout ── */
-    .dashboard-layout { 
-        display: block !important; 
-    }
-    .main-content { 
-        margin-left: 0 !important; 
-        padding: 0 !important;
-        width: 100% !important;
-    }
-    
-    /* ── Document ── */
+    .navbar-right { display: none !important; }
+    .dashboard-layout { display: block !important; }
+    .main-content { margin-left: 0 !important; padding: 0 !important; width: 100% !important; }
     body { background: white !important; }
     .ip-screen { padding: 0; max-width: 100%; }
-    .print-doc {
-        border: none; border-radius: 0; box-shadow: none;
-    }
-    
-    /* ── Colors preserved ── */
+    .print-doc { border: none; border-radius: 0; box-shadow: none; }
     .doc-header  { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .period-band { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .sum-box     { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .bk-fill     { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .cpb-av      { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .st-badge    { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .csp         { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    
-    /* ── Page breaks ── */
     .coord-print-block { page-break-inside: avoid; break-inside: avoid; }
-    
     @page { margin: 1cm; size: A4; }
 }
 {% endblock %}
@@ -429,7 +434,7 @@ body { font-family: 'DM Sans', sans-serif; background: #eef2f7; }
             {% endif %}
         </div>
 
-        <!-- Summary boxes -->
+        <!-- ── Summary boxes (6 KPI) ── -->
         <div class="summary-section">
             <div class="sum-boxes">
                 <div class="sum-box b1">
@@ -439,7 +444,7 @@ body { font-family: 'DM Sans', sans-serif; background: #eef2f7; }
                 </div>
                 <div class="sum-box b2">
                     <div class="sb-val">{{ "%.1f"|format(total_heures) }}h</div>
-                    <div class="sb-lbl">Heures totales</div>
+                    <div class="sb-lbl">Heures effectives</div>
                     <div class="sb-icon">⏱️</div>
                 </div>
                 <div class="sum-box b3">
@@ -448,11 +453,19 @@ body { font-family: 'DM Sans', sans-serif; background: #eef2f7; }
                     <div class="sb-icon">📚</div>
                 </div>
                 <div class="sum-box b4">
-                    <div class="sb-val">
-                        {% if total_seances > 0 %}{{ "%.1f"|format(total_heures / total_seances) }}h{% else %}—{% endif %}
-                    </div>
-                    <div class="sb-lbl">Moyenne / séance</div>
-                    <div class="sb-icon">📊</div>
+                    <div class="sb-val">{{ total_passees }}</div>
+                    <div class="sb-lbl">✅ Séances passées</div>
+                    <div class="sb-icon">✅</div>
+                </div>
+                <div class="sum-box b5">
+                    <div class="sb-val">{{ total_annulees }}</div>
+                    <div class="sb-lbl">❌ Séances annulées</div>
+                    <div class="sb-icon">❌</div>
+                </div>
+                <div class="sum-box b6">
+                    <div class="sb-val">{{ total_eleves or '—' }}</div>
+                    <div class="sb-lbl">👥 Élèves présents</div>
+                    <div class="sb-icon">👥</div>
                 </div>
             </div>
 
@@ -498,7 +511,7 @@ body { font-family: 'DM Sans', sans-serif; background: #eef2f7; }
             </div>
         </div>
 
-        <!-- Coordinator details -->
+        <!-- ── Coordinator details ── -->
         <div class="coord-section">
             <div class="section-title">
                 📋 Détail par Coordinateur
@@ -522,7 +535,7 @@ body { font-family: 'DM Sans', sans-serif; background: #eef2f7; }
                             {{ row.coord.prenom }} {{ row.coord.nom }}
                         </div>
                         <div class="cpb-sub">
-                            Responsable : {{ row.coord.responsable.prenom }} {{ row.coord.responsable.nom }}
+                            Responsable : {{ row.coord.responsable.prenom }} {{ row.coord.responsable.nom if row.coord.responsable }}
                         </div>
                         {% if row.matieres_uniq or row.niveaux_uniq %}
                         <div class="cpb-pills">
@@ -534,6 +547,33 @@ body { font-family: 'DM Sans', sans-serif; background: #eef2f7; }
                             {% endfor %}
                         </div>
                         {% endif %}
+                        <!-- ── Dours (Dars) tags ── -->
+                        {% if row.coord.dours %}
+                        <div style="display:flex; gap:4px; flex-wrap:wrap; margin-top:5px;">
+                            {% for d in row.coord.dours %}
+                            <span style="display:inline-flex;align-items:center;gap:3px;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;color:white;
+                                background:{% if d.type=='talib' %}#1a3a6b{% elif d.type=='taliba' %}#e91e8c{% else %}#f5a623{% endif %};">
+                                {% if d.type=='talib' %}🧒{% elif d.type=='taliba' %}👧{% else %}👩{% endif %}
+                                {{ d.nom }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <!-- ── Statut pills ── -->
+                        <div class="cpb-statut-pills">
+                            {% if row.nb_passees > 0 %}
+                            <span class="csp p">✅ {{ row.nb_passees }} passées</span>
+                            {% endif %}
+                            {% if row.nb_annulees > 0 %}
+                            <span class="csp a">❌ {{ row.nb_annulees }} annulées</span>
+                            {% endif %}
+                            {% if row.nb_rattrapage > 0 %}
+                            <span class="csp r">🔄 {{ row.nb_rattrapage }} rattrapages</span>
+                            {% endif %}
+                            {% if row.total_eleves > 0 %}
+                            <span class="csp e">👥 {{ row.total_eleves }} élèves</span>
+                            {% endif %}
+                        </div>
                     </div>
                     <div class="cpb-stats">
                         <div>
@@ -542,8 +582,14 @@ body { font-family: 'DM Sans', sans-serif; background: #eef2f7; }
                         </div>
                         <div>
                             <div class="cpb-stat-val" style="color:var(--teal);">{{ "%.1f"|format(row.nb_heures) }}h</div>
-                            <div class="cpb-stat-lbl">heures</div>
+                            <div class="cpb-stat-lbl">heures eff.</div>
                         </div>
+                        {% if row.total_eleves > 0 %}
+                        <div>
+                            <div class="cpb-stat-val" style="color:#7c3aed;">{{ row.total_eleves }}</div>
+                            <div class="cpb-stat-lbl">élèves</div>
+                        </div>
+                        {% endif %}
                         {% if row.nb_seances > 0 %}
                         <div>
                             <div class="cpb-stat-val" style="color:var(--grey); font-size:14px;">{{ "%.1f"|format(row.nb_heures / row.nb_seances) }}h</div>
@@ -559,9 +605,12 @@ body { font-family: 'DM Sans', sans-serif; background: #eef2f7; }
                     <thead>
                         <tr>
                             <th>📅 Date</th>
+                            <th>📊 Statut</th>
+                            <th>🏠 Dar</th>
                             <th>🔬 Matière</th>
                             <th>🎓 Niveau</th>
                             <th class="th-note">📝 Note</th>
+                            <th class="r">👥 Élèves</th>
                             <th class="r">⏱️ Heures</th>
                         </tr>
                     </thead>
@@ -571,9 +620,27 @@ body { font-family: 'DM Sans', sans-serif; background: #eef2f7; }
                             <td style="font-family:'DM Mono',monospace; white-space:nowrap;">
                                 {{ s.date.strftime('%A') }}<br>
                                 <strong>{{ s.date.day }} {{ month_abbr[s.date.month] }} {{ s.date.year }}</strong>
-                                {% if s.note %}
-                                <span class="note-mobile">📝 {{ s.note }}</span>
+                                {% if s.heure %}
+                                <br><span style="font-size:10px;color:var(--grey);">🕐 {{ s.heure }}</span>
                                 {% endif %}
+                            </td>
+                            <td>
+                                {% if s.statut == 'passee' %}
+                                <span class="st-badge passee">✅ Passée</span>
+                                {% elif s.statut == 'annulee' %}
+                                <span class="st-badge annulee">❌ Annulée</span>
+                                {% else %}
+                                <span class="st-badge rattrapage">🔄 Rattrapage</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if s.dar %}
+                                <span style="display:inline-flex;align-items:center;gap:2px;padding:1px 8px;border-radius:20px;font-size:10px;font-weight:700;color:white;
+                                    background:{% if s.dar.type=='talib' %}#1a3a6b{% elif s.dar.type=='taliba' %}#e91e8c{% else %}#f5a623{% endif %};">
+                                    {% if s.dar.type=='talib' %}🧒{% elif s.dar.type=='taliba' %}👧{% else %}👩{% endif %}
+                                    {{ s.dar.nom }}
+                                </span>
+                                {% else %}<span style="color:#cbd5e1;font-size:11px;">—</span>{% endif %}
                             </td>
                             <td>
                                 {% if s.matiere %}<span class="mat-chip">{{ s.matiere }}</span>
@@ -583,22 +650,46 @@ body { font-family: 'DM Sans', sans-serif; background: #eef2f7; }
                                 {% if s.niveau %}<span class="niv-chip">{{ s.niveau }}</span>
                                 {% else %}<span style="color:#cbd5e1;font-size:11px;">—</span>{% endif %}
                             </td>
-                            <td class="col-note" style="color:var(--grey);font-size:11px;max-width:180px;">
-                                {% if s.note %}{{ s.note }}
+                            <td class="col-note" style="color:var(--grey);font-size:11px;max-width:160px;">
+                                {% if s.remarque %}{{ s.remarque }}
+                                {% elif s.note %}{{ s.note }}
                                 {% else %}<span style="color:#cbd5e1;font-style:italic;">—</span>{% endif %}
+                            </td>
+                            <td class="r">
+                                {% if s.nb_eleves and s.statut != 'annulee' %}
+                                <span class="elv-chip">{{ s.nb_eleves }}</span>
+                                {% else %}<span style="color:#cbd5e1;">—</span>{% endif %}
                             </td>
                             <td class="r"><span class="h-chip">{{ "%.1f"|format(s.nb_heures) }}h</span></td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table></div>
+
+                <!-- Footer du bloc coordinateur -->
                 <div class="s-total">
-                    <span>🔢 {{ row.nb_seances }} séance{{ 's' if row.nb_seances != 1 }}
+                    <span>
+                        🔢 {{ row.nb_seances }} séance{{ 's' if row.nb_seances != 1 }}
                         {% if row.matieres_uniq %} · {{ row.matieres_uniq|join(', ') }}{% endif %}
                         {% if row.niveaux_uniq %} · {{ row.niveaux_uniq|join(', ') }}{% endif %}
                     </span>
-                    <span class="s-total-h">{{ "%.1f"|format(row.nb_heures) }}h</span>
+                    <div class="s-total-pills">
+                        {% if row.nb_passees > 0 %}
+                        <span class="csp p">✅ {{ row.nb_passees }}</span>
+                        {% endif %}
+                        {% if row.nb_annulees > 0 %}
+                        <span class="csp a">❌ {{ row.nb_annulees }}</span>
+                        {% endif %}
+                        {% if row.nb_rattrapage > 0 %}
+                        <span class="csp r">🔄 {{ row.nb_rattrapage }}</span>
+                        {% endif %}
+                        {% if row.total_eleves > 0 %}
+                        <span class="csp e">👥 {{ row.total_eleves }}</span>
+                        {% endif %}
+                        <span class="s-total-h">{{ "%.1f"|format(row.nb_heures) }}h</span>
+                    </div>
                 </div>
+
                 {% else %}
                 <div class="no-data">📭 Aucune séance enregistrée pour {{ mois_noms[mois] }} {{ annee }}</div>
                 {% endif %}

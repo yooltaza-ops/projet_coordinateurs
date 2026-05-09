@@ -38,6 +38,30 @@ def normalise_statut(val):
     }
     return mapping.get((val or '').strip(), 'passee')
 
+# ── Helper: parse professeur_id from form ─────────────────────────────────────
+def parse_professeur_id(form):
+    val = form.get('professeur_id', '').strip()
+    return int(val) if val.isdigit() else None
+
+# ── Helper: seance → dict (pour JSON) ────────────────────────────────────────
+def seance_to_dict(s):
+    return {
+        'id':              s.id,
+        'date':            s.date.isoformat() if s.date else '',
+        'heure':           s.heure or '',
+        'statut':          s.statut or 'passee',
+        'matiere':         s.matiere or '',
+        'niveau':          s.niveau or '',
+        'prof':            s.prof_nom or '',        # FK nom ou legacy string
+        'professeur_id':   s.professeur_id or '',
+        'coordinateur_id': s.coordinateur_id,
+        'nb_heures':       s.nb_heures or 0,
+        'nb_eleves':       s.nb_eleves or 0,
+        'remarque':        s.remarque or '',
+        'note':            s.note or '',
+        'dar_id':          s.dar_id or '',
+    }
+
 
 # ─── Auth ─────────────────────────────────────────────────────────────────────
 @app.route('/login', methods=['GET', 'POST'])
@@ -246,7 +270,6 @@ def heures():
         if coord_selected:
             seances_coord = sorted(coord_selected.seances_mois(mois, annee), key=lambda s: s.date)
 
-    # ── FIX : profs et dours pour le modal ──
     profs_list = Professeur.query.filter_by(actif=True).order_by(Professeur.nom).all()
     dours_ids = set()
     for coord in coordinateurs:
@@ -274,20 +297,20 @@ def heures():
     )
 
 
-# ── PATCH 1: ajouter_seance — tous les champs suivi partenariat ───────────────
+# ── ajouter_seance ────────────────────────────────────────────────────────────
 @app.route('/heures/ajouter', methods=['POST'])
 @login_required
 def ajouter_seance():
-    coord_id  = int(request.form['coordinateur_id'])
-    date_str  = request.form['date']
-    nb_heures = float(request.form['nb_heures'])
-    note      = request.form.get('note',     '').strip() or None
-    matiere   = request.form.get('matiere',  '').strip() or None
-    niveau    = request.form.get('niveau',   '').strip() or None
-    heure     = request.form.get('heure',    '').strip() or None
-    prof      = request.form.get('prof',     '').strip() or None
-    remarque  = request.form.get('remarque', '').strip() or None
-    statut    = normalise_statut(request.form.get('statut', 'passee'))
+    coord_id      = int(request.form['coordinateur_id'])
+    date_str      = request.form['date']
+    nb_heures     = float(request.form['nb_heures'])
+    note          = request.form.get('note',     '').strip() or None
+    matiere       = request.form.get('matiere',  '').strip() or None
+    niveau        = request.form.get('niveau',   '').strip() or None
+    heure         = request.form.get('heure',    '').strip() or None
+    remarque      = request.form.get('remarque', '').strip() or None
+    statut        = normalise_statut(request.form.get('statut', 'passee'))
+    professeur_id = parse_professeur_id(request.form)
 
     nb_eleves_str = request.form.get('nb_eleves', '').strip()
     nb_eleves = int(nb_eleves_str) if nb_eleves_str.isdigit() else None
@@ -301,6 +324,13 @@ def ajouter_seance():
             abort(403)
 
     date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+    # Récupère le nom du prof pour le champ legacy (compatibilité affichage)
+    prof_nom_legacy = None
+    if professeur_id:
+        p = Professeur.query.get(professeur_id)
+        if p:
+            prof_nom_legacy = p.nom
+
     s = Seance(
         coordinateur_id=coord_id,
         date=date_obj,
@@ -312,7 +342,8 @@ def ajouter_seance():
         niveau=niveau,
         statut=statut,
         heure=heure,
-        prof=prof,
+        prof=prof_nom_legacy,
+        professeur_id=professeur_id,
         nb_eleves=nb_eleves,
         dar_id=dar_id,
         remarque=remarque,
@@ -323,7 +354,7 @@ def ajouter_seance():
     return redirect(url_for('heures', mois=date_obj.month, annee=date_obj.year, coord_id=coord_id))
 
 
-# ── PATCH 2: modifier_seance — tous les champs suivi partenariat ──────────────
+# ── modifier_seance ───────────────────────────────────────────────────────────
 @app.route('/heures/modifier/<int:id>', methods=['POST'])
 @login_required
 def modifier_seance(id):
@@ -333,18 +364,24 @@ def modifier_seance(id):
         if not current_user.responsable or coord.responsable_id != current_user.responsable.id:
             abort(403)
 
-    date_obj    = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
-    s.date      = date_obj
-    s.mois      = date_obj.month
-    s.annee     = date_obj.year
-    s.nb_heures = float(request.form['nb_heures'])
-    s.note      = request.form.get('note',     '').strip() or None
-    s.matiere   = request.form.get('matiere',  '').strip() or None
-    s.niveau    = request.form.get('niveau',   '').strip() or None
-    s.heure     = request.form.get('heure',    '').strip() or None
-    s.prof      = request.form.get('prof',     '').strip() or None
-    s.remarque  = request.form.get('remarque', '').strip() or None
-    s.statut    = normalise_statut(request.form.get('statut', 'passee'))
+    date_obj      = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
+    s.date        = date_obj
+    s.mois        = date_obj.month
+    s.annee       = date_obj.year
+    s.nb_heures   = float(request.form['nb_heures'])
+    s.note        = request.form.get('note',     '').strip() or None
+    s.matiere     = request.form.get('matiere',  '').strip() or None
+    s.niveau      = request.form.get('niveau',   '').strip() or None
+    s.heure       = request.form.get('heure',    '').strip() or None
+    s.remarque    = request.form.get('remarque', '').strip() or None
+    s.statut      = normalise_statut(request.form.get('statut', 'passee'))
+    s.professeur_id = parse_professeur_id(request.form)
+    # Sync champ legacy prof
+    if s.professeur_id:
+        p = Professeur.query.get(s.professeur_id)
+        s.prof = p.nom if p else None
+    else:
+        s.prof = None
 
     nb_eleves_str = request.form.get('nb_eleves', '').strip()
     s.nb_eleves = int(nb_eleves_str) if nb_eleves_str.isdigit() else None
@@ -378,7 +415,7 @@ def supprimer_seance(id):
     return redirect(url_for('heures', mois=mois, annee=annee, coord_id=coord_id))
 
 
-# ── PATCH 3: ajouter_seances_multiple — tous les champs suivi partenariat ─────
+# ── ajouter_seances_multiple ──────────────────────────────────────────────────
 @app.route('/heures/ajouter_multiple', methods=['POST'])
 @login_required
 def ajouter_seances_multiple():
@@ -416,9 +453,11 @@ def ajouter_seances_multiple():
         niveau    = data.get('niveau',    '').strip() or None
         note      = data.get('note',      '').strip() or None
         heure     = data.get('heure',     '').strip() or None
-        prof      = data.get('prof',      '').strip() or None
         remarque  = data.get('remarque',  '').strip() or None
         statut    = normalise_statut(data.get('statut', 'passee'))
+
+        prof_id_str   = data.get('professeur_id', '').strip()
+        professeur_id = int(prof_id_str) if prof_id_str.isdigit() else None
 
         nb_eleves_str = data.get('nb_eleves', '').strip()
         nb_eleves = int(nb_eleves_str) if nb_eleves_str.isdigit() else None
@@ -439,6 +478,13 @@ def ajouter_seances_multiple():
             errors.append(f'Séance {idx}: valeur invalide ({e}).')
             continue
 
+        # Champ legacy prof
+        prof_nom_legacy = None
+        if professeur_id:
+            p = Professeur.query.get(professeur_id)
+            if p:
+                prof_nom_legacy = p.nom
+
         s = Seance(
             coordinateur_id=coord_id,
             date=date_obj,
@@ -450,7 +496,8 @@ def ajouter_seances_multiple():
             note=note,
             statut=statut,
             heure=heure,
-            prof=prof,
+            prof=prof_nom_legacy,
+            professeur_id=professeur_id,
             nb_eleves=nb_eleves,
             dar_id=dar_id,
             remarque=remarque,
@@ -871,7 +918,7 @@ def impression_seances():
         if filtre_niveau:
             seances = [s for s in seances if s.niveau == filtre_niveau]
 
-        nb_h = sum(s.nb_heures for s in seances)
+        nb_h = sum(s.nb_heures for s in seances if s.statut != 'annulee')
         mats = sorted({s.matiere for s in seances if s.matiere})
         nivs = sorted({s.niveau  for s in seances if s.niveau})
 
@@ -880,21 +927,29 @@ def impression_seances():
             if s.niveau:  heures_par_niv[s.niveau]  += s.nb_heures
 
         stats.append({
-            'coord':         coord,
-            'seances':       seances,
-            'nb_seances':    len(seances),
-            'nb_heures':     nb_h,
-            'initiales':     (coord.prenom[0] + coord.nom[0]).upper()
-                             if coord.prenom and coord.nom else '?',
-            'matieres_uniq': mats,
-            'niveaux_uniq':  nivs,
+            'coord':          coord,
+            'seances':        seances,
+            'nb_seances':     len(seances),
+            'nb_heures':      nb_h,
+            'initiales':      (coord.prenom[0] + coord.nom[0]).upper()
+                              if coord.prenom and coord.nom else '?',
+            'matieres_uniq':  mats,
+            'niveaux_uniq':   nivs,
+            'nb_passees':     sum(1 for s in seances if s.statut == 'passee'),
+            'nb_annulees':    sum(1 for s in seances if s.statut == 'annulee'),
+            'nb_rattrapage':  sum(1 for s in seances if s.statut == 'rattrapage'),
+            'total_eleves':   sum(s.nb_eleves for s in seances if s.nb_eleves and s.statut != 'annulee'),
         })
 
     stats.sort(key=lambda x: x['nb_heures'], reverse=True)
 
-    total_heures  = sum(s['nb_heures']  for s in stats)
-    total_seances = sum(s['nb_seances'] for s in stats)
-    total_coords  = sum(1 for s in stats if s['nb_seances'] > 0)
+    total_heures     = sum(s['nb_heures']     for s in stats)
+    total_seances    = sum(s['nb_seances']    for s in stats)
+    total_coords     = sum(1 for s in stats if s['nb_seances'] > 0)
+    total_passees    = sum(s['nb_passees']    for s in stats)
+    total_annulees   = sum(s['nb_annulees']   for s in stats)
+    total_rattrapage = sum(s['nb_rattrapage'] for s in stats)
+    total_eleves     = sum(s['total_eleves']  for s in stats)
 
     breakdown_mat = sorted(heures_par_mat.items(), key=lambda x: x[1], reverse=True)
     breakdown_niv = sorted(heures_par_niv.items(), key=lambda x: x[1], reverse=True)
@@ -912,6 +967,10 @@ def impression_seances():
         total_heures=total_heures,
         total_seances=total_seances,
         total_coords=total_coords,
+        total_passees=total_passees,
+        total_annulees=total_annulees,
+        total_rattrapage=total_rattrapage,
+        total_eleves=total_eleves,
         breakdown_mat=breakdown_mat,
         breakdown_niv=breakdown_niv,
         generated_at=generated_at,
@@ -1001,7 +1060,7 @@ def stats_coordinateurs():
     )
 
 
-# ── PATCH 4: calendrier_coordinateurs ─────────────────────────────────────────
+# ── calendrier_coordinateurs ───────────────────────────────────────────────────
 @app.route('/calendrier_coordinateurs')
 @login_required
 def calendrier_coordinateurs():
@@ -1091,23 +1150,7 @@ def calendrier_coordinateurs():
     for st in stats:
         all_seances_flat.extend(st['seances'])
 
-    seances_json = []
-    for s in all_seances_flat:
-        seances_json.append({
-            'id':              s.id,
-            'date':            s.date.isoformat() if s.date else '',
-            'heure':           s.heure or '',
-            'statut':          s.statut or 'passee',
-            'matiere':         s.matiere or '',
-            'niveau':          s.niveau or '',
-            'prof':            s.prof or '',
-            'coordinateur_id': s.coordinateur_id,
-            'nb_heures':       s.nb_heures or 0,
-            'nb_eleves':       s.nb_eleves or 0,
-            'remarque':        s.remarque or '',
-            'note':            s.note or '',
-            'dar_id':          s.dar_id or '',
-        })
+    seances_json = [seance_to_dict(s) for s in all_seances_flat]
 
     return render_template('calendrier_coordinateurs.html',
         stats=stats,
@@ -1214,24 +1257,6 @@ def toggle_professeur(id):
 
 
 # ─── Suivi Partenariat ────────────────────────────────────────────────────────
-def seance_to_dict(s):
-    return {
-        'id':              s.id,
-        'date':            s.date.isoformat() if s.date else '',
-        'heure':           s.heure or '',
-        'statut':          s.statut or 'passee',
-        'matiere':         s.matiere or '',
-        'niveau':          s.niveau or '',
-        'prof':            s.prof or '',
-        'coordinateur_id': s.coordinateur_id,
-        'nb_heures':       s.nb_heures or 0,
-        'nb_eleves':       s.nb_eleves or 0,
-        'remarque':        s.remarque or '',
-        'note':            s.note or '',
-        'dar_id':          s.dar_id or '',
-    }
-
-
 @app.route('/suivi_partenariat')
 @login_required
 def suivi_partenariat():
@@ -1375,20 +1400,20 @@ def suivi_partenariat():
 @app.route('/suivi_partenariat/ajouter', methods=['POST'])
 @login_required
 def suivi_partenariat_ajouter():
-    coord_id  = int(request.form['coordinateur_id'])
-    date_str  = request.form['date']
-    nb_heures = float(request.form['nb_heures'])
-    note      = request.form.get('note',     '').strip() or None
-    matiere   = request.form.get('matiere',  '').strip() or None
-    niveau    = request.form.get('niveau',   '').strip() or None
-    heure     = request.form.get('heure',    '').strip() or None
-    prof      = request.form.get('prof',     '').strip() or None
-    remarque  = request.form.get('remarque', '').strip() or None
-
-    statut = normalise_statut(request.form.get('statut', 'passee'))
+    coord_id      = int(request.form['coordinateur_id'])
+    date_str      = request.form['date']
+    nb_heures     = float(request.form['nb_heures'])
+    note          = request.form.get('note',     '').strip() or None
+    matiere       = request.form.get('matiere',  '').strip() or None
+    niveau        = request.form.get('niveau',   '').strip() or None
+    heure         = request.form.get('heure',    '').strip() or None
+    remarque      = request.form.get('remarque', '').strip() or None
+    statut        = normalise_statut(request.form.get('statut', 'passee'))
+    professeur_id = parse_professeur_id(request.form)
 
     nb_eleves_str = request.form.get('nb_eleves', '').strip()
     nb_eleves = int(nb_eleves_str) if nb_eleves_str.isdigit() else None
+
     dar_id_str = request.form.get('dar_id', '').strip()
     dar_id = int(dar_id_str) if dar_id_str.isdigit() else None
 
@@ -1396,6 +1421,13 @@ def suivi_partenariat_ajouter():
     if not current_user.is_admin:
         if not current_user.responsable or coord.responsable_id != current_user.responsable.id:
             abort(403)
+
+    # Champ legacy prof
+    prof_nom_legacy = None
+    if professeur_id:
+        p = Professeur.query.get(professeur_id)
+        if p:
+            prof_nom_legacy = p.nom
 
     date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
     s = Seance(
@@ -1409,7 +1441,8 @@ def suivi_partenariat_ajouter():
         niveau=niveau,
         statut=statut,
         heure=heure,
-        prof=prof,
+        prof=prof_nom_legacy,
+        professeur_id=professeur_id,
         nb_eleves=nb_eleves,
         dar_id=dar_id,
         remarque=remarque,
@@ -1433,25 +1466,30 @@ def suivi_partenariat_modifier(id):
         if not current_user.responsable or coord.responsable_id != current_user.responsable.id:
             abort(403)
 
-    date_obj    = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
-    s.date      = date_obj
-    s.mois      = date_obj.month
-    s.annee     = date_obj.year
-    s.nb_heures = float(request.form['nb_heures'])
-    s.note      = request.form.get('note',     '').strip() or None
-    s.matiere   = request.form.get('matiere',  '').strip() or None
-    s.niveau    = request.form.get('niveau',   '').strip() or None
-    s.remarque  = request.form.get('remarque', '').strip() or None
-    s.prof      = request.form.get('prof',     '').strip() or None
-    s.heure     = request.form.get('heure',    '').strip() or None
+    date_obj      = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
+    s.date        = date_obj
+    s.mois        = date_obj.month
+    s.annee       = date_obj.year
+    s.nb_heures   = float(request.form['nb_heures'])
+    s.note        = request.form.get('note',     '').strip() or None
+    s.matiere     = request.form.get('matiere',  '').strip() or None
+    s.niveau      = request.form.get('niveau',   '').strip() or None
+    s.remarque    = request.form.get('remarque', '').strip() or None
+    s.heure       = request.form.get('heure',    '').strip() or None
+    s.statut      = normalise_statut(request.form.get('statut', 'passee'))
+    s.professeur_id = parse_professeur_id(request.form)
+    # Sync champ legacy prof
+    if s.professeur_id:
+        p = Professeur.query.get(s.professeur_id)
+        s.prof = p.nom if p else None
+    else:
+        s.prof = None
 
     nb_eleves_str = request.form.get('nb_eleves', '').strip()
     s.nb_eleves   = int(nb_eleves_str) if nb_eleves_str.isdigit() else None
 
     dar_id_str = request.form.get('dar_id', '').strip()
     s.dar_id   = int(dar_id_str) if dar_id_str.isdigit() else None
-
-    s.statut = normalise_statut(request.form.get('statut', 'passee'))
 
     db.session.commit()
     flash('Séance modifiée!', 'success')
