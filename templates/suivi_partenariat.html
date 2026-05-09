@@ -782,7 +782,7 @@
                   <td style="max-width:160px;font-size:11px;color:#888;font-style:italic;">{{ s.remarque or (s.note or '—') }}</td>
                   <td style="white-space:nowrap;">
                     <button class="btn-action btn-edit" onclick="openEditModal({{ s.id }})">✏️</button>
-                    <button class="btn-action btn-delete" onclick="openDelModal('{{ url_for('supprimer_seance', id=s.id) }}', '{{ request.url }}')">🗑️</button>
+                    <button class="btn-action btn-delete" onclick="openDelModal('{{ url_for('suivi_partenariat_supprimer', id=s.id) }}', '{{ request.url }}')">🗑️</button>
                   </td>
                 </tr>
                 {% endfor %}

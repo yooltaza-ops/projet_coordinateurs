@@ -154,7 +154,7 @@ class Coordinateur(db.Model):
     responsable_id = db.Column(db.Integer, db.ForeignKey('responsable.id'))
     dours          = db.relationship('Dour', secondary=coordinateur_dour, lazy=True)
     seances        = db.relationship('Seance', backref='coordinateur', lazy=True,
-                                     cascade='all, delete-orphan')
+                                    cascade='all, delete-orphan')
 
     def seances_mois(self, mois, annee):
         return sorted(

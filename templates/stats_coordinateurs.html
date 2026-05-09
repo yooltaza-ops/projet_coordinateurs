@@ -2,278 +2,444 @@
 {% block title %}Stats Coordinateurs — Yool{% endblock %}
 
 {% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=DM+Mono:wght@400;500;600&display=swap');
 
-/* ══ PAGE LAYOUT ══ */
-.sc-wrap { padding: 28px; }
-@media (max-width:768px) { .sc-wrap { padding: 12px; } }
-
-.page-title {
-    font-size: 21px; font-weight: 700; color: #1a3a6b;
-    margin-bottom: 22px; display: flex; align-items: center; gap: 10px;
+:root {
+    --blue:    #1a3a6b;
+    --blue2:   #2a5298;
+    --orange:  #f5a623;
+    --orange2: #e09415;
+    --green:   #16a34a;
+    --red:     #dc2626;
+    --amber:   #d97706;
+    --purple:  #7c3aed;
+    --teal:    #0d9488;
+    --border:  #e2e8f0;
+    --surface: #f0f4f8;
+    --white:   #ffffff;
+    --text:    #1a3a6b;
+    --muted:   #64748b;
+    --shadow:  0 4px 20px rgba(26,58,107,0.08);
+    --shadow2: 0 8px 32px rgba(26,58,107,0.14);
 }
 
-/* ══ FILTER BAR ══ */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: #f8faff; }
+
+/* ══ PAGE ══ */
+.page { padding: 28px; }
+@media(max-width:768px){ .page { padding: 12px; } }
+
+/* ══ HEADER ══ */
+.sc-header {
+    background: linear-gradient(135deg, #1a3a6b 0%, #2a5298 60%, #1a3a6b 100%);
+    border-radius: 18px; padding: 28px 32px; margin-bottom: 24px;
+    position: relative; overflow: hidden; color: white;
+}
+.sc-header::before {
+    content:''; position:absolute; top:-50px; right:-50px;
+    width:220px; height:220px; border-radius:50%;
+    background: rgba(255,255,255,.05);
+}
+.sc-header::after {
+    content:''; position:absolute; bottom:-30px; left:40%;
+    width:160px; height:160px; border-radius:50%;
+    background: rgba(245,166,35,.08);
+}
+.sc-header-inner { position:relative; z-index:1; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; }
+.sc-header h1 { font-size:22px; font-weight:800; margin:0 0 4px; }
+.sc-header p  { font-size:13px; opacity:.75; margin:0; }
+
+/* ══ FILTER ══ */
 .filter-bar {
-    display: flex; gap: 10px; align-items: center;
-    flex-wrap: wrap; margin-bottom: 22px;
-    background: white; padding: 14px 18px; border-radius: 14px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+    background: white; border-radius: 14px; padding: 14px 20px;
+    box-shadow: var(--shadow); border: 1.5px solid var(--border);
+    display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;
+    margin-bottom: 22px;
 }
-.filter-bar select {
-    padding: 8px 13px; border: 2px solid #e8edf5; border-radius: 10px;
-    font-size: 13px; font-family: 'Poppins', sans-serif;
-    color: #1a3a6b; font-weight: 600; outline: none;
-    background: #f8fafc; transition: border 0.2s; cursor: pointer;
+.fg-filter { display:flex; flex-direction:column; gap:5px; }
+.fg-filter label { font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+.fg-filter select {
+    border: 2px solid var(--border); border-radius: 10px;
+    padding: 8px 12px; font-size: 13px; font-family: 'DM Sans', sans-serif;
+    color: var(--text); background: var(--surface); outline: none;
+    min-width: 130px; transition: border .2s; cursor: pointer;
 }
-.filter-bar select:focus { border-color: #f5a623; }
-.filter-btn {
-    padding: 8px 20px; background: #1a3a6b; color: white;
-    border: none; border-radius: 10px; font-size: 13px;
-    font-weight: 600; font-family: 'Poppins', sans-serif;
-    cursor: pointer; transition: all 0.2s;
+.fg-filter select:focus { border-color: var(--orange); }
+.btn-filter {
+    background: var(--orange); color: white; border: none; border-radius: 25px;
+    padding: 10px 22px; font-size: 13px; font-weight: 700;
+    font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all .2s;
+    align-self: flex-end;
 }
-.filter-btn:hover { background: #f5a623; transform: translateY(-1px); }
+.btn-filter:hover { background: var(--orange2); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(245,166,35,.35); }
 
-/* ══ SUMMARY CARDS ══ */
-.summary-row {
-    display: grid; grid-template-columns: repeat(3, 1fr);
-    gap: 14px; margin-bottom: 22px;
+/* ══ KPI STRIP ══ */
+.kpi-strip { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:22px; }
+.kpi-card {
+    flex:1; min-width:130px; background:white;
+    border-radius:14px; padding:16px 18px;
+    border: 1.5px solid var(--border);
+    box-shadow: var(--shadow);
+    display:flex; align-items:center; gap:12px;
+    transition: transform .2s, box-shadow .2s;
 }
-@media (max-width:600px) { .summary-row { grid-template-columns: 1fr 1fr; } }
-.sum-card {
-    background: white; border-radius: 14px; padding: 18px 20px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.07);
-    border-left: 5px solid; display: flex; flex-direction: column; gap: 4px;
-    transition: transform 0.2s, box-shadow 0.2s;
+.kpi-card:hover { transform:translateY(-2px); box-shadow:var(--shadow2); }
+.kpi-icon {
+    width:42px; height:42px; border-radius:10px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:18px; flex-shrink:0;
 }
-.sum-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
-.sum-card.blue   { border-color: #1a3a6b; }
-.sum-card.purple { border-color: #9b59b6; }
-.sum-card.teal   { border-color: #16a085; }
-.sum-num  { font-size: 28px; font-weight: 700; line-height: 1; color: #1a3a6b; }
-.sum-num.purple { color: #9b59b6; }
-.sum-num.teal   { color: #16a085; }
-.sum-lbl  { font-size: 11px; color: #888; font-weight: 500; }
+.kpi-icon.blue   { background:#e8edf5; }
+.kpi-icon.green  { background:#dcfce7; }
+.kpi-icon.red    { background:#fee2e2; }
+.kpi-icon.amber  { background:#fef3c7; }
+.kpi-icon.purple { background:#ede9fe; }
+.kpi-icon.teal   { background:#ccfbf1; }
+.kpi-val { font-size:24px; font-weight:800; color:var(--text); line-height:1; font-family:'DM Mono',monospace; }
+.kpi-lbl { font-size:11px; color:var(--muted); margin-top:2px; font-weight:500; }
 
 /* ══ MAIN GRID ══ */
-.sc-grid {
+.main-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 360px 1fr;
     gap: 20px;
     align-items: start;
 }
-@media (max-width: 960px) {
-    .sc-grid { grid-template-columns: 1fr; }
-}
+@media(max-width:1024px){ .main-grid { grid-template-columns:1fr; } }
 
-/* ══ COORDINATOR LIST ══ */
-.card {
-    background: white; border-radius: 14px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.07); overflow: hidden;
+/* ══ LEFT PANEL ══ */
+.panel {
+    background: white; border-radius: 16px;
+    box-shadow: var(--shadow); border: 1.5px solid var(--border);
+    overflow: hidden;
 }
-.card-header {
-    padding: 15px 20px; border-bottom: 1.5px solid #f0f4f8;
-    display: flex; justify-content: space-between; align-items: center;
+.panel-head {
+    padding: 14px 20px; border-bottom: 1.5px solid var(--border);
+    display:flex; justify-content:space-between; align-items:center;
+    background: var(--surface);
 }
-.card-header h3 { font-size: 14px; font-weight: 700; color: #1a3a6b; }
+.panel-head h3 { font-size:13px; font-weight:700; color:var(--text); }
+.panel-head span { font-size:11px; color:var(--muted); }
 
+/* Search */
+.coord-search {
+    padding: 10px 16px; border-bottom: 1.5px solid var(--border);
+}
+.coord-search input {
+    width:100%; border:2px solid var(--border); border-radius:10px;
+    padding:8px 12px; font-size:13px; font-family:'DM Sans',sans-serif;
+    color:var(--text); background:var(--surface); outline:none; transition:border .2s;
+}
+.coord-search input:focus { border-color:var(--orange); background:white; }
+
+/* Coord rows */
 .coord-row {
-    display: flex; align-items: center; gap: 12px;
-    padding: 13px 18px; border-bottom: 1px solid #f5f7fa;
-    cursor: pointer; text-decoration: none; transition: background 0.18s;
-    position: relative;
+    display:flex; align-items:center; gap:12px;
+    padding:12px 18px; border-bottom:1px solid #f5f7fa;
+    cursor:pointer; text-decoration:none; transition:background .15s;
+    position:relative;
 }
-.coord-row:last-child { border-bottom: none; }
-.coord-row:hover { background: #f8fafc; }
-.coord-row.active-row { background: #f0f4ff; border-left: 4px solid #1a3a6b; }
-
+.coord-row:last-child { border-bottom:none; }
+.coord-row:hover { background:#f8fafc; }
+.coord-row.active { background:#eff6ff; border-left:4px solid var(--orange); }
 .coord-av {
-    width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
-    color: white; display: flex; align-items: center;
-    justify-content: center; font-size: 13px; font-weight: 700;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.18);
+    width:40px; height:40px; border-radius:50%; flex-shrink:0;
+    color:white; display:flex; align-items:center; justify-content:center;
+    font-size:13px; font-weight:700; box-shadow:0 3px 8px rgba(0,0,0,.18);
 }
-.coord-info { flex: 1; min-width: 0; }
-.coord-name { font-size: 13px; font-weight: 700; color: #1a3a6b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.coord-sub  { font-size: 11px; color: #aaa; margin-top: 1px; }
+.coord-info { flex:1; min-width:0; }
+.coord-name { font-size:13px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.coord-sub  { font-size:11px; color:var(--muted); margin-top:1px; }
+.coord-bar  { margin-top:5px; height:3px; background:#f0f4f8; border-radius:3px; overflow:hidden; }
+.coord-bar-fill { height:100%; border-radius:3px; transition:width .5s ease; }
+.coord-meta { text-align:right; flex-shrink:0; }
+.coord-h  { font-size:14px; font-weight:800; color:var(--teal); font-family:'DM Mono',monospace; }
+.coord-s  { font-size:10px; color:var(--muted); margin-top:1px; }
 
-.coord-meta { text-align: right; flex-shrink: 0; }
-.coord-h    { font-size: 15px; font-weight: 700; color: #16a085; }
-.coord-s    { font-size: 11px; color: #aaa; }
-
-/* Progress bar */
-.bar-wrap { margin-top: 6px; height: 4px; background: #f0f4f8; border-radius: 4px; overflow: hidden; width: 100%; }
-.bar-fill  { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
-
-.empty-state {
-    padding: 40px; text-align: center; color: #bbb; font-size: 13px;
+/* Statut mini pills on coord row */
+.coord-pills { display:flex; gap:3px; flex-wrap:wrap; margin-top:3px; }
+.cpill {
+    font-size:9px; font-weight:700; padding:1px 5px;
+    border-radius:6px; display:inline-flex; align-items:center; gap:2px;
 }
+.cpill.p { background:#dcfce7; color:#15803d; }
+.cpill.a { background:#fee2e2; color:#b91c1c; }
+.cpill.r { background:#fef3c7; color:#92400e; }
 
-/* ══ DETAIL PANEL ══ */
-.detail-card { position: sticky; top: 85px; }
+/* ══ RIGHT PANEL — DETAIL ══ */
+.detail-panel { position:sticky; top:80px; }
 
-.detail-header {
-    background: linear-gradient(135deg, #1a3a6b, #2a5298);
-    padding: 20px 22px; color: white;
-    display: flex; align-items: center; gap: 14px;
+.detail-head {
+    background: linear-gradient(135deg, var(--blue), var(--blue2));
+    padding: 22px 24px; color:white;
+    display:flex; align-items:center; gap:16px;
 }
 .detail-av {
-    width: 54px; height: 54px; border-radius: 50%;
-    border: 3px solid rgba(255,255,255,0.35);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px; font-weight: 700; color: white; flex-shrink: 0;
+    width:56px; height:56px; border-radius:50%;
+    border:3px solid rgba(255,255,255,.3);
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px; font-weight:800; color:white; flex-shrink:0;
 }
-.detail-name { font-size: 16px; font-weight: 700; }
-.detail-sub  { font-size: 12px; opacity: 0.75; margin-top: 3px; }
+.detail-name { font-size:17px; font-weight:800; }
+.detail-sub  { font-size:12px; opacity:.72; margin-top:3px; }
 
-.detail-stats {
-    display: grid; grid-template-columns: 1fr 1fr 1fr;
-    gap: 0; border-bottom: 1.5px solid #f0f4f8;
+/* Stat row */
+.stat-row {
+    display:grid; grid-template-columns:repeat(3,1fr);
+    border-bottom:1.5px solid var(--border);
 }
-.ds-item {
-    padding: 14px 16px; text-align: center; border-right: 1px solid #f0f4f8;
+.stat-cell {
+    padding:14px 16px; text-align:center;
+    border-right:1px solid var(--border);
 }
-.ds-item:last-child { border-right: none; }
-.ds-val { font-size: 20px; font-weight: 700; color: #1a3a6b; }
-.ds-val.purple { color: #9b59b6; }
-.ds-val.teal   { color: #16a085; }
-.ds-lbl { font-size: 10px; color: #aaa; font-weight: 500; margin-top: 2px; }
+.stat-cell:last-child { border-right:none; }
+.stat-val { font-size:22px; font-weight:800; font-family:'DM Mono',monospace; color:var(--text); }
+.stat-val.green  { color:var(--green); }
+.stat-val.red    { color:var(--red); }
+.stat-val.amber  { color:var(--amber); }
+.stat-val.teal   { color:var(--teal); }
+.stat-val.purple { color:var(--purple); }
+.stat-lbl { font-size:10px; color:var(--muted); font-weight:600; margin-top:2px; text-transform:uppercase; letter-spacing:.04em; }
 
-/* Seances list */
+/* Breakdown sections */
+.breakdown-section { padding:14px 20px; border-bottom:1.5px solid var(--border); }
+.breakdown-title {
+    font-size:11px; font-weight:700; color:var(--muted);
+    text-transform:uppercase; letter-spacing:.06em; margin-bottom:10px;
+    display:flex; align-items:center; gap:6px;
+}
+.breakdown-row {
+    display:flex; align-items:center; gap:10px; margin-bottom:7px;
+}
+.breakdown-row:last-child { margin-bottom:0; }
+.breakdown-label { font-size:12px; font-weight:600; color:var(--text); min-width:120px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.breakdown-bar-wrap { flex:1; height:8px; background:#f0f4f8; border-radius:4px; overflow:hidden; }
+.breakdown-bar { height:100%; border-radius:4px; transition:width .6s ease; }
+.breakdown-val { font-size:11px; font-weight:700; color:var(--muted); min-width:35px; text-align:right; font-family:'DM Mono',monospace; }
+
+/* Dars tags */
+.dars-section {
+    padding:12px 20px; border-bottom:1.5px solid var(--border);
+    display:flex; flex-wrap:wrap; gap:6px;
+}
+.dar-tag {
+    padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700;
+    color:white;
+}
+
+/* Séances list */
+.seances-list { max-height:420px; overflow-y:auto; }
 .seance-item {
-    display: flex; align-items: center; gap: 12px;
-    padding: 12px 20px; border-bottom: 1px solid #f5f7fa;
-    transition: background 0.15s;
+    display:flex; align-items:flex-start; gap:12px;
+    padding:12px 20px; border-bottom:1px solid #f5f7fa;
+    transition:background .15s;
 }
-.seance-item:last-child { border-bottom: none; }
-.seance-item:hover { background: #fafbfc; }
-
-.seance-date-badge {
-    background: #f0f4f8; border-radius: 10px;
-    padding: 7px 10px; text-align: center; min-width: 46px; flex-shrink: 0;
+.seance-item:last-child { border-bottom:none; }
+.seance-item:hover { background:#fafbfc; }
+.seance-date {
+    background:var(--surface); border-radius:10px;
+    padding:7px 9px; text-align:center; min-width:44px; flex-shrink:0;
 }
-.sdb-day  { font-size: 16px; font-weight: 700; color: #1a3a6b; line-height: 1; }
-.sdb-mon  { font-size: 9px;  color: #aaa; font-weight: 600; text-transform: uppercase; }
-
-.seance-info { flex: 1; min-width: 0; }
-.seance-note { font-size: 12px; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.seance-note.empty { color: #bbb; font-style: italic; }
-
-.seance-h {
-    font-size: 14px; font-weight: 700; color: #16a085;
-    background: #e8f8f5; padding: 4px 10px; border-radius: 20px; flex-shrink: 0;
+.sd-day { font-size:16px; font-weight:800; color:var(--text); line-height:1; font-family:'DM Mono',monospace; }
+.sd-mon { font-size:9px; color:var(--muted); font-weight:700; text-transform:uppercase; margin-top:1px; }
+.seance-body { flex:1; min-width:0; }
+.seance-badges { display:flex; gap:4px; flex-wrap:wrap; margin-bottom:4px; }
+.sbadge {
+    font-size:10px; font-weight:700; padding:1px 7px; border-radius:8px;
+    display:inline-flex; align-items:center; gap:3px;
+}
+.sbadge.passee    { background:#dcfce7; color:#15803d; }
+.sbadge.annulee   { background:#fee2e2; color:#b91c1c; }
+.sbadge.rattrapage{ background:#fef3c7; color:#92400e; }
+.sbadge.mat  { background:#ccfbf1; color:#0f766e; }
+.sbadge.dar  { background:#e8edf5; color:#1a3a6b; }
+.sbadge.elev { background:#ede9fe; color:#6d28d9; }
+.seance-prof { font-size:11px; font-weight:600; color:var(--blue); margin-bottom:2px; }
+.seance-niv  { font-size:10px; color:var(--muted); }
+.seance-note { font-size:11px; color:#666; font-style:italic; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.seance-note.empty { color:#ccc; }
+.seance-time { font-size:10px; color:var(--muted); margin-top:2px; }
+.seance-h-badge {
+    font-size:13px; font-weight:800; color:var(--teal);
+    background:#ccfbf1; padding:4px 10px; border-radius:20px;
+    flex-shrink:0; font-family:'DM Mono',monospace;
+    align-self:flex-start; margin-top:2px;
 }
 
-/* ── Placeholder (no coord selected) ── */
+/* Total footer */
+.seances-footer {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:12px 20px; background:var(--surface);
+    border-top:2px solid var(--border);
+}
+.seances-footer span { font-size:12px; font-weight:700; color:var(--text); }
+.seances-footer .total-h { font-size:16px; font-weight:800; color:var(--teal); font-family:'DM Mono',monospace; }
+
+/* Nav link */
+.nav-link {
+    display:block; padding:12px 20px; text-align:center;
+    background:var(--surface); color:var(--text); font-size:13px; font-weight:700;
+    text-decoration:none; border-top:1.5px solid var(--border);
+    transition:all .2s;
+}
+.nav-link:hover { background:var(--blue); color:white; }
+
+/* Placeholder */
 .detail-placeholder {
-    display: flex; flex-direction: column; align-items: center;
-    justify-content: center; padding: 60px 20px; text-align: center; color: #ccc;
+    display:flex; flex-direction:column; align-items:center;
+    justify-content:center; padding:70px 20px; text-align:center; color:#ccc;
 }
-.detail-placeholder .ph-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
-.detail-placeholder p { font-size: 13px; line-height: 1.6; }
+.detail-placeholder .ph-icon { font-size:52px; margin-bottom:14px; opacity:.4; }
+.detail-placeholder p { font-size:13px; line-height:1.7; color:var(--muted); }
 
-/* ── Alert ── */
-.alert {
-    padding: 13px 18px; background: #27ae60; color: white;
-    border-radius: 10px; margin-bottom: 18px; font-size: 13px;
-    display: flex; align-items: center; gap: 10px;
-    box-shadow: 0 4px 12px rgba(39,174,96,0.25);
+/* Flash */
+.flash {
+    padding:12px 18px; border-radius:10px; margin-bottom:18px;
+    font-size:13px; display:flex; align-items:center; gap:8px; color:white;
 }
-.alert-error { background: #e74c3c; }
+.flash.success { background:var(--green); }
+.flash.error   { background:var(--red); }
 
+/* Empty */
+.empty-state { padding:50px 20px; text-align:center; color:var(--muted); font-size:13px; }
+.empty-state .ei { font-size:44px; opacity:.3; margin-bottom:10px; }
+
+/* Scrollbar */
+.seances-list::-webkit-scrollbar { width:5px; }
+.seances-list::-webkit-scrollbar-track { background:#f0f4f8; }
+.seances-list::-webkit-scrollbar-thumb { background:#c8d3e8; border-radius:3px; }
+
+@media(max-width:600px){
+    .kpi-card { min-width:110px; }
+    .kpi-val  { font-size:18px; }
+    .stat-row { grid-template-columns:repeat(2,1fr); }
+}
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="sc-wrap">
+<div class="page">
 
+    {# ── Flash ── #}
     {% with messages = get_flashed_messages(with_categories=true) %}
-        {% for category, message in messages %}
-            <div class="alert {% if category == 'error' %}alert-error{% endif %}">
-                {% if category == 'error' %}⚠️{% else %}✅{% endif %} {{ message }}
+        {% for cat, msg in messages %}
+            <div class="flash {{ 'error' if cat=='error' else 'success' }}">
+                {{ '⚠️' if cat=='error' else '✅' }} {{ msg }}
             </div>
         {% endfor %}
     {% endwith %}
 
-    <div class="page-title">⏱️ Stats Coordinateurs</div>
+    {# ── Header ── #}
+    <div class="sc-header">
+        <div class="sc-header-inner">
+            <div>
+                <h1>📊 Stats Coordinateurs</h1>
+                <p>Tableau de bord basé sur le suivi partenariat — {{ mois_noms[mois] }} {{ annee }}</p>
+            </div>
+        </div>
+    </div>
 
-    <!-- ══ FILTER ══ -->
+    {# ── Filter ── #}
     <form class="filter-bar" method="GET" action="{{ url_for('stats_coordinateurs') }}">
         {% if request.args.get('coord_id') %}
         <input type="hidden" name="coord_id" value="{{ request.args.get('coord_id') }}">
         {% endif %}
-        <span style="font-size:13px; font-weight:600; color:#888;">📅</span>
-        <select name="mois">
-            {% for i in range(1,13) %}
-            <option value="{{ i }}" {% if i == mois %}selected{% endif %}>
-                {{ mois_noms[i] }}
-            </option>
-            {% endfor %}
-        </select>
-        <select name="annee">
-            {% for y in annees %}
-            <option value="{{ y }}" {% if y == annee %}selected{% endif %}>{{ y }}</option>
-            {% endfor %}
-        </select>
-        <button type="submit" class="filter-btn">🔍 Afficher</button>
-        <span style="margin-left:auto; font-size:12px; color:#aaa; font-weight:500;">
+        <div class="fg-filter">
+            <label>Mois</label>
+            <select name="mois">
+                {% for i in range(1,13) %}
+                <option value="{{ i }}" {{ 'selected' if i==mois }}>{{ mois_noms[i] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="fg-filter">
+            <label>Année</label>
+            <select name="annee">
+                {% for y in annees %}
+                <option value="{{ y }}" {{ 'selected' if y==annee }}>{{ y }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn-filter">🔍 Afficher</button>
+        <span style="font-size:12px;color:var(--muted);font-weight:500;align-self:flex-end;margin-left:auto;">
             {{ mois_noms[mois] }} {{ annee }}
         </span>
     </form>
 
-    <!-- ══ SUMMARY ══ -->
-    <div class="summary-row">
-        <div class="sum-card blue">
-            <div class="sum-num">{{ stats | length }}</div>
-            <div class="sum-lbl">👥 Coordinateurs</div>
+    {# ── KPI Strip ── #}
+    <div class="kpi-strip">
+        <div class="kpi-card">
+            <div class="kpi-icon blue">👥</div>
+            <div><div class="kpi-val">{{ stats | length }}</div><div class="kpi-lbl">Coordinateurs</div></div>
         </div>
-        <div class="sum-card purple">
-            <div class="sum-num purple">{{ total_seances }}</div>
-            <div class="sum-lbl">📚 Séances — {{ mois_noms[mois] }}</div>
+        <div class="kpi-card">
+            <div class="kpi-icon blue">📅</div>
+            <div><div class="kpi-val">{{ total_seances }}</div><div class="kpi-lbl">Total séances</div></div>
         </div>
-        <div class="sum-card teal">
-            <div class="sum-num teal">{{ "%.1f"|format(total_heures) }}h</div>
-            <div class="sum-lbl">⏱️ Heures — {{ mois_noms[mois] }}</div>
+        <div class="kpi-card">
+            <div class="kpi-icon green">✅</div>
+            <div><div class="kpi-val">{{ total_passees }}</div><div class="kpi-lbl">Passées</div></div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon red">❌</div>
+            <div><div class="kpi-val">{{ total_annulees }}</div><div class="kpi-lbl">Annulées</div></div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon amber">🔄</div>
+            <div><div class="kpi-val">{{ total_rattrapage }}</div><div class="kpi-lbl">Rattrapages</div></div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon teal">⏱️</div>
+            <div><div class="kpi-val">{{ "%.1f"|format(total_heures) }}h</div><div class="kpi-lbl">Heures eff.</div></div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon purple">👥</div>
+            <div><div class="kpi-val">{{ total_eleves or '—' }}</div><div class="kpi-lbl">Élèves présents</div></div>
         </div>
     </div>
 
-    <!-- ══ MAIN GRID ══ -->
-    <div class="sc-grid">
+    {# ── Main Grid ── #}
+    <div class="main-grid">
 
-        <!-- ── LEFT: List ── -->
-        <div class="card">
-            <div class="card-header">
-                <h3>📋 Coordinateurs — {{ mois_noms[mois] }} {{ annee }}</h3>
-                <span style="font-size:12px; color:#aaa;">Cliquer pour plus de détails</span>
+        {# ── LEFT: Coordinateurs list ── #}
+        <div class="panel">
+            <div class="panel-head">
+                <h3>📋 Coordinateurs — {{ mois_noms[mois] }}</h3>
+                <span>Cliquer pour détails</span>
+            </div>
+            <div class="coord-search">
+                <input type="text" id="coordSearch" placeholder="🔍 Rechercher…" oninput="filterCoords(this.value)">
             </div>
 
             {% if stats %}
+            {% set colors = ['#1a3a6b','#0d9488','#7c3aed','#e91e8c','#f5a623','#16a34a','#dc2626','#0ea5e9','#d97706','#6366f1','#ec4899','#14b8a6'] %}
             {% for row in stats %}
+            {% set ci = loop.index0 % 12 %}
+            {% set col = colors[ci] %}
             {% set is_active = (coord_detail and coord_detail.id == row.coord.id) %}
             <a href="{{ url_for('stats_coordinateurs', mois=mois, annee=annee, coord_id=row.coord.id) }}"
-               class="coord-row {% if is_active %}active-row{% endif %}">
+               class="coord-row {{ 'active' if is_active }}"
+               data-name="{{ (row.coord.prenom ~ ' ' ~ row.coord.nom) | lower }}">
                 <div class="coord-av"
-                     style="background: {% if row.coord.genre == 'M' %}linear-gradient(135deg,#1a3a6b,#2a5298){% else %}linear-gradient(135deg,#e91e8c,#c2185b){% endif %};">
+                     style="background:{% if row.coord.genre=='M' %}linear-gradient(135deg,#1a3a6b,#2a5298){% else %}linear-gradient(135deg,#e91e8c,#c2185b){% endif %}">
                     {{ row.initiales }}
                 </div>
                 <div class="coord-info">
                     <div class="coord-name">
-                        {% if row.coord.genre == 'M' %}👨{% else %}👩{% endif %}
-                        {{ row.coord.prenom }} {{ row.coord.nom }}
+                        {{ '👨' if row.coord.genre=='M' else '👩' }} {{ row.coord.prenom }} {{ row.coord.nom }}
                     </div>
-                    <div class="coord-sub">
-                        {{ row.coord.responsable.prenom }} {{ row.coord.responsable.nom }}
-                        {% if row.coord.dours %}
-                        · {% for d in row.coord.dours[:2] %}{{ d.nom }}{% if not loop.last %}, {% endif %}{% endfor %}
-                        {% if row.coord.dours|length > 2 %}+{{ row.coord.dours|length - 2 }}{% endif %}
-                        {% endif %}
+                    <div class="coord-sub">{{ row.coord.responsable.prenom }} {{ row.coord.responsable.nom if row.coord.responsable }}</div>
+                    <div class="coord-pills">
+                        {% if row.nb_passees > 0 %}<span class="cpill p">✅ {{ row.nb_passees }}</span>{% endif %}
+                        {% if row.nb_annulees > 0 %}<span class="cpill a">❌ {{ row.nb_annulees }}</span>{% endif %}
+                        {% if row.nb_rattrapage > 0 %}<span class="cpill r">🔄 {{ row.nb_rattrapage }}</span>{% endif %}
+                        {% if row.total_eleves > 0 %}<span class="cpill" style="background:#ede9fe;color:#6d28d9;">👥 {{ row.total_eleves }}</span>{% endif %}
                     </div>
-                    <!-- Progress bar -->
-                    <div class="bar-wrap">
-                        <div class="bar-fill"
-                             style="width: {{ ((row.nb_heures / max_heures) * 100)|round|int }}%;
-                                    background: {% if row.coord.genre == 'M' %}#1a3a6b{% else %}#e91e8c{% endif %};
-                                    opacity: 0.55;">
-                        </div>
+                    <div class="coord-bar">
+                        <div class="coord-bar-fill"
+                             style="width:{{ ((row.nb_heures / max_heures) * 100)|round|int }}%;background:{{ col }};opacity:.6;"></div>
                     </div>
                 </div>
                 <div class="coord-meta">
@@ -284,126 +450,190 @@
             {% endfor %}
             {% else %}
             <div class="empty-state">
-                📭 Aucun coordinateur trouvé pour {{ mois_noms[mois] }} {{ annee }}
+                <div class="ei">📭</div>
+                Aucun coordinateur pour {{ mois_noms[mois] }} {{ annee }}
             </div>
             {% endif %}
         </div>
 
-        <!-- ── RIGHT: Detail ── -->
-        <div class="card detail-card">
+        {# ── RIGHT: Detail panel ── #}
+        <div class="panel detail-panel">
             {% if coord_detail %}
 
-            <!-- Header -->
-            <div class="detail-header">
+            {# Header #}
+            <div class="detail-head">
                 <div class="detail-av"
-                     style="background: {% if coord_detail.genre == 'M' %}rgba(255,255,255,0.15){% else %}rgba(233,30,140,0.5){% endif %};">
+                     style="background:{% if coord_detail.genre=='M' %}rgba(255,255,255,.15){% else %}rgba(233,30,140,.4){% endif %}">
                     {{ (coord_detail.prenom[0] + coord_detail.nom[0]).upper() if coord_detail.prenom and coord_detail.nom else '?' }}
                 </div>
                 <div>
-                    <div class="detail-name">
-                        {% if coord_detail.genre == 'M' %}👨{% else %}👩{% endif %}
-                        {{ coord_detail.prenom }} {{ coord_detail.nom }}
-                    </div>
-                    <div class="detail-sub">
-                        {{ coord_detail.responsable.prenom }} {{ coord_detail.responsable.nom }}
-                        · {{ mois_noms[mois] }} {{ annee }}
-                    </div>
+                    <div class="detail-name">{{ '👨' if coord_detail.genre=='M' else '👩' }} {{ coord_detail.prenom }} {{ coord_detail.nom }}</div>
+                    <div class="detail-sub">{{ coord_detail.responsable.prenom }} {{ coord_detail.responsable.nom if coord_detail.responsable }} · {{ mois_noms[mois] }} {{ annee }}</div>
                 </div>
             </div>
 
-            <!-- Summary stats -->
-            <div class="detail-stats">
-                <div class="ds-item">
-                    <div class="ds-val purple">{{ seances_detail | length }}</div>
-                    <div class="ds-lbl">Séances</div>
+            {# Stat row: passées / annulées / rattrapages / heures / élèves / moy #}
+            <div class="stat-row">
+                <div class="stat-cell">
+                    <div class="stat-val green">{{ seances_detail | selectattr('statut','eq','passee') | list | length }}</div>
+                    <div class="stat-lbl">✅ Passées</div>
                 </div>
-                <div class="ds-item">
-                    <div class="ds-val teal">{{ "%.1f"|format(seances_detail | sum(attribute='nb_heures')) }}h</div>
-                    <div class="ds-lbl">Total heures</div>
+                <div class="stat-cell">
+                    <div class="stat-val red">{{ seances_detail | selectattr('statut','eq','annulee') | list | length }}</div>
+                    <div class="stat-lbl">❌ Annulées</div>
                 </div>
-                <div class="ds-item">
-                    <div class="ds-val">
-                        {% if seances_detail %}
-                        {{ "%.1f"|format(seances_detail | sum(attribute='nb_heures') / seances_detail|length) }}h
-                        {% else %}—{% endif %}
+                <div class="stat-cell">
+                    <div class="stat-val amber">{{ seances_detail | selectattr('statut','eq','rattrapage') | list | length }}</div>
+                    <div class="stat-lbl">🔄 Rattrapage</div>
+                </div>
+            </div>
+            <div class="stat-row">
+                <div class="stat-cell">
+                    <div class="stat-val teal">{{ "%.1f"|format(seances_detail | sum(attribute='nb_heures')) }}h</div>
+                    <div class="stat-lbl">⏱️ Heures eff.</div>
+                </div>
+                <div class="stat-cell">
+                    <div class="stat-val purple">
+                        {% set elv = seances_detail | selectattr('nb_eleves') | list %}
+                        {% if elv %}{{ elv | sum(attribute='nb_eleves') }}{% else %}—{% endif %}
                     </div>
-                    <div class="ds-lbl">Moy/séance</div>
+                    <div class="stat-lbl">👥 Élèves</div>
+                </div>
+                <div class="stat-cell">
+                    <div class="stat-val">
+                        {% if seances_detail %}{{ "%.1f"|format(seances_detail | sum(attribute='nb_heures') / seances_detail|length) }}h{% else %}—{% endif %}
+                    </div>
+                    <div class="stat-lbl">📐 Moy/séance</div>
                 </div>
             </div>
 
-            <!-- Dours tags -->
+            {# Dars tags #}
             {% if coord_detail.dours %}
-            <div style="padding: 10px 18px; border-bottom: 1.5px solid #f0f4f8; display: flex; flex-wrap: wrap; gap: 6px;">
+            <div class="dars-section">
                 {% for d in coord_detail.dours %}
-                <span style="padding: 3px 11px; border-radius: 20px; font-size: 11px; font-weight: 600; color: white;
-                             background: {% if d.type == 'talib' %}#1a3a6b{% elif d.type == 'taliba' %}#e91e8c{% else %}#f5a623{% endif %};">
-                    {% if d.type == 'talib' %}🧒{% elif d.type == 'taliba' %}👧{% else %}👩{% endif %}
-                    dar {{ d.type }} {{ d.nom }}
+                <span class="dar-tag" style="background:{% if d.type=='talib' %}#1a3a6b{% elif d.type=='taliba' %}#e91e8c{% else %}#f5a623{% endif %}">
+                    {% if d.type=='talib' %}🧒{% elif d.type=='taliba' %}👧{% else %}👩{% endif %}
+                    {{ d.nom }}
                 </span>
                 {% endfor %}
             </div>
             {% endif %}
 
-            <!-- Seances list -->
+            {# Breakdown par matière #}
+            {% set mats = {} %}
+            {% for s in seances_detail if s.matiere and s.statut != 'annulee' %}
+                {% if s.matiere in mats %}
+                    {% set _ = mats.update({s.matiere: mats[s.matiere] + s.nb_heures}) %}
+                {% else %}
+                    {% set _ = mats.update({s.matiere: s.nb_heures}) %}
+                {% endif %}
+            {% endfor %}
+            {% if mats %}
+            {% set max_mat = mats.values() | max %}
+            <div class="breakdown-section">
+                <div class="breakdown-title">🔬 Par matière</div>
+                {% for mat, h in mats.items() | sort(attribute=1, reverse=true) %}
+                <div class="breakdown-row">
+                    <div class="breakdown-label">{{ mat }}</div>
+                    <div class="breakdown-bar-wrap">
+                        <div class="breakdown-bar" style="width:{{ ((h/max_mat)*100)|round|int }}%;background:#0d9488;"></div>
+                    </div>
+                    <div class="breakdown-val">{{ "%.1f"|format(h) }}h</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {# Breakdown par niveau #}
+            {% set nivs = {} %}
+            {% for s in seances_detail if s.niveau and s.statut != 'annulee' %}
+                {% if s.niveau in nivs %}
+                    {% set _ = nivs.update({s.niveau: nivs[s.niveau] + s.nb_heures}) %}
+                {% else %}
+                    {% set _ = nivs.update({s.niveau: s.nb_heures}) %}
+                {% endif %}
+            {% endfor %}
+            {% if nivs %}
+            {% set max_niv = nivs.values() | max %}
+            <div class="breakdown-section">
+                <div class="breakdown-title">🎓 Par niveau</div>
+                {% for niv, h in nivs.items() | sort(attribute=1, reverse=true) %}
+                <div class="breakdown-row">
+                    <div class="breakdown-label">{{ niv }}</div>
+                    <div class="breakdown-bar-wrap">
+                        <div class="breakdown-bar" style="width:{{ ((h/max_niv)*100)|round|int }}%;background:#7c3aed;"></div>
+                    </div>
+                    <div class="breakdown-val">{{ "%.1f"|format(h) }}h</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {# Séances list #}
             {% if seances_detail %}
             {% set month_abbr = ['','Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'] %}
-            {% for s in seances_detail %}
-            <div class="seance-item">
-                <div class="seance-date-badge">
-                    <div class="sdb-day">{{ s.date.day }}</div>
-                    <div class="sdb-mon">{{ month_abbr[s.date.month] }}</div>
-                </div>
-                <div class="seance-info">
-                    {% if s.note %}
-                    <div class="seance-note">{{ s.note }}</div>
-                    {% else %}
-                    <div class="seance-note empty">Aucune note</div>
-                    {% endif %}
-                    <div style="font-size: 11px; color: #bbb; margin-top: 2px;">
-                        {{ s.date.strftime('%A') }}
+            <div class="seances-list">
+                {% for s in seances_detail %}
+                <div class="seance-item">
+                    <div class="seance-date">
+                        <div class="sd-day">{{ s.date.day }}</div>
+                        <div class="sd-mon">{{ month_abbr[s.date.month] }}</div>
                     </div>
+                    <div class="seance-body">
+                        <div class="seance-badges">
+                            <span class="sbadge {{ s.statut }}">
+                                {{ '✅' if s.statut=='passee' else ('❌' if s.statut=='annulee' else '🔄') }}
+                                {{ s.statut_label }}
+                            </span>
+                            {% if s.matiere %}<span class="sbadge mat">{{ s.matiere }}</span>{% endif %}
+                            {% if s.dar %}<span class="sbadge dar">🏠 {{ s.dar.nom }}</span>{% endif %}
+                            {% if s.nb_eleves %}<span class="sbadge elev">👥 {{ s.nb_eleves }}</span>{% endif %}
+                        </div>
+                        {% if s.prof %}<div class="seance-prof">🎓 {{ s.prof }}</div>{% endif %}
+                        {% if s.niveau %}<div class="seance-niv">{{ s.niveau }}</div>{% endif %}
+                        {% if s.remarque or s.note %}
+                            <div class="seance-note">{{ s.remarque or s.note }}</div>
+                        {% else %}
+                            <div class="seance-note empty">Aucune note</div>
+                        {% endif %}
+                        <div class="seance-time">
+                            {{ '🕐 ' ~ s.heure ~ ' · ' if s.heure }}{{ s.date.strftime('%A %d/%m') }}
+                        </div>
+                    </div>
+                    <div class="seance-h-badge">{{ "%.1f"|format(s.nb_heures) }}h</div>
                 </div>
-                <div class="seance-h">{{ "%.1f"|format(s.nb_heures) }}h</div>
+                {% endfor %}
             </div>
-            {% endfor %}
-
-            <!-- Total row -->
-            <div style="display:flex; justify-content:space-between; align-items:center;
-                        padding: 12px 20px; background: #f8fafc; border-top: 2px solid #f0f4f8;">
-                <span style="font-size: 12px; font-weight: 700; color: #1a3a6b;">
-                    🔢 Total — {{ seances_detail | length }} séance{{ 's' if seances_detail|length != 1 }}
-                </span>
-                <span style="font-size: 15px; font-weight: 700; color: #16a085;">
-                    {{ "%.1f"|format(seances_detail | sum(attribute='nb_heures')) }}h
-                </span>
+            <div class="seances-footer">
+                <span>🔢 {{ seances_detail|length }} séance{{ 's' if seances_detail|length != 1 }}</span>
+                <span class="total-h">{{ "%.1f"|format(seances_detail | sum(attribute='nb_heures')) }}h</span>
             </div>
-
             {% else %}
-            <div style="padding: 40px; text-align: center; color: #bbb; font-size: 13px;">
+            <div style="padding:40px;text-align:center;color:var(--muted);font-size:13px;">
                 📭 Aucune séance pour {{ mois_noms[mois] }} {{ annee }}
             </div>
             {% endif %}
 
-            <!-- Link to full heures page -->
-            <div style="padding: 14px 20px; border-top: 1.5px solid #f0f4f8;">
-                <a href="{{ url_for('heures', mois=mois, annee=annee, coord_id=coord_detail.id) }}"
-                   style="display: block; text-align: center; padding: 10px; background: #f0f4f8;
-                          border-radius: 10px; color: #1a3a6b; font-size: 13px; font-weight: 700;
-                          text-decoration: none; transition: all 0.2s;"
-                   onmouseover="this.style.background='#1a3a6b'; this.style.color='white';"
-                   onmouseout="this.style.background='#f0f4f8'; this.style.color='#1a3a6b';">
-                    ⏱️ Gérer les séances de {{ coord_detail.prenom }}
-                </a>
-            </div>
+            <a href="{{ url_for('heures', mois=mois, annee=annee, coord_id=coord_detail.id) }}"
+               class="nav-link">⏱️ Gérer les séances de {{ coord_detail.prenom }}</a>
 
             {% else %}
             <div class="detail-placeholder">
                 <div class="ph-icon">👈</div>
-                <p>Veuillez choisir un coordinateur parmi la liste<br>pour consulter son planning de <strong>{{ mois_noms[mois] }} {{ annee }}</strong></p>
+                <p>Choisissez un coordinateur dans la liste<br>pour voir ses statistiques détaillées<br><strong>{{ mois_noms[mois] }} {{ annee }}</strong></p>
             </div>
             {% endif %}
         </div>
 
-    </div><!-- end sc-grid -->
+    </div>{# /main-grid #}
 </div>
+
+<script>
+function filterCoords(q) {
+    var lq = q.toLowerCase().trim();
+    document.querySelectorAll('.coord-row').forEach(function(row) {
+        row.style.display = (!lq || row.dataset.name.includes(lq)) ? '' : 'none';
+    });
+}
+</script>
 {% endblock %}

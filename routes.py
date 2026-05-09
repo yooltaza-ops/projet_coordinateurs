@@ -246,6 +246,17 @@ def heures():
         if coord_selected:
             seances_coord = sorted(coord_selected.seances_mois(mois, annee), key=lambda s: s.date)
 
+    # ── FIX : profs et dours pour le modal ──
+    profs_list = Professeur.query.filter_by(actif=True).order_by(Professeur.nom).all()
+    dours_ids = set()
+    for coord in coordinateurs:
+        for d in coord.dours:
+            dours_ids.add(d.id)
+    if dours_ids:
+        dours_list = Dour.query.filter(Dour.id.in_(dours_ids)).order_by(Dour.nom).all()
+    else:
+        dours_list = []
+
     return render_template('heures.html',
         coordinateurs=coordinateurs,
         coord_selected=coord_selected,
@@ -258,6 +269,8 @@ def heures():
         today=date.today().isoformat(),
         matieres=MATIERES,
         niveaux=NIVEAUX,
+        profs_list=profs_list,
+        dours_list=dours_list,
     )
 
 
@@ -931,20 +944,32 @@ def stats_coordinateurs():
     stats = []
     for coord in coordinateurs:
         seances = coord.seances_mois(mois, annee)
-        nb_h = sum(s.nb_heures for s in seances)
+        nb_h         = sum(s.nb_heures for s in seances if s.statut != 'annulee')
+        nb_passees   = sum(1 for s in seances if s.statut == 'passee')
+        nb_annulees  = sum(1 for s in seances if s.statut == 'annulee')
+        nb_rattrapage= sum(1 for s in seances if s.statut == 'rattrapage')
+        total_eleves = sum(s.nb_eleves for s in seances if s.nb_eleves and s.statut != 'annulee')
         stats.append({
-            'coord':      coord,
-            'seances':    seances,
-            'nb_seances': len(seances),
-            'nb_heures':  nb_h,
-            'initiales':  (coord.prenom[0] + coord.nom[0]).upper() if coord.prenom and coord.nom else '?',
+            'coord':         coord,
+            'seances':       seances,
+            'nb_seances':    len(seances),
+            'nb_heures':     nb_h,
+            'nb_passees':    nb_passees,
+            'nb_annulees':   nb_annulees,
+            'nb_rattrapage': nb_rattrapage,
+            'total_eleves':  total_eleves,
+            'initiales':     (coord.prenom[0] + coord.nom[0]).upper() if coord.prenom and coord.nom else '?',
         })
 
     stats.sort(key=lambda x: x['nb_heures'], reverse=True)
 
-    total_heures  = sum(s['nb_heures']  for s in stats)
-    total_seances = sum(s['nb_seances'] for s in stats)
-    max_heures    = max((s['nb_heures'] for s in stats), default=1) or 1
+    total_heures     = sum(s['nb_heures']     for s in stats)
+    total_seances    = sum(s['nb_seances']    for s in stats)
+    total_passees    = sum(s['nb_passees']    for s in stats)
+    total_annulees   = sum(s['nb_annulees']   for s in stats)
+    total_rattrapage = sum(s['nb_rattrapage'] for s in stats)
+    total_eleves     = sum(s['total_eleves']  for s in stats)
+    max_heures       = max((s['nb_heures'] for s in stats), default=1) or 1
 
     coord_id = request.args.get('coord_id', type=int)
     coord_detail   = None
@@ -966,13 +991,17 @@ def stats_coordinateurs():
         annees=list(range(now.year - 2, now.year + 2)),
         total_heures=total_heures,
         total_seances=total_seances,
+        total_passees=total_passees,
+        total_annulees=total_annulees,
+        total_rattrapage=total_rattrapage,
+        total_eleves=total_eleves,
         max_heures=max_heures,
         coord_detail=coord_detail,
         seances_detail=seances_detail,
     )
 
 
-# ── PATCH 4: calendrier_coordinateurs — sync complet avec suivi partenariat ───
+# ── PATCH 4: calendrier_coordinateurs ─────────────────────────────────────────
 @app.route('/calendrier_coordinateurs')
 @login_required
 def calendrier_coordinateurs():
@@ -990,7 +1019,7 @@ def calendrier_coordinateurs():
                  'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
 
     dours_objs = Dour.query.order_by(Dour.nom).all()
-    dours = dours_objs  # kept for template loops
+    dours = dours_objs
     dours_json = [{'id': d.id, 'nom': d.nom, 'type': d.type} for d in dours_objs]
 
     if current_user.is_admin:
@@ -999,7 +1028,6 @@ def calendrier_coordinateurs():
         resp = current_user.responsable
         coordinateurs = sorted(resp.coordinateurs, key=lambda c: c.nom) if resp else []
 
-    # ── Professeurs actifs pour le dropdown ──
     professeurs = Professeur.query.filter_by(actif=True).order_by(Professeur.nom).all()
 
     stats = []
@@ -1011,7 +1039,6 @@ def calendrier_coordinateurs():
     for coord in coordinateurs:
         seances = coord.seances_mois(mois, annee)
 
-        # ── Filtres identiques à suivi_partenariat ──
         if filtre_matiere:
             seances = [s for s in seances if s.matiere == filtre_matiere]
         if filtre_niveau:
@@ -1043,7 +1070,6 @@ def calendrier_coordinateurs():
             'initiales':      (coord.prenom[0] + coord.nom[0]).upper() if coord.prenom and coord.nom else '?',
             'matieres_uniq':  mats,
             'niveaux_uniq':   nivs,
-            # ── champs suivi partenariat ──────────────────────────
             'nb_passees':     sum(1 for s in seances if s.statut == 'passee'),
             'nb_annulees':    sum(1 for s in seances if s.statut == 'annulee'),
             'nb_rattrapage':  sum(1 for s in seances if s.statut == 'rattrapage'),
@@ -1054,7 +1080,6 @@ def calendrier_coordinateurs():
     breakdown_mat = sorted(heures_par_mat.items(), key=lambda x: x[1], reverse=True)
     breakdown_niv = sorted(heures_par_niv.items(), key=lambda x: x[1], reverse=True)
 
-    # ── Totaux globaux ──
     total_heures     = sum(s['nb_heures']    for s in stats)
     total_seances    = sum(s['nb_seances']   for s in stats)
     total_passees    = sum(s['nb_passees']   for s in stats)
@@ -1062,7 +1087,6 @@ def calendrier_coordinateurs():
     total_rattrapage = sum(s['nb_rattrapage']for s in stats)
     total_eleves     = sum(s['total_eleves'] for s in stats)
 
-    # ── seances_json pour modal modifier (même format que suivi_partenariat) ──
     all_seances_flat = []
     for st in stats:
         all_seances_flat.extend(st['seances'])
@@ -1223,15 +1247,19 @@ def suivi_partenariat():
     filtre_matiere = request.args.get('filtre_matiere', '').strip()
 
     mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin',
-                 'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
-
-    dours = Dour.query.order_by(Dour.nom).all()
+                'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
 
     if current_user.is_admin:
         coordinateurs = Coordinateur.query.order_by(Coordinateur.nom).all()
     else:
         resp = current_user.responsable
         coordinateurs = sorted(resp.coordinateurs, key=lambda c: c.nom) if resp else []
+
+    dours_ids_set = set()
+    for coord in coordinateurs:
+        for d in coord.dours:
+            dours_ids_set.add(d.id)
+    dours = Dour.query.filter(Dour.id.in_(dours_ids_set)).order_by(Dour.nom).all()
 
     professeurs = Professeur.query.filter_by(actif=True).order_by(Professeur.nom).all()
 
@@ -1271,11 +1299,18 @@ def suivi_partenariat():
         else:
             sans_dar.append(s)
 
+    dars_ids_actives = set()
+    for coord in coordinateurs:
+        for d in coord.dours:
+            dars_ids_actives.add(d.id)
+
     blocs_dar = []
     for dour in dours:
-        seances_d = par_dar.get(dour.id, [])
-        if not seances_d and filtre_dar and str(dour.id) != filtre_dar:
+        if dour.id not in dars_ids_actives:
             continue
+        if filtre_dar and str(dour.id) != filtre_dar:
+            continue
+        seances_d = par_dar.get(dour.id, [])
         blocs_dar.append({
             'dour':          dour,
             'seances':       seances_d,

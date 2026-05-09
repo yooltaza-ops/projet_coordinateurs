@@ -7,6 +7,183 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/heures.css') }}">
 <script src="{{ url_for('static', filename='js/heures.js') }}" defer></script>
 
+<style>
+/* ── Suivi partenariat extras ── */
+.sp-modal-overlay {
+    display:none; position:fixed; inset:0;
+    background:rgba(26,58,107,0.55); z-index:1050;
+    align-items:flex-start; justify-content:center;
+    backdrop-filter:blur(4px); padding:16px; overflow-y:auto;
+}
+.sp-modal-overlay.show { display:flex; }
+.sp-modal-box {
+    background:white; border-radius:20px; width:100%; max-width:640px;
+    box-shadow:0 28px 80px rgba(26,58,107,0.22);
+    border:1px solid #e2e8f0;
+    animation:spModalIn .28s cubic-bezier(0.34,1.56,0.64,1);
+    margin:auto; overflow:hidden;
+}
+@keyframes spModalIn {
+    from { opacity:0; transform:scale(0.91) translateY(20px); }
+    to   { opacity:1; transform:scale(1) translateY(0); }
+}
+.sp-mhead {
+    background:linear-gradient(135deg,#1a3a6b,#2a5298);
+    padding:18px 22px; display:flex; align-items:center;
+    justify-content:space-between; position:relative; overflow:hidden;
+}
+.sp-mhead::after {
+    content:''; position:absolute; top:-30px; right:-30px;
+    width:110px; height:110px; border-radius:50%;
+    background:rgba(255,255,255,.06);
+}
+.sp-mhead-left { display:flex; align-items:center; gap:10px; z-index:1; }
+.sp-mhead-icon {
+    width:38px; height:38px; border-radius:9px;
+    background:rgba(255,255,255,.15);
+    display:flex; align-items:center; justify-content:center; font-size:16px;
+}
+.sp-mhead h4 { font-size:15px; font-weight:700; color:#fff; margin:0; }
+.sp-mhead p  { font-size:11px; color:rgba(255,255,255,.7); margin:2px 0 0; }
+.sp-mhead-close {
+    width:30px; height:30px; border-radius:50%; border:none; cursor:pointer;
+    background:rgba(255,255,255,.15); color:#fff; z-index:1;
+    display:flex; align-items:center; justify-content:center; font-size:15px;
+    flex-shrink:0;
+}
+.sp-mbody { padding:18px 22px; max-height:75vh; overflow-y:auto; }
+.sp-mfooter {
+    display:flex; gap:10px; justify-content:flex-end;
+    padding:14px 22px 18px; border-top:1px solid #e2e8f0; background:#f8fafc;
+}
+
+/* Section label */
+.sp-slabel {
+    display:flex; align-items:center; gap:7px;
+    font-size:11px; font-weight:700; color:#8898aa;
+    text-transform:uppercase; letter-spacing:.07em;
+    margin:18px 0 10px;
+}
+.sp-slabel:first-child { margin-top:0; }
+.sp-slabel::after { content:''; flex:1; height:1px; background:linear-gradient(to right,#e2e8f0,transparent); }
+
+/* Grid */
+.sp-g2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.sp-g3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+@media(max-width:520px){ .sp-g2,.sp-g3 { grid-template-columns:1fr; } }
+
+/* Field group */
+.sp-fg { display:flex; flex-direction:column; gap:5px; }
+.sp-fg.full { grid-column:1/-1; }
+.sp-fg label { font-size:11px; font-weight:700; color:#4a5568; text-transform:uppercase; letter-spacing:.04em; }
+.sp-fg input,
+.sp-fg select,
+.sp-fg textarea {
+    border:1.5px solid #d1d9e6; border-radius:9px;
+    padding:9px 12px; font-size:13px; font-family:inherit;
+    color:#1a202c; background:#fff; outline:none;
+    transition:border .18s, box-shadow .18s;
+}
+.sp-fg select {
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7a99' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 11px center;
+    padding-right:32px; cursor:pointer;
+    -webkit-appearance:none; appearance:none;
+}
+.sp-fg textarea { resize:vertical; min-height:68px; }
+.sp-fg input:focus,.sp-fg select:focus,.sp-fg textarea:focus {
+    border-color:#f5a623;
+    box-shadow:0 0 0 3px rgba(245,166,35,.13);
+}
+
+/* Statut pills */
+.sp-statut-group { display:flex; gap:7px; flex-wrap:wrap; }
+.sp-statut-pill {
+    display:flex; align-items:center; gap:6px;
+    padding:7px 14px; border-radius:9px;
+    border:1.5px solid #d1d9e6; background:#fafbfd;
+    cursor:pointer; font-size:12px; font-weight:600; color:#6b7a99;
+    transition:all .15s; user-select:none;
+}
+.sp-statut-pill input[type=radio] { display:none; }
+.sp-statut-pill .sdot {
+    width:8px; height:8px; border-radius:50%;
+    background:currentColor; opacity:.35; flex-shrink:0;
+}
+.sp-statut-pill.s-passee:has(input:checked)    { background:#edfdf4; border-color:#4ade80; color:#166534; box-shadow:0 0 0 3px rgba(74,222,128,.12); }
+.sp-statut-pill.s-annulee:has(input:checked)   { background:#fff0f0; border-color:#f87171; color:#991b1b; box-shadow:0 0 0 3px rgba(248,113,113,.12); }
+.sp-statut-pill.s-rattrapage:has(input:checked){ background:#fffbeb; border-color:#fbbf24; color:#92400e; box-shadow:0 0 0 3px rgba(251,191,36,.12); }
+.sp-statut-pill:has(input:checked) .sdot { opacity:1; }
+
+/* Number stepper */
+.sp-num-wrap {
+    display:inline-flex; align-items:center;
+    border:1.5px solid #d1d9e6; border-radius:9px;
+    background:#fff; overflow:hidden; max-width:150px; width:100%;
+    transition:border .15s;
+}
+.sp-num-wrap:focus-within { border-color:#f5a623; box-shadow:0 0 0 3px rgba(245,166,35,.13); }
+.sp-num-btn {
+    width:36px; min-width:36px; height:40px; border:none;
+    background:#f4f7fb; cursor:pointer; font-size:18px;
+    color:#4a5568; display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+}
+.sp-num-btn:first-child { border-right:1.5px solid #e2e8f0; }
+.sp-num-btn:last-child  { border-left: 1.5px solid #e2e8f0; }
+.sp-num-btn:hover { background:#e8edf5; color:#1a3a6b; }
+.sp-num-input {
+    border:none; background:transparent; text-align:center;
+    font-size:15px; font-weight:700; color:#1a202c;
+    flex:1; outline:none; font-family:inherit; padding:0; min-width:0;
+}
+
+/* Prof search */
+.sp-prof-wrap { position:relative; }
+.sp-prof-input {
+    width:100%; border:1.5px solid #d1d9e6; border-radius:9px;
+    padding:9px 12px 9px 34px; font-size:13px; font-family:inherit;
+    color:#1a202c; background:#fff; outline:none; transition:border .18s;
+}
+.sp-prof-input:focus { border-color:#f5a623; box-shadow:0 0 0 3px rgba(245,166,35,.13); border-radius:9px 9px 0 0; }
+.sp-prof-icon { position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:14px; opacity:.45; pointer-events:none; }
+.sp-prof-drop {
+    display:none; position:absolute; top:100%; left:0; right:0; z-index:200;
+    background:white; border:1.5px solid #f5a623; border-top:1px solid #f0e8d4;
+    border-radius:0 0 9px 9px; max-height:180px; overflow-y:auto;
+    box-shadow:0 8px 24px rgba(26,58,107,.12);
+}
+.sp-prof-drop.open { display:block; }
+.sp-prof-opt {
+    padding:9px 12px; font-size:12px; cursor:pointer; color:#2d3748;
+    border-bottom:1px solid #f4f7fb; transition:background .1s;
+}
+.sp-prof-opt:last-child { border-bottom:none; }
+.sp-prof-opt:hover { background:#fdf8f0; color:#1a3a6b; }
+.sp-prof-opt.selected { background:#fffbeb; font-weight:600; color:#92400e; }
+
+/* Buttons */
+.sp-btn-cancel {
+    background:#fff; color:#64748b; border:1.5px solid #e2e8f0; border-radius:22px;
+    padding:9px 18px; font-weight:600; cursor:pointer; font-size:13px; font-family:inherit;
+}
+.sp-btn-save {
+    background:#f5a623; color:white; border:none; border-radius:22px;
+    padding:9px 24px; font-weight:700; cursor:pointer; font-size:13px; font-family:inherit;
+    display:flex; align-items:center; gap:6px; transition:all .2s;
+}
+.sp-btn-save:hover { background:#e09415; transform:translateY(-1px); box-shadow:0 4px 14px rgba(245,166,35,.35); }
+
+/* Badge statut in table */
+.sp-badge {
+    display:inline-block; padding:2px 8px;
+    border-radius:20px; font-size:10px; font-weight:700;
+}
+.sp-badge.passee    { background:#dcfce7; color:#15803d; }
+.sp-badge.annulee   { background:#fee2e2; color:#b91c1c; }
+.sp-badge.rattrapage{ background:#fef3c7; color:#92400e; }
+</style>
+
 <div class="main-content">
 
 <!-- ══ CONFIRM DELETE MODAL ══ -->
@@ -34,49 +211,133 @@
     </div>
 </div>
 
-<!-- ══ EDIT MODAL ══ -->
-<div class="modal-overlay" id="edit-modal">
-    <div class="modal-box">
-        <div class="modal-title">✏️ Modifier la séance</div>
-        <form method="POST" id="edit-form">
-            <div class="modal-grid">
-                <div class="modal-field">
-                    <label>📅 Date</label>
-                    <input type="date" name="date" id="edit-date" required>
-                </div>
-                <div class="modal-field">
-                    <label>⏱️ Heures</label>
-                    <input type="number" name="nb_heures" id="edit-heures" min="0.5" max="24" step="0.5" required>
-                </div>
-                <div class="modal-field">
-                    <label>🔬 Matière</label>
-                    <select name="matiere" id="edit-matiere">
-                        <option value="">— Sélectionner —</option>
-                        {% for m in matieres %}
-                        <option value="{{ m }}">{{ m }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="modal-field">
-                    <label>🎓 Niveau</label>
-                    <select name="niveau" id="edit-niveau">
-                        <option value="">— Sélectionner —</option>
-                        {% for n in niveaux %}
-                        <option value="{{ n }}">{{ n }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="modal-field full">
-                    <label>📝 Note</label>
-                    <input type="text" name="note" id="edit-note" placeholder="Remarque...">
-                </div>
-            </div>
-            <div class="modal-btns">
-                <button type="button" class="btn-cancel" onclick="closeModal()">Annuler</button>
-                <button type="submit" class="btn-save-mod">💾 Enregistrer</button>
-            </div>
-        </form>
+<!-- ══ ADD / EDIT MODAL (suivi partenariat complet) ══ -->
+<div class="sp-modal-overlay" id="sp-modal">
+  <div class="sp-modal-box">
+    <div class="sp-mhead">
+      <div class="sp-mhead-left">
+        <div class="sp-mhead-icon">📅</div>
+        <div>
+          <h4 id="spModalTitle">Ajouter une séance</h4>
+          <p id="spModalSub">Séances de travail</p>
+        </div>
+      </div>
+      <button class="sp-mhead-close" type="button" onclick="spCloseModal()">✕</button>
     </div>
+
+    <form id="sp-form" method="POST">
+      <input type="hidden" name="redirect_url" id="spRedirectUrl">
+
+      <div class="sp-mbody">
+
+        {# ── Coordinateur (caché dans le contexte heures car déjà sélectionné) ── #}
+        <input type="hidden" name="coordinateur_id" id="spCoordId">
+
+        {# ── Date & Heure & Durée ── #}
+        <div class="sp-slabel">🕐 Date & Durée</div>
+        <div class="sp-g3">
+          <div class="sp-fg">
+            <label>📅 Date *</label>
+            <input type="date" name="date" id="spDate" required>
+          </div>
+          <div class="sp-fg">
+            <label>🕐 Heure</label>
+            <input type="time" name="heure" id="spHeure">
+          </div>
+          <div class="sp-fg">
+            <label>⏱️ Durée (h) *</label>
+            <div class="sp-num-wrap">
+              <button class="sp-num-btn" type="button" onclick="spChgH(-0.5)">−</button>
+              <input class="sp-num-input" type="number" name="nb_heures" id="spHeures"
+                     step="0.5" min="0.5" max="12" value="2" required>
+              <button class="sp-num-btn" type="button" onclick="spChgH(0.5)">+</button>
+            </div>
+          </div>
+        </div>
+
+        {# ── Statut ── #}
+        <div class="sp-slabel">📊 Statut</div>
+        <div class="sp-statut-group">
+          <label class="sp-statut-pill s-passee">
+            <input type="radio" name="statut" value="passee" id="spStatutPassee" checked>
+            <span class="sdot"></span> Passée
+          </label>
+          <label class="sp-statut-pill s-annulee">
+            <input type="radio" name="statut" value="annulee" id="spStatutAnnulee">
+            <span class="sdot"></span> Annulée
+          </label>
+          <label class="sp-statut-pill s-rattrapage">
+            <input type="radio" name="statut" value="rattrapage" id="spStatutRattrapage">
+            <span class="sdot"></span> Rattrapage
+          </label>
+        </div>
+
+        {# ── Lieu & Matière ── #}
+        <div class="sp-slabel">🏠 Lieu & Matière</div>
+        <div class="sp-g2">
+          <div class="sp-fg">
+            <label>🏠 Dar Talib</label>
+            <select name="dar_id" id="spDar">
+              <option value="">— Aucune —</option>
+              {% for d in dours_list %}
+                <option value="{{ d.id }}">{{ d.nom }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="sp-fg">
+            <label>🔬 Matière</label>
+            <select name="matiere" id="spMatiere">
+              <option value="">— Non défini —</option>
+              {% for m in matieres %}<option value="{{ m }}">{{ m }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="sp-fg full">
+            <label>🎓 Niveau</label>
+            <select name="niveau" id="spNiveau">
+              <option value="">— Non défini —</option>
+              {% for n in niveaux %}<option value="{{ n }}">{{ n }}</option>{% endfor %}
+            </select>
+          </div>
+        </div>
+
+        {# ── Professeur ── #}
+        <div class="sp-slabel">🎓 Professeur</div>
+        <input type="hidden" name="prof" id="spProfHidden">
+        <div class="sp-prof-wrap">
+          <span class="sp-prof-icon">🔍</span>
+          <input type="text" id="spProfSearch" class="sp-prof-input"
+                 placeholder="Rechercher un professeur…" autocomplete="off">
+          <div class="sp-prof-drop" id="spProfDrop"></div>
+        </div>
+
+        {# ── Présence & Notes ── #}
+        <div class="sp-slabel">📝 Présence & Notes</div>
+        <div class="sp-g2">
+          <div class="sp-fg">
+            <label>👥 Élèves présents</label>
+            <input type="number" name="nb_eleves" id="spEleves" min="0" placeholder="0">
+          </div>
+          <div class="sp-fg">
+            <label>🏷️ Note interne</label>
+            <input type="text" name="note" id="spNote" placeholder="Note courte…">
+          </div>
+          <div class="sp-fg full">
+            <label>💬 Remarque</label>
+            <textarea name="remarque" id="spRemarque"
+                      placeholder="Remarques sur le déroulement de la séance…"></textarea>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="sp-mfooter">
+        <button type="button" class="sp-btn-cancel" onclick="spCloseModal()">Annuler</button>
+        <button type="submit" class="sp-btn-save" id="spSubmitBtn">
+          💾 Enregistrer
+        </button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <div class="main">
@@ -159,56 +420,28 @@
                     <div class="sub">{{ mois_noms[mois] }} {{ annee }} — {{ seances_coord|length }} séance{% if seances_coord|length != 1 %}s{% endif %} · {{ "%.1f"|format(coord_selected.total_heures_mois(mois, annee)) }}h</div>
                 </div>
 
-                <form method="POST" action="{{ url_for('ajouter_seance') }}">
-                    <input type="hidden" name="coordinateur_id" value="{{ coord_selected.id }}">
-                    <div class="add-seance-section">
-                        <div class="add-seance-title">➕ Ajouter une séance</div>
-                        <div class="add-seance-grid">
-                            <div class="add-field">
-                                <label>📅 Date</label>
-                                <input type="date" name="date" required value="{{ today }}"
-                                       min="{{ annee }}-{{ '%02d'|format(mois) }}-01"
-                                       max="{{ annee }}-{{ '%02d'|format(mois) }}-31">
-                            </div>
-                            <div class="add-field">
-                                <label>⏱️ Heures</label>
-                                <input type="number" name="nb_heures" value="1.5" min="0.5" max="24" step="0.5" required>
-                            </div>
-                            <div class="add-field">
-                                <label>🔬 Matière</label>
-                                <select name="matiere">
-                                    <option value="">— Sélectionner —</option>
-                                    {% for m in matieres %}
-                                    <option value="{{ m }}">{{ m }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="add-field">
-                                <label>🎓 Niveau</label>
-                                <select name="niveau">
-                                    <option value="">— Sélectionner —</option>
-                                    {% for n in niveaux %}
-                                    <option value="{{ n }}">{{ n }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="add-field note-field">
-                                <label>📝 Note (optionnelle)</label>
-                                <input type="text" name="note" placeholder="Remarque optionnelle...">
-                            </div>
-                            <button type="submit" class="btn-add">➕ Ajouter</button>
-                        </div>
-                    </div>
-                </form>
+                {# ── Bouton ajouter ── #}
+                <div style="padding:16px 0 8px;">
+                    <button class="sp-btn-save" type="button"
+                            onclick="spOpenAdd({{ coord_selected.id }}, '{{ today }}')">
+                        ➕ Ajouter une séance
+                    </button>
+                </div>
 
                 {% if seances_coord %}
+                <div style="overflow-x:auto;">
                 <table class="seances-table">
                     <thead>
                         <tr>
                             <th>📅 Date</th>
+                            <th>🕐 Heure</th>
                             <th>🔬 Matière</th>
                             <th>🎓 Niveau</th>
+                            <th>🎓 Prof</th>
+                            <th>🏠 Dar</th>
+                            <th>👥 Élèves</th>
                             <th>⏱️ Heures</th>
+                            <th>📊 Statut</th>
                             <th>📝 Note</th>
                             <th>Actions</th>
                         </tr>
@@ -217,14 +450,24 @@
                         {% for s in seances_coord %}
                         <tr>
                             <td><span class="date-chip">{{ s.date.strftime('%d %b %Y') }}</span></td>
+                            <td>{{ s.heure or '—' }}</td>
                             <td>{% if s.matiere %}<span class="mat-badge">{{ s.matiere }}</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}</td>
                             <td>{% if s.niveau %}<span class="niv-badge">{{ s.niveau }}</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}</td>
+                            <td style="font-size:12px;font-weight:600;color:#1a3a6b;">{{ s.prof or '—' }}</td>
+                            <td>{% if s.dar %}<span style="background:#e8edf5;color:#1a3a6b;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:600;">{{ s.dar.nom }}</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}</td>
+                            <td>{% if s.nb_eleves %}<span style="background:#ede9fe;color:#6d28d9;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:700;">{{ s.nb_eleves }}</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}</td>
                             <td><span class="heures-chip">{{ "%.1f"|format(s.nb_heures) }}h</span></td>
-                            <td>{% if s.note %}<span class="note-text">{{ s.note }}</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}</td>
+                            <td>
+                                <span class="sp-badge {{ s.statut }}">
+                                    {{ '✅' if s.statut=='passee' else ('❌' if s.statut=='annulee' else '🔄') }}
+                                    {{ s.statut_label }}
+                                </span>
+                            </td>
+                            <td>{% if s.remarque or s.note %}<span class="note-text">{{ s.remarque or s.note }}</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}</td>
                             <td>
                                 <div style="display:flex; gap:6px;">
                                     <button class="btn-edit-sm"
-                                        onclick="openEdit({{ s.id }}, '{{ s.date }}', {{ s.nb_heures }}, '{{ s.note or '' }}', '{{ s.matiere or '' }}', '{{ s.niveau or '' }}')">
+                                        onclick="spOpenEdit({{ s.id }})">
                                         ✏️
                                     </button>
                                     <button class="btn-del-sm"
@@ -237,13 +480,14 @@
                         {% endfor %}
                     </tbody>
                 </table>
+                </div>
                 <div class="total-row">
                     <div class="total-item">📚 <span>{{ seances_coord|length }} séance{% if seances_coord|length != 1 %}s{% endif %}</span></div>
                     <div class="total-item" style="color:#f5a623;">⏱️ <span>{{ "%.1f"|format(coord_selected.total_heures_mois(mois, annee)) }} heures total</span></div>
-                    {% set mats = seances_coord | map(attribute='matiere') | select | unique | list %}
-                    {% if mats %}
-                    <div class="total-item" style="color:#0d9488; font-size:11px; font-weight:500;">🔬 {{ mats | join(', ') }}</div>
-                    {% endif %}
+                    {% set passees = seances_coord | selectattr('statut','eq','passee') | list | length %}
+                    {% set annulees = seances_coord | selectattr('statut','eq','annulee') | list | length %}
+                    {% if passees > 0 %}<div class="total-item" style="color:#16a34a;">✅ <span>{{ passees }} passée{% if passees>1 %}s{% endif %}</span></div>{% endif %}
+                    {% if annulees > 0 %}<div class="total-item" style="color:#dc2626;">❌ <span>{{ annulees }} annulée{% if annulees>1 %}s{% endif %}</span></div>{% endif %}
                 </div>
                 {% else %}
                 <div class="empty-box">📭 Aucune séance {{ mois_noms[mois] }} — Utilisez le bouton en haut pour en ajouter !</div>
@@ -266,29 +510,46 @@
             <table class="recap-table">
                 <thead>
                     <tr>
-                        <th>Coordinateur</th><th>Genre</th><th>Séances</th><th>Total heures</th><th>Moy. h/séance</th><th>Dours</th>
+                        <th>Coordinateur</th><th>Genre</th><th>Séances</th>
+                        <th>✅ Passées</th><th>❌ Annulées</th><th>🔄 Rattrapages</th>
+                        <th>Total heures</th><th>👥 Élèves</th><th>Dours</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for coord in coordinateurs %}
-                    {% set nb_s = coord.total_seances_mois(mois, annee) %}
-                    {% set nb_h = coord.total_heures_mois(mois, annee) %}
+                    {% set seances_m = coord.seances_mois(mois, annee) %}
+                    {% set nb_s = seances_m | length %}
+                    {% set nb_h = seances_m | selectattr('statut','ne','annulee') | sum(attribute='nb_heures') %}
+                    {% set nb_p = seances_m | selectattr('statut','eq','passee') | list | length %}
+                    {% set nb_a = seances_m | selectattr('statut','eq','annulee') | list | length %}
+                    {% set nb_r = seances_m | selectattr('statut','eq','rattrapage') | list | length %}
+                    {% set nb_e = namespace(val=0) %}
+                    {% for s in seances_m %}{% if s.nb_eleves and s.statut != 'annulee' %}{% set nb_e.val = nb_e.val + s.nb_eleves %}{% endif %}{% endfor %}
                     <tr {% if coord_selected and coord_selected.id == coord.id %}style="background:#f0f6ff;"{% endif %}>
                         <td>
-                            <a href="{{ url_for('heures', mois=mois, annee=annee, coord_id=coord.id) }}" style="color:#1a3a6b; text-decoration:none; font-weight:600;">{{ coord.prenom }} {{ coord.nom }}</a>
+                            <a href="{{ url_for('heures', mois=mois, annee=annee, coord_id=coord.id) }}"
+                               style="color:#1a3a6b;text-decoration:none;font-weight:600;">
+                               {{ coord.prenom }} {{ coord.nom }}
+                            </a>
                         </td>
-                        <td><span style="padding:2px 9px; border-radius:9px; font-size:11px; font-weight:700; color:white; background:{% if coord.genre == 'M' %}#1a3a6b{% else %}#e91e8c{% endif %};">{% if coord.genre == 'M' %}👨{% else %}👩{% endif %}</span></td>
-                        <td>{% if nb_s > 0 %}<span style="font-weight:700; color:#1a3a6b;">{{ nb_s }}</span>{% else %}<span style="color:#ddd;">0</span>{% endif %}</td>
-                        <td>{% if nb_h > 0 %}<span style="font-weight:700; color:#f5a623;">{{ "%.1f"|format(nb_h) }}h</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}</td>
-                        <td>{% if nb_s > 0 %}<span style="color:#27ae60; font-weight:600;">{{ "%.1f"|format(nb_h / nb_s) }}h</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}</td>
-                        <td>{% for d in coord.dours %}<span style="display:inline-block; margin:1px; padding:2px 7px; border-radius:8px; font-size:10px; color:white; font-weight:500; background:{% if d.type == 'talib' %}#1a3a6b{% elif d.type == 'taliba' %}#e91e8c{% else %}#f5a623{% endif %};">{{ d.nom }}</span>{% endfor %}</td>
+                        <td><span style="padding:2px 9px;border-radius:9px;font-size:11px;font-weight:700;color:white;background:{% if coord.genre == 'M' %}#1a3a6b{% else %}#e91e8c{% endif %};">{% if coord.genre == 'M' %}👨{% else %}👩{% endif %}</span></td>
+                        <td>{% if nb_s > 0 %}<span style="font-weight:700;color:#1a3a6b;">{{ nb_s }}</span>{% else %}<span style="color:#ddd;">0</span>{% endif %}</td>
+                        <td>{% if nb_p > 0 %}<span style="font-weight:700;color:#16a34a;">{{ nb_p }}</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}</td>
+                        <td>{% if nb_a > 0 %}<span style="font-weight:700;color:#dc2626;">{{ nb_a }}</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}</td>
+                        <td>{% if nb_r > 0 %}<span style="font-weight:700;color:#d97706;">{{ nb_r }}</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}</td>
+                        <td>{% if nb_h > 0 %}<span style="font-weight:700;color:#f5a623;">{{ "%.1f"|format(nb_h) }}h</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}</td>
+                        <td>{% if nb_e.val > 0 %}<span style="font-weight:700;color:#7c3aed;">{{ nb_e.val }}</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}</td>
+                        <td>{% for d in coord.dours %}<span style="display:inline-block;margin:1px;padding:2px 7px;border-radius:8px;font-size:10px;color:white;font-weight:500;background:{% if d.type=='talib' %}#1a3a6b{% elif d.type=='taliba' %}#e91e8c{% else %}#f5a623{% endif %};">{{ d.nom }}</span>{% endfor %}</td>
                     </tr>
                     {% endfor %}
-                    <tr style="background:#f8fafc; font-weight:700;">
+                    <tr style="background:#f8fafc;font-weight:700;">
                         <td colspan="2" style="color:#1a3a6b;">🔢 Total</td>
                         <td style="color:#1a3a6b;">{{ total_seances }}</td>
+                        <td style="color:#16a34a;">—</td>
+                        <td style="color:#dc2626;">—</td>
+                        <td style="color:#d97706;">—</td>
                         <td style="color:#f5a623;">{{ "%.1f"|format(total_heures) }}h</td>
-                        <td style="color:#27ae60;">{% if total_seances > 0 %}{{ "%.1f"|format(total_heures / total_seances) }}h{% else %}—{% endif %}</td>
+                        <td>—</td>
                         <td></td>
                     </tr>
                 </tbody>
@@ -297,6 +558,123 @@
     </div>
 </div>
 </div>
+
+{# ── Séances data JSON pour le modal edit ── #}
+<script>
+var SP_PROFS = [
+  {% for p in profs_list %}{{ p.nom | tojson }}{% if not loop.last %},{% endif %}{% endfor %}
+];
+
+var SP_SEANCES = {};
+{% for s in seances_coord %}
+SP_SEANCES[{{ s.id }}] = {
+    id: {{ s.id }},
+    coordinateur_id: {{ s.coordinateur_id }},
+    date: "{{ s.date.isoformat() }}",
+    heure: "{{ s.heure or '' }}",
+    nb_heures: {{ s.nb_heures }},
+    statut: "{{ s.statut or 'passee' }}",
+    dar_id: "{{ s.dar_id or '' }}",
+    matiere: "{{ s.matiere or '' }}",
+    niveau: "{{ s.niveau or '' }}",
+    prof: {{ (s.prof or '') | tojson }},
+    nb_eleves: {{ s.nb_eleves or 0 }},
+    note: {{ (s.note or '') | tojson }},
+    remarque: {{ (s.remarque or '') | tojson }},
+};
+{% endfor %}
+
+/* ── Stepper ── */
+function spChgH(d) {
+    var el = document.getElementById('spHeures');
+    var v = parseFloat(el.value)||2;
+    v = Math.min(12, Math.max(0.5, v+d));
+    el.value = (v%1===0)?v:v.toFixed(1);
+}
+
+/* ── Statut ── */
+function spSetStatut(val) {
+    document.querySelectorAll('input[name="statut"]').forEach(function(r){ r.checked=(r.value===val); });
+}
+
+/* ── Prof search ── */
+var spProfSearch = document.getElementById('spProfSearch');
+var spProfDrop   = document.getElementById('spProfDrop');
+var spProfHidden = document.getElementById('spProfHidden');
+
+function spRenderProfs(filter) {
+    var lower = (filter||'').toLowerCase();
+    var list  = SP_PROFS.filter(function(p){ return p.toLowerCase().includes(lower); });
+    spProfDrop.innerHTML = '';
+    var empty = document.createElement('div');
+    empty.className='sp-prof-opt'; empty.textContent='— Aucun prof —'; empty.dataset.value='';
+    spProfDrop.appendChild(empty);
+    list.forEach(function(p){
+        var opt=document.createElement('div');
+        opt.className='sp-prof-opt'+(p===spProfHidden.value?' selected':'');
+        opt.textContent=p; opt.dataset.value=p;
+        spProfDrop.appendChild(opt);
+    });
+    spProfDrop.querySelectorAll('.sp-prof-opt').forEach(function(opt){
+        opt.addEventListener('mousedown',function(e){
+            e.preventDefault();
+            spProfHidden.value=opt.dataset.value;
+            spProfSearch.value=opt.dataset.value||'';
+            spProfDrop.classList.remove('open');
+        });
+    });
+}
+spProfSearch.addEventListener('focus',function(){ spRenderProfs(spProfSearch.value); spProfDrop.classList.add('open'); });
+spProfSearch.addEventListener('input',function(){ spRenderProfs(spProfSearch.value); spProfDrop.classList.add('open'); spProfHidden.value=''; });
+spProfSearch.addEventListener('blur',function(){ setTimeout(function(){ spProfDrop.classList.remove('open'); },150); });
+
+/* ── Modal open/close ── */
+var spModal = document.getElementById('sp-modal');
+
+function spOpenAdd(coordId, defaultDate) {
+    document.getElementById('spModalTitle').textContent = 'Ajouter une séance';
+    document.getElementById('spModalSub').textContent   = 'Séances de travail';
+    document.getElementById('sp-form').action = "{{ url_for('ajouter_seance') }}";
+    document.getElementById('spSubmitBtn').textContent = '💾 Ajouter';
+    document.getElementById('sp-form').reset();
+    spProfHidden.value=''; spProfSearch.value='';
+    document.getElementById('spCoordId').value  = coordId;
+    document.getElementById('spDate').value     = defaultDate || new Date().toISOString().slice(0,10);
+    document.getElementById('spHeures').value   = '2';
+    document.getElementById('spRedirectUrl').value = window.location.href;
+    spSetStatut('passee');
+    spModal.classList.add('show');
+}
+
+function spOpenEdit(id) {
+    var s = SP_SEANCES[id];
+    if (!s) { console.warn('Séance introuvable:', id); return; }
+    document.getElementById('spModalTitle').textContent = 'Modifier la séance';
+    document.getElementById('spModalSub').textContent   = 'Séances de travail';
+    document.getElementById('sp-form').action = '/heures/modifier/' + id;
+    document.getElementById('spSubmitBtn').textContent = '💾 Enregistrer';
+    document.getElementById('spCoordId').value      = s.coordinateur_id;
+    document.getElementById('spDate').value         = s.date;
+    document.getElementById('spHeure').value        = s.heure;
+    document.getElementById('spHeures').value       = s.nb_heures;
+    document.getElementById('spDar').value          = s.dar_id;
+    document.getElementById('spMatiere').value      = s.matiere;
+    document.getElementById('spNiveau').value       = s.niveau;
+    document.getElementById('spEleves').value       = s.nb_eleves||'';
+    document.getElementById('spNote').value         = s.note;
+    document.getElementById('spRemarque').value     = s.remarque;
+    document.getElementById('spRedirectUrl').value  = window.location.href;
+    spProfHidden.value = s.prof||''; spProfSearch.value = s.prof||'';
+    spSetStatut(s.statut||'passee');
+    spModal.classList.add('show');
+}
+
+function spCloseModal() { spModal.classList.remove('show'); }
+
+spModal.addEventListener('click', function(e){ if(e.target===spModal) spCloseModal(); });
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') spCloseModal(); });
+</script>
+
 {% endblock %}
 
 {% block extra_js %}{% endblock %}
