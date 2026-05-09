@@ -59,7 +59,8 @@
                         <div class="dropdown-email">{{ current_user.email }}</div>
                     </div>
                 </div>
-                <a href="{{ url_for('index') }}"><span style="font-size:16px;">🏠</span> Tableau de bord</a>
+                <a href="{{ url_for('index') }}" ><span style="font-size:16px;" >🏠</span> Tableau de bord</a>
+                <a href="{{ url_for('suivi_partenariat') }}" ><span class="nav-icon">📊</span><span>Suivi Partenariat</span></a>
                 <a href="{{ url_for('parametres') }}"><span style="font-size:16px;">⚙️</span> Paramètres</a>
                 <div class="dropdown-divider"></div>
                 <a href="{{ url_for('logout') }}" class="red"><span style="font-size:16px;">🚪</span> Déconnexion</a>
@@ -156,9 +157,14 @@
             <a href="{{ url_for('gerer_coordinateurs') }}" class="nav-item {% if request.endpoint == 'gerer_coordinateurs' %}active{% endif %}">
                 <span class="nav-icon">👥</span><span class="nav-label">Gérer Coordinateurs</span>
             </a>
+            <a href="{{ url_for('suivi_partenariat') }}" class="nav-item {% if request.endpoint == 'suivi_partenariat' %}active{% endif %}">
+                <span class="nav-icon">📊</span><span class="nav-label">Suivi Partenariat</span>
+            </a>
+            {% if current_user.is_admin %}
             <a href="{{ url_for('heures') }}" class="nav-item {% if request.endpoint == 'heures' %}active{% endif %}">
                 <span class="nav-icon">⏱️</span><span class="nav-label">Séances</span>
             </a>
+            {% endif %}
             <a href="{{ url_for('calendrier_coordinateurs') }}" class="nav-item {% if request.endpoint == 'calendrier_coordinateurs' %}active{% endif %}">
                 <span class="nav-icon">📅</span><span class="nav-label">Calendrier</span>
             </a>
@@ -167,9 +173,6 @@
                 <span class="nav-icon">📈</span><span class="nav-label">Stats Coordinateurs</span>
             </a>
             {% endif %}
-            <a href="{{ url_for('suivi_partenariat') }}" class="nav-item {% if request.endpoint == 'suivi_partenariat' %}active{% endif %}">
-                <span class="nav-icon">📊</span><span class="nav-label">Suivi Partenariat</span>
-            </a>
             <a href="{{ url_for('impression_seances') }}" class="nav-item {% if request.endpoint == 'impression_seances' %}active{% endif %}">
                 <span class="nav-icon">🖨️</span><span class="nav-label">Impression</span>
             </a>
