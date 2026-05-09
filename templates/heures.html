@@ -369,23 +369,80 @@
         </form>
     </div>
 
-    <div class="stats-row">
-        <div class="stat-card blue">
-            <div class="stat-number">{{ coordinateurs|length }}</div>
-            <div class="stat-label">👥 Coordinateurs</div>
+    {% set ns_stats = namespace(passees=0, annulees=0, rattrapages=0, eleves=0) %}
+    {% for c in coordinateurs %}
+    {% for s in c.seances_mois(mois, annee) %}
+        {% if s.statut == 'passee' %}{% set ns_stats.passees = ns_stats.passees + 1 %}{% endif %}
+        {% if s.statut == 'annulee' %}{% set ns_stats.annulees = ns_stats.annulees + 1 %}{% endif %}
+        {% if s.statut == 'rattrapage' %}{% set ns_stats.rattrapages = ns_stats.rattrapages + 1 %}{% endif %}
+        {% if s.nb_eleves and s.statut != 'annulee' %}{% set ns_stats.eleves = ns_stats.eleves + s.nb_eleves %}{% endif %}
+    {% endfor %}
+    {% endfor %}
+
+    <div style="display:flex; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
+
+    <div style="display:flex;align-items:center;gap:12px;background:white;border-radius:14px;padding:16px 20px;flex:1;min-width:130px;box-shadow:0 2px 8px rgba(26,58,107,.07);border:1px solid #e8edf5;">
+        <div style="width:42px;height:42px;border-radius:12px;background:#eef2ff;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">👥</div>
+        <div>
+        <div style="font-size:22px;font-weight:800;color:#1a3a6b;line-height:1.1;">{{ coordinateurs|length }}</div>
+        <div style="font-size:11px;color:#8898aa;font-weight:600;margin-top:2px;">Coordinateurs</div>
         </div>
-        <div class="stat-card orange">
-            <div class="stat-number">{{ "%.1f"|format(total_heures) }}h</div>
-            <div class="stat-label">⏱️ Total heures — {{ mois_noms[mois] }}</div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:12px;background:white;border-radius:14px;padding:16px 20px;flex:1;min-width:130px;box-shadow:0 2px 8px rgba(26,58,107,.07);border:1px solid #e8edf5;">
+        <div style="width:42px;height:42px;border-radius:12px;background:#fff8e6;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">📅</div>
+        <div>
+        <div style="font-size:22px;font-weight:800;color:#1a3a6b;line-height:1.1;">{{ total_seances + ns_stats.annulees + ns_stats.rattrapages }}</div>
+        <div style="font-size:11px;color:#8898aa;font-weight:600;margin-top:2px;">Total séances</div>
         </div>
-        <div class="stat-card green">
-            <div class="stat-number">{{ total_seances }}</div>
-            <div class="stat-label">📚 Total séances — {{ mois_noms[mois] }}</div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:12px;background:white;border-radius:14px;padding:16px 20px;flex:1;min-width:130px;box-shadow:0 2px 8px rgba(26,58,107,.07);border:1px solid #e8edf5;">
+        <div style="width:42px;height:42px;border-radius:12px;background:#edfdf4;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">✅</div>
+        <div>
+        <div style="font-size:22px;font-weight:800;color:#16a34a;line-height:1.1;">{{ ns_stats.passees }}</div>
+        <div style="font-size:11px;color:#8898aa;font-weight:600;margin-top:2px;">Passées</div>
         </div>
-        <div class="stat-card pink">
-            <div class="stat-number">{{ coordinateurs | selectattr('seances') | list | length }}</div>
-            <div class="stat-label">✅ Avec séances ce mois</div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:12px;background:white;border-radius:14px;padding:16px 20px;flex:1;min-width:130px;box-shadow:0 2px 8px rgba(26,58,107,.07);border:1px solid #e8edf5;">
+        <div style="width:42px;height:42px;border-radius:12px;background:#fee2e2;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">❌</div>
+        <div>
+        <div style="font-size:22px;font-weight:800;color:#dc2626;line-height:1.1;">{{ ns_stats.annulees }}</div>
+        <div style="font-size:11px;color:#8898aa;font-weight:600;margin-top:2px;">Annulées</div>
         </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:12px;background:white;border-radius:14px;padding:16px 20px;flex:1;min-width:130px;box-shadow:0 2px 8px rgba(26,58,107,.07);border:1px solid #e8edf5;">
+        <div style="width:42px;height:42px;border-radius:12px;background:#fffbeb;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🔄</div>
+        <div>
+        <div style="font-size:22px;font-weight:800;color:#d97706;line-height:1.1;">{{ ns_stats.rattrapages }}</div>
+        <div style="font-size:11px;color:#8898aa;font-weight:600;margin-top:2px;">Rattrapages</div>
+        </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:12px;background:white;border-radius:14px;padding:16px 20px;flex:1;min-width:130px;box-shadow:0 2px 8px rgba(26,58,107,.07);border:1px solid #e8edf5;">
+        <div style="width:42px;height:42px;border-radius:12px;background:#fff7ed;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">⏱️</div>
+        <div>
+        {% set ns_h_passees = namespace(val=0) %}
+        {% for c in coordinateurs %}
+            {% for s in c.seances_mois(mois, annee) %}
+                {% if s.statut == 'passee' %}{% set ns_h_passees.val = ns_h_passees.val + s.nb_heures %}{% endif %}
+            {% endfor %}
+        {% endfor %}
+        <div style="font-size:22px;font-weight:800;color:#f5a623;line-height:1.1;">{{ "%.1f"|format(ns_h_passees.val) }}h</div>
+        <div style="font-size:11px;color:#8898aa;font-weight:600;margin-top:2px;">Heures passées</div>
+                </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:12px;background:white;border-radius:14px;padding:16px 20px;flex:1;min-width:130px;box-shadow:0 2px 8px rgba(26,58,107,.07);border:1px solid #e8edf5;">
+        <div style="width:42px;height:42px;border-radius:12px;background:#ede9fe;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🧑‍🎓</div>
+        <div>
+        <div style="font-size:22px;font-weight:800;color:#7c3aed;line-height:1.1;">{{ ns_stats.eleves if ns_stats.eleves > 0 else '—' }}</div>
+        <div style="font-size:11px;color:#8898aa;font-weight:600;margin-top:2px;">Élèves présents</div>
+        </div>
+    </div>
+
     </div>
 
     <div class="heures-layout">
@@ -394,15 +451,16 @@
                 <h3>👥 {{ mois_noms[mois] }} {{ annee }}</h3>
             </div>
             {% for coord in coordinateurs %}
-            {% set nb_s = coord.total_seances_mois(mois, annee) %}
-            {% set nb_h = coord.total_heures_mois(mois, annee) %}
+            {% set all_s_coord = coord.seances_mois(mois, annee) %}
+            {% set nb_s = all_s_coord | selectattr('statut','eq','passee') | list | length %}
+            {% set nb_h = all_s_coord | selectattr('statut','eq','passee') | sum(attribute='nb_heures') %}
             <a href="{{ url_for('heures', mois=mois, annee=annee, coord_id=coord.id) }}"
                class="coord-item {% if coord_selected and coord_selected.id == coord.id %}selected{% endif %}">
                 <div class="coord-avatar {{ coord.genre }}">{{ coord.prenom[0].upper() }}{{ coord.nom[0].upper() }}</div>
                 <div class="coord-meta">
                     <div class="coord-name-sm">{{ coord.prenom }} {{ coord.nom }}</div>
                     <div class="coord-stats-sm">
-                        {% if nb_s > 0 %}{{ nb_s }} séance{% if nb_s > 1 %}s{% endif %} · {{ "%.1f"|format(nb_h) }}h
+                        {% if nb_s > 0 %}{{ nb_s }} passée{% if nb_s > 1 %}s{% endif %} · {{ "%.1f"|format(nb_h) }}h
                         {% else %}<span style="color:#ddd;">Aucune séance</span>{% endif %}
                     </div>
                 </div>
@@ -414,9 +472,11 @@
         <div>
             {% if coord_selected %}
             <div class="detail-panel">
+                {% set nb_passees_detail = seances_coord | selectattr('statut','eq','passee') | list | length %}
+                {% set h_passees_detail = seances_coord | selectattr('statut','eq','passee') | sum(attribute='nb_heures') %}
                 <div class="detail-header">
                     <h3>{% if coord_selected.genre == 'M' %}👨{% else %}👩{% endif %} {{ coord_selected.prenom }} {{ coord_selected.nom }}</h3>
-                    <div class="sub">{{ mois_noms[mois] }} {{ annee }} — {{ seances_coord|length }} séance{% if seances_coord|length != 1 %}s{% endif %} · {{ "%.1f"|format(coord_selected.total_heures_mois(mois, annee)) }}h</div>
+                    <div class="sub">{{ mois_noms[mois] }} {{ annee }} — {{ nb_passees_detail }} passée{% if nb_passees_detail != 1 %}s{% endif %} · {{ "%.1f"|format(h_passees_detail) }}h</div>
                 </div>
 
                 <div style="padding:16px 0 8px;">
@@ -479,13 +539,14 @@
                     </tbody>
                 </table>
                 </div>
+                {% set rattrapages = seances_coord | selectattr('statut','eq','rattrapage') | list | length %}
                 <div class="total-row">
                     <div class="total-item">📚 <span>{{ seances_coord|length }} séance{% if seances_coord|length != 1 %}s{% endif %}</span></div>
-                    <div class="total-item" style="color:#f5a623;">⏱️ <span>{{ "%.1f"|format(coord_selected.total_heures_mois(mois, annee)) }} heures total</span></div>
-                    {% set passees = seances_coord | selectattr('statut','eq','passee') | list | length %}
+                    <div class="total-item" style="color:#f5a623;">⏱️ <span>{{ "%.1f"|format(h_passees_detail) }} heures passées</span></div>
+                    {% if nb_passees_detail > 0 %}<div class="total-item" style="color:#16a34a;">✅ <span>{{ nb_passees_detail }} passée{% if nb_passees_detail>1 %}s{% endif %}</span></div>{% endif %}
                     {% set annulees = seances_coord | selectattr('statut','eq','annulee') | list | length %}
-                    {% if passees > 0 %}<div class="total-item" style="color:#16a34a;">✅ <span>{{ passees }} passée{% if passees>1 %}s{% endif %}</span></div>{% endif %}
                     {% if annulees > 0 %}<div class="total-item" style="color:#dc2626;">❌ <span>{{ annulees }} annulée{% if annulees>1 %}s{% endif %}</span></div>{% endif %}
+                    {% if rattrapages > 0 %}<div class="total-item" style="color:#d97706;">🔄 <span>{{ rattrapages }} rattrapage{% if rattrapages>1 %}s{% endif %}</span></div>{% endif %}
                 </div>
                 {% else %}
                 <div class="empty-box">📭 Aucune séance {{ mois_noms[mois] }} — Utilisez le bouton en haut pour en ajouter !</div>

@@ -809,7 +809,7 @@ function buildSummary() {
     if (!curCoord) return;
     const all = Object.values(SBY[curCoord.id] || {}).flat();
     const nbS      = all.length;
-    const nbH      = all.filter(s=>s.statut!=='annulee').reduce((a,s)=>a+s.heures,0);
+    const nbH = all.filter(s=>s.statut==='passee').reduce((a,s)=>a+s.heures,0);
     const nbPass   = all.filter(s=>s.statut==='passee').length;
     const nbAnn    = all.filter(s=>s.statut==='annulee').length;
     const nbRatt   = all.filter(s=>s.statut==='rattrapage').length;
@@ -824,7 +824,7 @@ function buildSummary() {
         </div>
         <div class="sum-item" style="border-color:var(--teal)">
             <div class="sum-val" style="color:var(--teal)">${nbH.toFixed(1)}h</div>
-            <div class="sum-lbl">⏱️ Heures eff.</div>
+            <div class="sum-lbl">⏱️ Heures passées</div>
         </div>
         ${nbPass ? `<div class="sum-item" style="border-color:#16a34a">
             <div class="sum-val" style="color:#16a34a">${nbPass}</div>

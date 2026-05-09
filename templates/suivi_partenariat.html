@@ -518,9 +518,14 @@
 
   {# ── KPI Row ── #}
   <div class="sp-kpi-row">
+    
     <div class="sp-kpi">
-      <div class="sp-kpi-icon blue">📅</div>
-      <div><div class="sp-kpi-val">{{ total_seances }}</div><div class="sp-kpi-lbl">Total séances</div></div>
+        <div class="sp-kpi-icon blue">📅</div>
+        <div><div class="sp-kpi-val">{{ total_seances }}</div><div class="sp-kpi-lbl">Total séances</div></div>
+    </div>
+    <div class="sp-kpi">
+        <div class="sp-kpi-icon blue">⏱️</div>
+        <div><div class="sp-kpi-val">{{ "%.1f"|format(total_passees_heures) }}h</div><div class="sp-kpi-lbl">Heures passées</div></div>
     </div>
     <div class="sp-kpi">
       <div class="sp-kpi-icon green">✅</div>
@@ -533,10 +538,6 @@
     <div class="sp-kpi">
       <div class="sp-kpi-icon amber">🔄</div>
       <div><div class="sp-kpi-val">{{ total_rattrapage }}</div><div class="sp-kpi-lbl">Rattrapages</div></div>
-    </div>
-    <div class="sp-kpi">
-      <div class="sp-kpi-icon blue">⏱️</div>
-      <div><div class="sp-kpi-val">{{ "%.1f"|format(total_heures) }}h</div><div class="sp-kpi-lbl">Heures effectives</div></div>
     </div>
     <div class="sp-kpi">
       <div class="sp-kpi-icon purple">👥</div>

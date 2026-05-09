@@ -132,46 +132,49 @@
 
     <!-- STATS -->
     <div class="stats-row">
-        <div class="stat-card blue">
-            <div class="stat-number">{{ nb_responsables }}</div>
-            <div class="stat-label">{% if current_user.is_admin %}👤 Responsables{% else %}👥 Coordinateurs{% endif %}</div>
-        </div>
-        {% if current_user.is_admin %}
-        <div class="stat-card orange">
-            <div class="stat-number orange">{{ nb_admins }}</div>
-            <div class="stat-label">👑 Admins</div>
-        </div>
-        {% endif %}
-        <div class="stat-card orange">
-            <div class="stat-number">{{ data | sum(attribute='nb_coordinateurs') }}</div>
-            <div class="stat-label">👨 Coordinateurs</div>
-        </div>
-        <div class="stat-card pink">
-            <div class="stat-number">{{ data | sum(attribute='nb_coordinatrices') }}</div>
-            <div class="stat-label">👩 Coordinatrices</div>
-        </div>
-        <div class="stat-card green">
-            <div class="stat-number">{{ dours|length }}</div>
-            <div class="stat-label">🏠 Dours</div>
-        </div>
-        <div class="stat-card purple">
-            <div class="stat-number purple">{{ total_seances_mois }}</div>
-            <div class="stat-label">✅ Séances passées — {{ mois_nom_actuel }}</div>
-        </div>
-        <div class="stat-card teal">
-            <div class="stat-number teal">{{ "%.0f"|format(total_heures_mois) }}h</div>
-            <div class="stat-label">⏱️ Heures passées — {{ mois_nom_actuel }}</div>
-        </div>
-
-        {# ══ زيد هاد الاثنين ══ #}
-        <div class="stat-card" style="border-color:#dc2626;">
-            <div class="stat-number" style="color:#dc2626;">{{ total_annulees_mois }}</div>
-            <div class="stat-label">❌ Annulées — {{ mois_nom_actuel }}</div>
-        </div>
-        <div class="stat-card" style="border-color:#d97706;">
-            <div class="stat-number" style="color:#d97706;">{{ total_rattrapage_mois }}</div>
-            <div class="stat-label">🔄 Rattrapages — {{ mois_nom_actuel }}</div>
-        </div>
+            <div class="stat-card blue">
+                <div class="stat-number">{{ nb_responsables }}</div>
+                <div class="stat-label">{% if current_user.is_admin %}👤 Responsables{% else %}👥 Coordinateurs{% endif %}</div>
+            </div>
+            {% if current_user.is_admin %}
+            <div class="stat-card orange">
+                <div class="stat-number orange">{{ nb_admins }}</div>
+                <div class="stat-label">👑 Admins</div>
+            </div>
+            {% endif %}
+            <div class="stat-card orange">
+                <div class="stat-number">{{ data | sum(attribute='nb_coordinateurs') }}</div>
+                <div class="stat-label">👨 Coordinateurs</div>
+            </div>
+            <div class="stat-card pink">
+                <div class="stat-number">{{ data | sum(attribute='nb_coordinatrices') }}</div>
+                <div class="stat-label">👩 Coordinatrices</div>
+            </div>
+            <div class="stat-card green">
+                <div class="stat-number">{{ dours|length }}</div>
+                <div class="stat-label">🏠 Dours</div>
+            </div>
+            <div class="stat-card" style="border-color:#2a5298;">
+                <div class="stat-number" style="color:#2a5298;">{{ total_seances_mois + total_annulees_mois + total_rattrapage_mois }}</div>
+                <div class="stat-label">📅 Total séances — {{ mois_nom_actuel }}</div>
+            </div>
+            <div class="stat-card purple">
+                <div class="stat-number purple">{{ total_seances_mois }}</div>
+                <div class="stat-label">✅ Séances passées — {{ mois_nom_actuel }}</div>
+            </div>
+            <div class="stat-card teal">
+                <div class="stat-number teal">{{ "%.1f"|format(total_heures_mois) }}h</div>
+                <div class="stat-label">⏱️ Heures passées — {{ mois_nom_actuel }}</div>
+            </div>
+            {# ══ زيد هاد الاثنين ══ #}
+            <div class="stat-card" style="border-color:#dc2626;">
+                <div class="stat-number" style="color:#dc2626;">{{ total_annulees_mois }}</div>
+                <div class="stat-label">❌ Annulées — {{ mois_nom_actuel }}</div>
+            </div>
+            <div class="stat-card" style="border-color:#d97706;">
+                <div class="stat-number" style="color:#d97706;">{{ total_rattrapage_mois }}</div>
+                <div class="stat-label">🔄 Rattrapages — {{ mois_nom_actuel }}</div>
+            </div>
     </div>
 
     <!-- GÉRER ADMINS -->

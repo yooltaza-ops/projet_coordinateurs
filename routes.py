@@ -125,8 +125,8 @@ def index():
             Seance.annee == annee,
             Seance.coordinateur_id.in_(coord_ids)
         ).all()
-    total_heures_mois    = sum(s.nb_heures for s in all_seances_mois if s.statut != 'annulee')
-    total_seances_mois   = sum(1 for s in all_seances_mois if s.statut != 'annulee')
+    total_heures_mois    = sum(s.nb_heures for s in all_seances_mois if s.statut == 'passee')
+    total_seances_mois   = sum(1 for s in all_seances_mois if s.statut == 'passee')
     total_annulees_mois  = sum(1 for s in all_seances_mois if s.statut == 'annulee')
     total_rattrapage_mois= sum(1 for s in all_seances_mois if s.statut == 'rattrapage')
 
@@ -140,7 +140,7 @@ def index():
     for coord in all_coords:
         seances = Seance.query.filter_by(coordinateur_id=coord.id, mois=mois, annee=annee).all()
         nb_s = len(seances)
-        nb_h = sum(s.nb_heures for s in seances if s.statut != 'annulee')
+        nb_h = sum(s.nb_heures for s in seances if s.statut == 'passee')
         nb_p = sum(1 for s in seances if s.statut == 'passee')
         nb_a = sum(1 for s in seances if s.statut == 'annulee')
         nb_r = sum(1 for s in seances if s.statut == 'rattrapage')
@@ -271,7 +271,7 @@ def heures():
             Seance.coordinateur_id.in_(coord_ids)
         ).all()
     total_heures  = sum(s.nb_heures for s in all_seances_mois if s.statut != 'annulee')
-    total_seances = len(all_seances_mois)
+    total_seances = sum(1 for s in all_seances_mois if s.statut == 'passee')
 
     coord_selected = None
     seances_coord  = []
@@ -928,7 +928,7 @@ def impression_seances():
         if filtre_niveau:
             seances = [s for s in seances if s.niveau == filtre_niveau]
 
-        nb_h = sum(s.nb_heures for s in seances if s.statut != 'annulee')
+        nb_h = sum(s.nb_heures for s in seances if s.statut == 'passee')
         mats = sorted({s.matiere for s in seances if s.matiere})
         nivs = sorted({s.niveau  for s in seances if s.niveau})
 
@@ -1121,7 +1121,7 @@ def calendrier_coordinateurs():
             except ValueError:
                 pass
 
-        nb_h = sum(s.nb_heures for s in seances if s.statut != 'annulee')
+        nb_h = sum(s.nb_heures for s in seances if s.statut == 'passee')
         mats = sorted({s.matiere for s in seances if s.matiere})
         nivs = sorted({s.niveau  for s in seances if s.niveau})
         matieres_actives_set.update(mats)
@@ -1352,7 +1352,7 @@ def suivi_partenariat():
             'nb_passees':    sum(1 for s in seances_d if s.statut == 'passee'),
             'nb_annulees':   sum(1 for s in seances_d if s.statut == 'annulee'),
             'nb_rattrapage': sum(1 for s in seances_d if s.statut == 'rattrapage'),
-            'total_heures':  sum(s.nb_heures for s in seances_d if s.statut != 'annulee'),
+            'total_heures':  sum(s.nb_heures for s in seances_d if s.statut == 'passee'),
             'total_eleves':  sum(s.nb_eleves for s in seances_d if s.nb_eleves and s.statut != 'annulee'),
             'niveaux_uniq':  sorted({s.niveau for s in seances_d if s.niveau}),
         })
@@ -1370,14 +1370,15 @@ def suivi_partenariat():
             'nb_passees':    sum(1 for s in seances_n if s.statut == 'passee'),
             'nb_annulees':   sum(1 for s in seances_n if s.statut == 'annulee'),
             'nb_rattrapage': sum(1 for s in seances_n if s.statut == 'rattrapage'),
-            'total_heures':  sum(s.nb_heures for s in seances_n if s.statut != 'annulee'),
+            'total_heures':  sum(s.nb_heures for s in seances_n if s.statut == 'passee'),
             'total_eleves':  sum(s.nb_eleves for s in seances_n if s.nb_eleves and s.statut != 'annulee'),
         })
 
     total_passees    = sum(1 for s in all_seances if s.statut == 'passee')
     total_annulees   = sum(1 for s in all_seances if s.statut == 'annulee')
     total_rattrapage = sum(1 for s in all_seances if s.statut == 'rattrapage')
-    total_heures     = sum(s.nb_heures for s in all_seances if s.statut != 'annulee')
+    total_heures          = sum(s.nb_heures for s in all_seances if s.statut != 'annulee')
+    total_passees_heures  = sum(s.nb_heures for s in all_seances if s.statut == 'passee')
     total_eleves     = sum(s.nb_eleves for s in all_seances if s.nb_eleves and s.statut != 'annulee')
 
     return render_template('suivi_partenariat.html',
@@ -1402,6 +1403,7 @@ def suivi_partenariat():
         total_annulees=total_annulees,
         total_rattrapage=total_rattrapage,
         total_heures=total_heures,
+        total_passees_heures=total_passees_heures,
         total_eleves=total_eleves,
         total_seances=len(all_seances),
     )
