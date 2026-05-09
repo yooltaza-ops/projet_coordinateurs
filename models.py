@@ -178,7 +178,7 @@ class Coordinateur(db.Model):
         )
 
     def total_heures_mois(self, mois, annee):
-        return sum(s.nb_heures for s in self.seances_mois(mois, annee))
+        return sum(s.nb_heures for s in self.seances_mois(mois, annee) if s.statut != 'annulee')
 
     def total_seances_mois(self, mois, annee):
         return len(self.seances_mois(mois, annee))

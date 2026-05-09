@@ -125,8 +125,10 @@ def index():
             Seance.annee == annee,
             Seance.coordinateur_id.in_(coord_ids)
         ).all()
-    total_heures_mois  = sum(s.nb_heures for s in all_seances_mois)
-    total_seances_mois = len(all_seances_mois)
+    total_heures_mois    = sum(s.nb_heures for s in all_seances_mois if s.statut != 'annulee')
+    total_seances_mois   = sum(1 for s in all_seances_mois if s.statut != 'annulee')
+    total_annulees_mois  = sum(1 for s in all_seances_mois if s.statut == 'annulee')
+    total_rattrapage_mois= sum(1 for s in all_seances_mois if s.statut == 'rattrapage')
 
     recap_seances = []
     if current_user.is_admin:
@@ -138,7 +140,10 @@ def index():
     for coord in all_coords:
         seances = Seance.query.filter_by(coordinateur_id=coord.id, mois=mois, annee=annee).all()
         nb_s = len(seances)
-        nb_h = sum(s.nb_heures for s in seances)
+        nb_h = sum(s.nb_heures for s in seances if s.statut != 'annulee')
+        nb_p = sum(1 for s in seances if s.statut == 'passee')
+        nb_a = sum(1 for s in seances if s.statut == 'annulee')
+        nb_r = sum(1 for s in seances if s.statut == 'rattrapage')
         if nb_s > 0:
             recap_seances.append({
                 'nom': f"{coord.prenom} {coord.nom}",
@@ -147,6 +152,9 @@ def index():
                 'responsable': f"{coord.responsable.prenom} {coord.responsable.nom}" if coord.responsable else '',
                 'nb_seances': nb_s,
                 'nb_heures': nb_h,
+                'nb_passees': nb_p,
+                'nb_annulees': nb_a,
+                'nb_rattrapages': nb_r,
             })
 
     if current_user.is_admin:
@@ -178,6 +186,8 @@ def index():
                            dours=dours,
                            total_heures_mois=total_heures_mois,
                            total_seances_mois=total_seances_mois,
+                           total_annulees_mois=total_annulees_mois,
+                           total_rattrapage_mois=total_rattrapage_mois,
                            mois_nom_actuel=mois_noms[mois],
                            annee_actuel=annee,
                            recap_seances=recap_seances,
@@ -260,7 +270,7 @@ def heures():
             Seance.annee == annee,
             Seance.coordinateur_id.in_(coord_ids)
         ).all()
-    total_heures  = sum(s.nb_heures for s in all_seances_mois)
+    total_heures  = sum(s.nb_heures for s in all_seances_mois if s.statut != 'annulee')
     total_seances = len(all_seances_mois)
 
     coord_selected = None

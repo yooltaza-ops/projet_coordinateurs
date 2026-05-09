@@ -156,11 +156,21 @@
         </div>
         <div class="stat-card purple">
             <div class="stat-number purple">{{ total_seances_mois }}</div>
-            <div class="stat-label">📚 Séances — {{ mois_nom_actuel }}</div>
+            <div class="stat-label">✅ Séances passées — {{ mois_nom_actuel }}</div>
         </div>
         <div class="stat-card teal">
             <div class="stat-number teal">{{ "%.0f"|format(total_heures_mois) }}h</div>
-            <div class="stat-label">⏱️ Heures — {{ mois_nom_actuel }}</div>
+            <div class="stat-label">⏱️ Heures passées — {{ mois_nom_actuel }}</div>
+        </div>
+
+        {# ══ زيد هاد الاثنين ══ #}
+        <div class="stat-card" style="border-color:#dc2626;">
+            <div class="stat-number" style="color:#dc2626;">{{ total_annulees_mois }}</div>
+            <div class="stat-label">❌ Annulées — {{ mois_nom_actuel }}</div>
+        </div>
+        <div class="stat-card" style="border-color:#d97706;">
+            <div class="stat-number" style="color:#d97706;">{{ total_rattrapage_mois }}</div>
+            <div class="stat-label">🔄 Rattrapages — {{ mois_nom_actuel }}</div>
         </div>
     </div>
 
@@ -308,8 +318,14 @@
             <table class="recap-seances-table">
                 <thead>
                     <tr>
-                        <th>Coordinateur</th><th class="center">Genre</th>
-                        <th class="center">Séances</th><th class="center">Heures</th><th class="center">Moy/séance</th>
+                        <th>Coordinateur</th>
+                        <th class="center">Genre</th>
+                        <th class="center">Séances</th>
+                        <th class="center">✅ Passées</th>
+                        <th class="center">❌ Annulées</th>
+                        <th class="center">🔄 Rattrapages</th>
+                        <th class="center">Heures</th>
+                        <th class="center">Moy/séance</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -329,7 +345,16 @@
                                 {% if row.genre == 'M' %}👨{% else %}👩{% endif %}
                             </span>
                         </td>
-                        <td style="text-align:center;"><span style="font-weight:700;color:#9b59b6;font-size:15px;">{{ row.nb_seances }}</span></td>
+                        <td style="text-align:center;"><span style="font-weight:700;color:#1a3a6b;font-size:15px;">{{ row.nb_seances }}</span></td>
+                        <td style="text-align:center;">
+                            {% if row.nb_passees > 0 %}<span style="font-weight:700;color:#16a34a;font-size:14px;">{{ row.nb_passees }}</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}
+                        </td>
+                        <td style="text-align:center;">
+                            {% if row.nb_annulees > 0 %}<span style="font-weight:700;color:#dc2626;font-size:14px;">{{ row.nb_annulees }}</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}
+                        </td>
+                        <td style="text-align:center;">
+                            {% if row.nb_rattrapages > 0 %}<span style="font-weight:700;color:#d97706;font-size:14px;">{{ row.nb_rattrapages }}</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}
+                        </td>
                         <td style="text-align:center;"><span style="font-weight:700;color:#16a085;font-size:15px;">{{ "%.1f"|format(row.nb_heures) }}h</span></td>
                         <td style="text-align:center;">
                             {% if row.nb_seances > 0 %}<span style="color:#888;font-size:12px;">{{ "%.1f"|format(row.nb_heures / row.nb_seances) }}h</span>
@@ -337,12 +362,25 @@
                         </td>
                     </tr>
                     {% endfor %}
+
+                    {# ══ صف Total ══ #}
+                    {% set grand = namespace(seances=0, passees=0, annulees=0, rattrapages=0, heures=0) %}
+                    {% for row in recap_seances %}
+                        {% set grand.seances     = grand.seances     + row.nb_seances %}
+                        {% set grand.passees     = grand.passees     + row.nb_passees %}
+                        {% set grand.annulees    = grand.annulees    + row.nb_annulees %}
+                        {% set grand.rattrapages = grand.rattrapages + row.nb_rattrapages %}
+                        {% set grand.heures      = grand.heures      + row.nb_heures %}
+                    {% endfor %}
                     <tr style="background:#f8fafc;font-weight:700;">
                         <td colspan="2" style="color:#1a3a6b;font-size:13px;">🔢 Total</td>
-                        <td style="text-align:center;color:#9b59b6;font-size:15px;">{{ total_seances_mois }}</td>
-                        <td style="text-align:center;color:#16a085;font-size:15px;">{{ "%.1f"|format(total_heures_mois) }}h</td>
+                        <td style="text-align:center;color:#1a3a6b;font-size:15px;">{{ grand.seances }}</td>
+                        <td style="text-align:center;color:#16a34a;font-size:14px;">{{ grand.passees if grand.passees > 0 else '—' }}</td>
+                        <td style="text-align:center;color:#dc2626;font-size:14px;">{{ grand.annulees if grand.annulees > 0 else '—' }}</td>
+                        <td style="text-align:center;color:#d97706;font-size:14px;">{{ grand.rattrapages if grand.rattrapages > 0 else '—' }}</td>
+                        <td style="text-align:center;color:#16a085;font-size:15px;">{{ "%.1f"|format(grand.heures) }}h</td>
                         <td style="text-align:center;color:#888;font-size:12px;">
-                            {% if total_seances_mois > 0 %}{{ "%.1f"|format(total_heures_mois / total_seances_mois) }}h{% else %}—{% endif %}
+                            {% if grand.seances > 0 %}{{ "%.1f"|format(grand.heures / grand.seances) }}h{% else %}—{% endif %}
                         </td>
                     </tr>
                 </tbody>

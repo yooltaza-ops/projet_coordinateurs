@@ -514,6 +514,10 @@
                     </tr>
                 </thead>
                 <tbody>
+
+                    {# ══ حساب grand totals بـ namespace ══ #}
+                    {% set grand = namespace(seances=0, passees=0, annulees=0, rattrapages=0, heures=0, eleves=0) %}
+
                     {% for coord in coordinateurs %}
                     {% set seances_m = coord.seances_mois(mois, annee) %}
                     {% set nb_s = seances_m | length %}
@@ -523,6 +527,15 @@
                     {% set nb_r = seances_m | selectattr('statut','eq','rattrapage') | list | length %}
                     {% set nb_e = namespace(val=0) %}
                     {% for s in seances_m %}{% if s.nb_eleves and s.statut != 'annulee' %}{% set nb_e.val = nb_e.val + s.nb_eleves %}{% endif %}{% endfor %}
+
+                    {# ══ تجميع فـ grand totals ══ #}
+                    {% set grand.seances     = grand.seances     + nb_s %}
+                    {% set grand.passees     = grand.passees     + nb_p %}
+                    {% set grand.annulees    = grand.annulees    + nb_a %}
+                    {% set grand.rattrapages = grand.rattrapages + nb_r %}
+                    {% set grand.heures      = grand.heures      + nb_h %}
+                    {% set grand.eleves      = grand.eleves      + nb_e.val %}
+
                     <tr {% if coord_selected and coord_selected.id == coord.id %}style="background:#f0f6ff;"{% endif %}>
                         <td>
                             <a href="{{ url_for('heures', mois=mois, annee=annee, coord_id=coord.id) }}"
@@ -540,16 +553,19 @@
                         <td>{% for d in coord.dours %}<span style="display:inline-block;margin:1px;padding:2px 7px;border-radius:8px;font-size:10px;color:white;font-weight:500;background:{% if d.type=='talib' %}#1a3a6b{% elif d.type=='taliba' %}#e91e8c{% else %}#f5a623{% endif %};">{{ d.nom }}</span>{% endfor %}</td>
                     </tr>
                     {% endfor %}
+
+                    {# ══ صف Total الكامل بـ grand totals ══ #}
                     <tr style="background:#f8fafc;font-weight:700;">
                         <td colspan="2" style="color:#1a3a6b;">🔢 Total</td>
-                        <td style="color:#1a3a6b;">{{ total_seances }}</td>
-                        <td style="color:#16a34a;">—</td>
-                        <td style="color:#dc2626;">—</td>
-                        <td style="color:#d97706;">—</td>
-                        <td style="color:#f5a623;">{{ "%.1f"|format(total_heures) }}h</td>
-                        <td>—</td>
+                        <td style="color:#1a3a6b;">{{ grand.seances }}</td>
+                        <td style="color:#16a34a;">{% if grand.passees > 0 %}<span style="font-weight:700;">{{ grand.passees }}</span>{% else %}—{% endif %}</td>
+                        <td style="color:#dc2626;">{% if grand.annulees > 0 %}<span style="font-weight:700;">{{ grand.annulees }}</span>{% else %}—{% endif %}</td>
+                        <td style="color:#d97706;">{% if grand.rattrapages > 0 %}<span style="font-weight:700;">{{ grand.rattrapages }}</span>{% else %}—{% endif %}</td>
+                        <td style="color:#f5a623;"><span style="font-weight:700;">{{ "%.1f"|format(grand.heures) }}h</span></td>
+                        <td style="color:#7c3aed;">{% if grand.eleves > 0 %}<span style="font-weight:700;">{{ grand.eleves }}</span>{% else %}—{% endif %}</td>
                         <td></td>
                     </tr>
+
                 </tbody>
             </table>
         </div>
@@ -622,7 +638,7 @@ function spRenderProfs(filter) {
         var opt = document.createElement('div');
         opt.className     = 'sp-prof-opt' + (String(p.id) === spProfHidden.value ? ' selected' : '');
         opt.textContent   = p.nom;
-        opt.dataset.value = String(p.id);   /* ← ID numérique */
+        opt.dataset.value = String(p.id);
         opt.dataset.nom   = p.nom;
         spProfDrop.appendChild(opt);
     });
@@ -630,8 +646,8 @@ function spRenderProfs(filter) {
     spProfDrop.querySelectorAll('.sp-prof-opt').forEach(function(opt) {
         opt.addEventListener('mousedown', function(e) {
             e.preventDefault();
-            spProfHidden.value = opt.dataset.value;    /* ← stocke l'ID */
-            spProfSearch.value = opt.dataset.nom || '';/* ← affiche le nom */
+            spProfHidden.value = opt.dataset.value;
+            spProfSearch.value = opt.dataset.nom || '';
             spProfDrop.classList.remove('open');
         });
     });
@@ -690,7 +706,6 @@ function spOpenEdit(id) {
     document.getElementById('spRemarque').value    = s.remarque;
     document.getElementById('spRedirectUrl').value = window.location.href;
 
-    /* ← professeur_id dans le hidden, nom dans le search */
     spProfHidden.value = s.professeur_id ? String(s.professeur_id) : '';
     spProfSearch.value = s.prof || '';
 
