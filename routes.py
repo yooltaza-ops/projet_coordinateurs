@@ -1013,7 +1013,7 @@ def stats_coordinateurs():
     stats = []
     for coord in coordinateurs:
         seances = coord.seances_mois(mois, annee)
-        nb_h         = sum(s.nb_heures for s in seances if s.statut != 'annulee')
+        nb_h = sum(s.nb_heures for s in seances if s.statut == 'passee')
         nb_passees   = sum(1 for s in seances if s.statut == 'passee')
         nb_annulees  = sum(1 for s in seances if s.statut == 'annulee')
         nb_rattrapage= sum(1 for s in seances if s.statut == 'rattrapage')

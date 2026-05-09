@@ -392,7 +392,7 @@ body { font-family: 'DM Sans', sans-serif; background: #f8faff; }
         </div>
         <div class="kpi-card">
             <div class="kpi-icon teal">⏱️</div>
-            <div><div class="kpi-val">{{ "%.1f"|format(total_heures) }}h</div><div class="kpi-lbl">Heures eff.</div></div>
+            <div><div class="kpi-val">{{ "%.1f"|format(total_heures) }}h</div><div class="kpi-lbl">Heures passées</div></div>
         </div>
         <div class="kpi-card">
             <div class="kpi-icon purple">👥</div>
@@ -489,8 +489,8 @@ body { font-family: 'DM Sans', sans-serif; background: #f8faff; }
             </div>
             <div class="stat-row">
                 <div class="stat-cell">
-                    <div class="stat-val teal">{{ "%.1f"|format(seances_detail | sum(attribute='nb_heures')) }}h</div>
-                    <div class="stat-lbl">⏱️ Heures eff.</div>
+                    <div class="stat-val teal">{{ "%.1f"|format(seances_detail | selectattr('statut','eq','passee') | sum(attribute='nb_heures')) }}h</div>
+                    <div class="stat-lbl">⏱️ Heures passées</div>
                 </div>
                 <div class="stat-cell">
                     <div class="stat-val purple">
