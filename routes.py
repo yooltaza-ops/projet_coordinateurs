@@ -901,41 +901,62 @@ def supprimer_dour(id):
 @login_required
 def impression_seances():
     from collections import defaultdict
-
+ 
     now   = datetime.now()
     mois  = request.args.get('mois',  now.month,  type=int)
     annee = request.args.get('annee', now.year,   type=int)
     filtre_matiere = request.args.get('filtre_matiere', '').strip()
     filtre_niveau  = request.args.get('filtre_niveau',  '').strip()
-
+    filtre_coord   = request.args.get('filtre_coord',   '').strip()
+    filtre_dar     = request.args.get('filtre_dar',     '').strip()
+ 
     mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin',
                  'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
-
+ 
     if current_user.is_admin:
         coordinateurs = Coordinateur.query.order_by(Coordinateur.nom).all()
     else:
         resp = current_user.responsable
         coordinateurs = sorted(resp.coordinateurs, key=lambda c: c.nom) if resp else []
-
+ 
+    all_dours = Dour.query.order_by(Dour.nom).all()
+ 
     stats = []
     heures_par_mat = defaultdict(float)
     heures_par_niv = defaultdict(float)
-
+ 
     for coord in coordinateurs:
+        # ── Filtre coordinateur ──
+        if filtre_coord and str(coord.id) != filtre_coord:
+            continue
+ 
         seances = coord.seances_mois(mois, annee)
+ 
+        # ── Filtre dar ──
+        if filtre_dar:
+            try:
+                filtre_dar_int = int(filtre_dar)
+                seances = [s for s in seances if s.dar_id == filtre_dar_int]
+            except ValueError:
+                pass
+ 
         if filtre_matiere:
             seances = [s for s in seances if s.matiere == filtre_matiere]
         if filtre_niveau:
             seances = [s for s in seances if s.niveau == filtre_niveau]
-
+ 
+        # ── Ma tbaynch coordinateur ila ma3ndoch séances waqt filtre ──
+        if (filtre_dar or filtre_matiere or filtre_niveau or filtre_coord) and len(seances) == 0:
+            continue
+ 
         nb_h = sum(s.nb_heures for s in seances if s.statut == 'passee')
         mats = sorted({s.matiere for s in seances if s.matiere})
         nivs = sorted({s.niveau  for s in seances if s.niveau})
-
+ 
         for s in seances:
             if s.matiere: heures_par_mat[s.matiere] += s.nb_heures
             if s.niveau:  heures_par_niv[s.niveau]  += s.nb_heures
-
+ 
         stats.append({
             'coord':          coord,
             'seances':        seances,
@@ -950,9 +971,9 @@ def impression_seances():
             'nb_rattrapage':  sum(1 for s in seances if s.statut == 'rattrapage'),
             'total_eleves':   sum(s.nb_eleves for s in seances if s.nb_eleves and s.statut != 'annulee'),
         })
-
+ 
     stats.sort(key=lambda x: x['nb_heures'], reverse=True)
-
+ 
     total_heures     = sum(s['nb_heures']     for s in stats)
     total_seances    = sum(s['nb_seances']    for s in stats)
     total_coords     = sum(1 for s in stats if s['nb_seances'] > 0)
@@ -960,11 +981,11 @@ def impression_seances():
     total_annulees   = sum(s['nb_annulees']   for s in stats)
     total_rattrapage = sum(s['nb_rattrapage'] for s in stats)
     total_eleves     = sum(s['total_eleves']  for s in stats)
-
+ 
     breakdown_mat = sorted(heures_par_mat.items(), key=lambda x: x[1], reverse=True)
     breakdown_niv = sorted(heures_par_niv.items(), key=lambda x: x[1], reverse=True)
     generated_at  = now.strftime('%d/%m/%Y à %H:%M')
-
+ 
     return render_template('impression_seances.html',
         stats=stats,
         mois=mois, annee=annee,
@@ -972,8 +993,12 @@ def impression_seances():
         annees=list(range(now.year - 2, now.year + 2)),
         filtre_matiere=filtre_matiere,
         filtre_niveau=filtre_niveau,
+        filtre_coord=filtre_coord,
+        filtre_dar=filtre_dar,
         matieres=MATIERES,
         niveaux=NIVEAUX,
+        all_coordinateurs=coordinateurs,
+        all_dours=all_dours,
         total_heures=total_heures,
         total_seances=total_seances,
         total_coords=total_coords,

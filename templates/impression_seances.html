@@ -58,6 +58,13 @@ body { font-family: 'DM Sans', sans-serif; background: #eef2f7; }
     font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all .2s;
 }
 .filter-btn:hover { background: #e8941a; }
+.reset-btn {
+    padding: 9px 14px; background: var(--grey); color: white; border: none;
+    border-radius: 10px; font-size: 12px; font-weight: 700;
+    font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all .2s;
+    text-decoration: none; display: inline-flex; align-items: center;
+}
+.reset-btn:hover { background: #475569; }
 
 /* ── PRINT DOCUMENT ── */
 .print-doc {
@@ -104,7 +111,7 @@ body { font-family: 'DM Sans', sans-serif; background: #eef2f7; }
 /* Period band */
 .period-band {
     background: var(--orange); padding: 10px 44px;
-    display: flex; align-items: center; gap: 10px;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
     font-size: 13px; font-weight: 700; color: white;
 }
 
@@ -308,6 +315,7 @@ body { font-family: 'DM Sans', sans-serif; background: #eef2f7; }
     .tb-select    { padding: 6px 8px; font-size: 11px; }
     .print-btn    { padding: 7px 12px; font-size: 11px; }
     .filter-btn   { padding: 7px 10px; font-size: 11px; }
+    .reset-btn    { padding: 7px 10px; font-size: 11px; }
 }
 
 /* Footer */
@@ -378,6 +386,8 @@ body { font-family: 'DM Sans', sans-serif; background: #eef2f7; }
         <div class="toolbar-title">🖨️ Impression — Rapport Séances</div>
         <form method="GET" action="{{ url_for('impression_seances') }}"
               style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+
+            <!-- Mois / Année -->
             <span class="tb-label">📅</span>
             <select name="mois" class="tb-select">
                 {% for i in range(1,13) %}
@@ -389,7 +399,35 @@ body { font-family: 'DM Sans', sans-serif; background: #eef2f7; }
                 <option value="{{ y }}" {% if y == annee %}selected{% endif %}>{{ y }}</option>
                 {% endfor %}
             </select>
+
+            <!-- Filtre Coordinateur -->
+            <span class="tb-label">👤</span>
+            <select name="filtre_coord" class="tb-select">
+                <option value="">Tous les coordinateurs</option>
+                {% for coord in all_coordinateurs %}
+                <option value="{{ coord.id }}" {% if filtre_coord == coord.id|string %}selected{% endif %}>
+                    {{ coord.prenom }} {{ coord.nom }}
+                </option>
+                {% endfor %}
+            </select>
+
+            <!-- Filtre Dar -->
+            <span class="tb-label">🏠</span>
+            <select name="filtre_dar" class="tb-select">
+                <option value="">Toutes les dars</option>
+                {% for d in all_dours %}
+                <option value="{{ d.id }}" {% if filtre_dar == d.id|string %}selected{% endif %}>
+                    {% if d.type == 'talib' %}🧒{% elif d.type == 'taliba' %}👧{% else %}👩{% endif %}
+                    {{ d.nom }}
+                </option>
+                {% endfor %}
+            </select>
+
             <button type="submit" class="filter-btn">🔍 Actualiser</button>
+
+            {% if filtre_coord or filtre_dar or filtre_matiere or filtre_niveau %}
+            <a href="{{ url_for('impression_seances', mois=mois, annee=annee) }}" class="reset-btn">✖ Reset</a>
+            {% endif %}
         </form>
         <button class="print-btn" onclick="window.print()">🖨️ Imprimer</button>
     </div>
@@ -403,7 +441,15 @@ body { font-family: 'DM Sans', sans-serif; background: #eef2f7; }
         <div class="doc-header">
             <div class="doc-org">Yool · Système de gestion</div>
             <div class="doc-title">Rapport des Séances</div>
-            <div class="doc-subtitle">Planning et détails par coordinateur</div>
+            <div class="doc-subtitle">
+                {% if filtre_coord %}
+                    {% for coord in all_coordinateurs %}{% if coord.id|string == filtre_coord %}{{ coord.prenom }} {{ coord.nom }}{% endif %}{% endfor %}
+                {% elif filtre_dar %}
+                    {% for d in all_dours %}{% if d.id|string == filtre_dar %}🏠 {{ d.nom }}{% endif %}{% endfor %}
+                {% else %}
+                    Planning et détails par coordinateur
+                {% endif %}
+            </div>
             <div class="doc-meta">
                 <div class="doc-meta-item">
                     <div class="dmi-val">{{ total_coords }}</div>
@@ -427,10 +473,19 @@ body { font-family: 'DM Sans', sans-serif; background: #eef2f7; }
         <!-- Period band -->
         <div class="period-band">
             📅 Période : {{ mois_noms[mois] }} {{ annee }}
-            {% if filtre_matiere or filtre_niveau %}
-            &nbsp;·&nbsp;
-            {% if filtre_matiere %}🔬 {{ filtre_matiere }}{% endif %}
-            {% if filtre_niveau %}&nbsp;🎓 {{ filtre_niveau }}{% endif %}
+            {% if filtre_coord %}
+            &nbsp;·&nbsp; 👤
+            {% for coord in all_coordinateurs %}{% if coord.id|string == filtre_coord %}{{ coord.prenom }} {{ coord.nom }}{% endif %}{% endfor %}
+            {% endif %}
+            {% if filtre_dar %}
+            &nbsp;·&nbsp; 🏠
+            {% for d in all_dours %}{% if d.id|string == filtre_dar %}{{ d.nom }}{% endif %}{% endfor %}
+            {% endif %}
+            {% if filtre_matiere %}
+            &nbsp;·&nbsp; 🔬 {{ filtre_matiere }}
+            {% endif %}
+            {% if filtre_niveau %}
+            &nbsp;·&nbsp; 🎓 {{ filtre_niveau }}
             {% endif %}
         </div>
 
