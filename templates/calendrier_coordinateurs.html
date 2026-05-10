@@ -164,7 +164,6 @@ body { font-family: 'DM Sans', sans-serif; }
 .cal-cell:hover .cell-add-btn { display: flex; }
 .cell-add-btn:hover { background: var(--green); transform: scale(1.15); }
 
-/* ── chip colors by statut ── */
 .seance-chip {
     display: flex; align-items: center; gap: 4px; padding: 3px 6px; border-radius: 6px;
     margin-bottom: 2px; font-size: 10px; font-weight: 600; color: white; cursor: pointer;
@@ -178,7 +177,6 @@ body { font-family: 'DM Sans', sans-serif; }
     background: var(--light); border-radius: 4px; margin-top: 1px; display: inline-block; cursor: pointer;
 }
 
-/* ── Modals ── */
 .modal-overlay {
     display: none; position: fixed; inset: 0;
     background: rgba(15,23,42,0.60); backdrop-filter: blur(5px);
@@ -215,7 +213,6 @@ body { font-family: 'DM Sans', sans-serif; }
     border-top: 1.5px solid var(--border); background: #fafbff;
 }
 
-/* ── Section label (comme suivi_partenariat) ── */
 .sp-section-label {
     display: flex; align-items: center; gap: 8px;
     font-size: 11px; font-weight: 700; color: #8898aa;
@@ -228,7 +225,6 @@ body { font-family: 'DM Sans', sans-serif; }
     background: linear-gradient(to right, #e2e8f0, transparent);
 }
 
-/* Form grids */
 .sc-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .sc-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
 @media(max-width:500px){
@@ -236,7 +232,6 @@ body { font-family: 'DM Sans', sans-serif; }
     .sc-grid-3 { grid-template-columns:1fr; }
 }
 
-/* ── Statut pills (identique suivi_partenariat) ── */
 .sp-statut-group { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px; }
 .sp-statut-pill {
     display: flex; align-items: center; gap: 7px;
@@ -255,7 +250,6 @@ body { font-family: 'DM Sans', sans-serif; }
 .sp-statut-pill.s-rattrapage:has(input:checked){ background:#fffbeb; border-color:#fbbf24; color:#92400e; box-shadow:0 0 0 3px rgba(251,191,36,.12); }
 .sp-statut-pill:has(input:checked) .sdot { opacity: 1; }
 
-/* Number stepper */
 .sp-num-wrap {
     display: inline-flex; align-items: center;
     border: 2px solid var(--border); border-radius: 9px;
@@ -278,7 +272,6 @@ body { font-family: 'DM Sans', sans-serif; }
     flex: 1; outline: none; font-family: 'DM Sans', sans-serif; padding: 0; min-width: 0;
 }
 
-/* Prof search */
 .prof-search-wrapper { position: relative; }
 .prof-search-input {
     width: 100%; outline: none;
@@ -308,7 +301,13 @@ body { font-family: 'DM Sans', sans-serif; }
 .prof-option:hover { background: #fdf8f0; color: var(--blue); }
 .prof-option.selected { background: #fffbeb; font-weight: 600; }
 
-/* Sessions (form add multiple) */
+/* dar lock hint */
+.dar-lock-hint {
+    font-size: 11px; color: var(--grey); margin-top: 4px;
+    font-style: italic; display: none;
+}
+.dar-lock-hint.show { display: block; }
+
 .sessions-list { display: flex; flex-direction: column; gap: 16px; }
 .session-card {
     background: var(--light); border: 2px solid var(--border);
@@ -348,6 +347,7 @@ body { font-family: 'DM Sans', sans-serif; }
     border-color: var(--orange); box-shadow: 0 0 0 3px rgba(245,166,35,.12);
 }
 .fg textarea { resize: vertical; min-height: 60px; }
+.fg select:disabled { background: #f0f4f8; color: var(--grey); cursor: not-allowed; opacity: 1; }
 
 .btn-add-row {
     display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -371,7 +371,6 @@ body { font-family: 'DM Sans', sans-serif; }
 .btn-save:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(22,163,74,.45); }
 .save-badge { background: rgba(255,255,255,.25); border-radius: 20px; padding: 1px 8px; font-size: 11px; }
 
-/* Detail */
 .dr {
     border: 2px solid var(--border); border-radius: 12px; padding: 12px 14px;
     margin-bottom: 10px; border-left-width: 4px;
@@ -523,7 +522,8 @@ body { font-family: 'DM Sans', sans-serif; }
                 </div>
 
                 <div class="sp-section-label">🎓 Professeur</div>
-                <input type="hidden" name="prof" id="edit-prof-hidden">
+                <input type="hidden" name="professeur_id" id="edit-prof-id-hidden">
+                <input type="hidden" name="prof"          id="edit-prof-nom-hidden">
                 <div class="prof-search-wrapper">
                     <span class="prof-search-icon">🔍</span>
                     <input type="text" id="edit-prof-search" class="prof-search-input"
@@ -547,7 +547,8 @@ body { font-family: 'DM Sans', sans-serif; }
                     </div>
                 </div>
 
-                <input type="hidden" name="redirect_url" id="edit-redirect">
+                <input type="hidden" name="coordinateur_id" id="edit-coord-hidden">
+                <input type="hidden" name="redirect_url"    id="edit-redirect">
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-cancel" onclick="closeEdit()">Annuler</button>
@@ -719,14 +720,13 @@ body { font-family: 'DM Sans', sans-serif; }
 const MATIERES  = {{ matieres  | tojson }};
 const NIVEAUX   = {{ niveaux   | tojson }};
 const MOIS_NOMS = {{ mois_noms | tojson }};
-const DOURS     = {{ dours | map(attribute='id') | list | tojson }};
 
-// Professeurs list
 const PROFS_DATA = [
-    {% for p in professeurs %}{{ p.nom | tojson }}{% if not loop.last %},{% endif %}{% endfor %}
+    {% for p in professeurs %}{ id: {{ p.id }}, nom: {{ p.nom | tojson }} }{% if not loop.last %},{% endif %}{% endfor %}
 ];
 
-// Coordinator data
+const DOURS_JSON = {{ dours_json | tojson }};
+
 const COORDS = {};
 {% for row in stats %}
 {% set ci = loop.index0 % 12 %}
@@ -737,10 +737,10 @@ COORDS[{{ row.coord.id }}] = {
     initiales:"{{ row.initiales }}",
     genre:    "{{ row.coord.genre }}",
     color:    "{{ colors[ci] }}",
+    dours: [{% for d in row.coord.dours %}{ id: {{ d.id }}, nom: {{ d.nom | tojson }} }{% if not loop.last %},{% endif %}{% endfor %}],
 };
 {% endfor %}
 
-// Séances per coordinator per date — avec tous les champs
 const SBY = {};
 {% for row in stats %}
 SBY[{{ row.coord.id }}] = {};
@@ -749,18 +749,20 @@ SBY[{{ row.coord.id }}] = {};
     const k = "{{ s.date.strftime('%Y-%m-%d') }}";
     if (!SBY[{{ row.coord.id }}][k]) SBY[{{ row.coord.id }}][k] = [];
     SBY[{{ row.coord.id }}][k].push({
-        id:       {{ s.id }},
-        heures:   {{ s.nb_heures }},
-        heure:    "{{ s.heure or '' }}",
-        statut:   "{{ s.statut or 'passee' }}",
-        matiere:  "{{ s.matiere or '' }}",
-        niveau:   "{{ s.niveau or '' }}",
-        prof:     "{{ (s.prof or '')|replace('"','\\"') }}",
-        note:     "{{ (s.note or '')|replace('"','\\"') }}",
-        remarque: "{{ (s.remarque or '')|replace('"','\\"') }}",
-        nb_eleves: {{ s.nb_eleves or 0 }},
-        dar_id:   "{{ s.dar_id or '' }}",
-        date:     "{{ s.date.strftime('%Y-%m-%d') }}",
+        id:             {{ s.id }},
+        coordinateur_id:{{ s.coordinateur_id }},
+        heures:         {{ s.nb_heures }},
+        heure:          "{{ s.heure or '' }}",
+        statut:         "{{ s.statut or 'passee' }}",
+        matiere:        "{{ s.matiere or '' }}",
+        niveau:         "{{ s.niveau or '' }}",
+        prof:           "{{ (s.prof or '')|replace('"','\\"') }}",
+        professeur_id:  {{ s.professeur_id if s.professeur_id else 'null' }},
+        note:           "{{ (s.note or '')|replace('"','\\"') }}",
+        remarque:       "{{ (s.remarque or '')|replace('"','\\"') }}",
+        nb_eleves:      {{ s.nb_eleves or 0 }},
+        dar_id:         "{{ s.dar_id or '' }}",
+        date:           "{{ s.date.strftime('%Y-%m-%d') }}",
     });
 })();
 {% endfor %}
@@ -770,14 +772,12 @@ let curCoord = null;
 let curMois  = {{ mois }};
 let curAnnee = {{ annee }};
 
-/* ── Chip color by statut ── */
 function chipColor(s, coordColor) {
-    if (s.statut === 'annulee')   return '#dc2626';
+    if (s.statut === 'annulee')    return '#dc2626';
     if (s.statut === 'rattrapage') return '#f5a623';
     return coordColor;
 }
 
-/* ── Search ── */
 function filterCoords(q) {
     const lq = q.toLowerCase().trim();
     document.querySelectorAll('.coord-card').forEach(c => {
@@ -785,7 +785,6 @@ function filterCoords(q) {
     });
 }
 
-/* ── Open calendar ── */
 function openCalendar(id) {
     curCoord = COORDS[id];
     document.getElementById('badge-av').textContent   = curCoord.initiales;
@@ -804,12 +803,11 @@ function goBack() {
     curCoord = null;
 }
 
-/* ── Summary ── */
 function buildSummary() {
     if (!curCoord) return;
     const all = Object.values(SBY[curCoord.id] || {}).flat();
     const nbS      = all.length;
-    const nbH = all.filter(s=>s.statut==='passee').reduce((a,s)=>a+s.heures,0);
+    const nbH      = all.filter(s=>s.statut==='passee').reduce((a,s)=>a+s.heures,0);
     const nbPass   = all.filter(s=>s.statut==='passee').length;
     const nbAnn    = all.filter(s=>s.statut==='annulee').length;
     const nbRatt   = all.filter(s=>s.statut==='rattrapage').length;
@@ -853,7 +851,6 @@ function buildSummary() {
     `;
 }
 
-/* ── Build calendar ── */
 function buildCalendar() {
     const grid = document.getElementById('cal-grid');
     grid.innerHTML = '';
@@ -923,7 +920,6 @@ function buildCalendar() {
     document.getElementById('nav-lbl').textContent = MOIS_NOMS[curMois] + ' ' + curAnnee;
 }
 
-/* ── Navigation ── */
 function changeMonth(d) {
     curMois += d;
     if (curMois > 12) { curMois = 1;  curAnnee++; }
@@ -942,16 +938,107 @@ function goToday() {
 }
 
 /* ══════════════════════════════════════
-   MODAL ADD — avec tous les champs
+   HELPERS — options HTML
 ══════════════════════════════════════ */
-let sc = 0, prefDate = '';
-
 const MO = (sel) => '<option value="">— Matière —</option>' + MATIERES.map(m=>
     `<option value="${m}"${m===sel?' selected':''}>${m}</option>`).join('');
 const NO = (sel) => '<option value="">— Niveau —</option>' + NIVEAUX.map(n=>
     `<option value="${n}"${n===sel?' selected':''}>${n}</option>`).join('');
-const DO = (sel) => '<option value="">— Aucune —</option>' + {{ dours_json | tojson }}.map(d=>
+
+/* Toutes les dars — pour modal edit */
+const DO = (sel) => '<option value="">— Aucune —</option>' + DOURS_JSON.map(d=>
     `<option value="${d.id}"${String(d.id)===String(sel)?' selected':''}>${d.nom}</option>`).join('');
+
+/* ══════════════════════════════════════
+   DOcoord(sel, locked)
+   ─────────────────────────────────────
+   - Si locked=true  → affiche UNIQUEMENT les dars du coordinateur courant
+                        et retourne { html, isLocked:true }
+   - Si locked=false → affiche toutes les dars du coordinateur (mode normal)
+══════════════════════════════════════ */
+function buildDarOptions(sel, locked) {
+    /* Dars du coordinateur courant */
+    const coordDours = (curCoord && curCoord.dours && curCoord.dours.length)
+        ? curCoord.dours
+        : DOURS_JSON;
+
+    if (locked && coordDours.length > 0) {
+        /* Mode verrouillé : une seule dar, disabled */
+        let html = '';
+        coordDours.forEach(d => {
+            const isSelected = !sel || String(d.id) === String(sel);
+            html += `<option value="${d.id}"${isSelected ? ' selected' : ''}>${d.nom}</option>`;
+        });
+        return { html, isLocked: coordDours.length > 0 };
+    }
+
+    /* Mode normal : toutes les dars du coordinateur */
+    let html = '<option value="">— Aucune —</option>';
+    coordDours.forEach(d => {
+        html += `<option value="${d.id}"${String(d.id)===String(sel)?' selected':''}>${d.nom}</option>`;
+    });
+    return { html, isLocked: false };
+}
+
+/* ══════════════════════════════════════
+   PROF SEARCH
+══════════════════════════════════════ */
+function bindProfSearch(inp, drop, hidNom, hidId) {
+    function render(filter) {
+        const lower = (filter||'').toLowerCase();
+        const list  = PROFS_DATA.filter(p => p.nom.toLowerCase().includes(lower));
+        drop.innerHTML = '';
+
+        const empty = document.createElement('div');
+        empty.className   = 'prof-option';
+        empty.textContent = '— Aucun professeur —';
+        empty.dataset.id  = '';
+        empty.dataset.nom = '';
+        drop.appendChild(empty);
+
+        list.forEach(p => {
+            const opt = document.createElement('div');
+            opt.className   = 'prof-option' + (String(p.id) === hidId.value ? ' selected' : '');
+            opt.textContent = p.nom;
+            opt.dataset.id  = String(p.id);
+            opt.dataset.nom = p.nom;
+            drop.appendChild(opt);
+        });
+
+        drop.querySelectorAll('.prof-option').forEach(opt => {
+            opt.addEventListener('mousedown', e => {
+                e.preventDefault();
+                hidId.value  = opt.dataset.id;
+                hidNom.value = opt.dataset.nom;
+                inp.value    = opt.dataset.nom || '';
+                drop.classList.remove('open');
+            });
+        });
+    }
+    inp.addEventListener('focus', () => { render(inp.value); drop.classList.add('open'); });
+    inp.addEventListener('input', () => {
+        render(inp.value);
+        drop.classList.add('open');
+        hidId.value  = '';
+        hidNom.value = '';
+    });
+    inp.addEventListener('blur', () => { setTimeout(() => drop.classList.remove('open'), 150); });
+}
+
+/* Bind edit modal prof search */
+const editProfSearch  = document.getElementById('edit-prof-search');
+const editProfDrop    = document.getElementById('edit-prof-dropdown');
+const editProfIdHid   = document.getElementById('edit-prof-id-hidden');
+const editProfNomHid  = document.getElementById('edit-prof-nom-hidden');
+bindProfSearch(editProfSearch, editProfDrop, editProfNomHid, editProfIdHid);
+
+/* ══════════════════════════════════════
+   MODAL ADD — sessions multiples
+   ──────────────────────────────────────
+   _addLocked : true quand on ouvre depuis une cellule calendrier
+                (les dars sont filtrées ET verrouillées sur celles du coord)
+══════════════════════════════════════ */
+let sc = 0, prefDate = '', _addLocked = false;
 
 function addSession(date) {
     sc++;
@@ -959,6 +1046,16 @@ function addSession(date) {
     const list = document.getElementById('sessions-list');
     const d    = date || prefDate || new Date().toISOString().split('T')[0];
     const isFirst = list.children.length === 0;
+
+    /* ── Construire les options dar ── */
+    const darResult = buildDarOptions('', _addLocked);
+    const darHtml   = darResult.html;
+    const isLocked  = darResult.isLocked;
+
+    const lockHint = isLocked
+        ? `<span class="dar-lock-hint show">🔒 Dars du coordinateur uniquement</span>`
+        : `<span class="dar-lock-hint show" style="color:var(--orange)">💡 Dars assignées à ${curCoord ? curCoord.name : 'ce coordinateur'}</span>`;
+
     const card = document.createElement('div');
     card.className = 'session-card'; card.id = `sc-${idx}`;
     card.innerHTML = `
@@ -1009,7 +1106,8 @@ function addSession(date) {
         <div class="sc-grid-2">
             <div class="fg">
                 <label>🏠 Dar Talib</label>
-                <select name="seances[${idx}][dar_id]">${DO('')}</select>
+                <select name="seances[${idx}][dar_id]" ${isLocked ? 'disabled' : ''}>${darHtml}</select>
+                ${lockHint}
             </div>
             <div class="fg">
                 <label>🔬 Matière</label>
@@ -1022,7 +1120,8 @@ function addSession(date) {
         </div>
 
         <div class="sp-section-label">🎓 Professeur</div>
-        <input type="hidden" name="seances[${idx}][prof]" class="prof-hidden-${idx}">
+        <input type="hidden" name="seances[${idx}][professeur_id]" class="prof-id-hidden-${idx}">
+        <input type="hidden" name="seances[${idx}][prof]"          class="prof-nom-hidden-${idx}">
         <div class="prof-search-wrapper">
             <span class="prof-search-icon">🔍</span>
             <input type="text" class="prof-search-input prof-inp-${idx}"
@@ -1049,16 +1148,24 @@ function addSession(date) {
     `;
     list.appendChild(card);
 
-    // bind prof search for this session
-    const inp  = card.querySelector(`.prof-inp-${idx}`);
-    const drop = card.querySelector(`#pdrop-${idx}`);
-    const hid  = card.querySelector(`.prof-hidden-${idx}`);
-    bindProfSearch(inp, drop, hid);
+    /* Si dar verrouillée → ajouter un hidden avec la valeur pour que le form la soumette */
+    if (isLocked && curCoord && curCoord.dours && curCoord.dours.length > 0) {
+        const hidDar = document.createElement('input');
+        hidDar.type  = 'hidden';
+        hidDar.name  = `seances[${idx}][dar_id]`;
+        hidDar.value = curCoord.dours[0].id;
+        card.appendChild(hidDar);
+    }
+
+    const inp    = card.querySelector(`.prof-inp-${idx}`);
+    const drop   = card.querySelector(`#pdrop-${idx}`);
+    const hidId  = card.querySelector(`.prof-id-hidden-${idx}`);
+    const hidNom = card.querySelector(`.prof-nom-hidden-${idx}`);
+    bindProfSearch(inp, drop, hidNom, hidId);
 
     updRm(); updBadge();
 }
 
-/* ── Stepper helpers ── */
 function chgH(btn, delta) {
     const inp = btn.parentElement.querySelector('.sp-num-input');
     let v = parseFloat(inp.value) || 2;
@@ -1091,9 +1198,19 @@ function updBadge() {
     if(b) b.textContent = n + (n>1?' séances':' séance');
 }
 
+/* ══════════════════════════════════════
+   openAdd :
+   - Depuis calendrier → _addLocked = true
+     (dars filtrées ET verrouillées sur le coordinateur)
+   - Depuis n'importe où → _addLocked = true par défaut
+     (on est toujours dans le contexte d'UN coordinateur)
+══════════════════════════════════════ */
 function openAdd(ds) {
     if (!curCoord) return;
-    prefDate = ds; sc = 0;
+    prefDate    = ds;
+    sc          = 0;
+    _addLocked  = true; /* toujours verrouillé sur les dars du coord courant */
+
     document.getElementById('sessions-list').innerHTML = '';
     document.getElementById('hci').value = curCoord.id;
     document.getElementById('hru').value = window.location.href;
@@ -1112,43 +1229,6 @@ function closeAdd(evt) {
     document.getElementById('modal-add').classList.remove('open');
     document.body.style.overflow = '';
 }
-
-/* ══════════════════════════════════════
-   PROF SEARCH — générique
-══════════════════════════════════════ */
-function bindProfSearch(inp, drop, hid) {
-    function render(filter) {
-        const lower = (filter||'').toLowerCase();
-        const list  = PROFS_DATA.filter(p=>p.toLowerCase().includes(lower));
-        drop.innerHTML = '';
-        const empty = document.createElement('div');
-        empty.className = 'prof-option'; empty.textContent = '— Aucun prof —'; empty.dataset.value = '';
-        drop.appendChild(empty);
-        list.forEach(p => {
-            const opt = document.createElement('div');
-            opt.className = 'prof-option' + (p === hid.value ? ' selected' : '');
-            opt.textContent = p; opt.dataset.value = p;
-            drop.appendChild(opt);
-        });
-        drop.querySelectorAll('.prof-option').forEach(opt => {
-            opt.addEventListener('mousedown', e => {
-                e.preventDefault();
-                hid.value = opt.dataset.value;
-                inp.value = opt.dataset.value || '';
-                drop.classList.remove('open');
-            });
-        });
-    }
-    inp.addEventListener('focus', () => { render(inp.value); drop.classList.add('open'); });
-    inp.addEventListener('input', () => { render(inp.value); drop.classList.add('open'); hid.value=''; });
-    inp.addEventListener('blur',  () => { setTimeout(()=>drop.classList.remove('open'), 150); });
-}
-
-/* Edit modal prof search */
-const editProfSearch = document.getElementById('edit-prof-search');
-const editProfDrop   = document.getElementById('edit-prof-dropdown');
-const editProfHid    = document.getElementById('edit-prof-hidden');
-bindProfSearch(editProfSearch, editProfDrop, editProfHid);
 
 /* ══════════════════════════════════════
    DETAIL MODAL
@@ -1179,9 +1259,9 @@ function drHtml(s, color) {
             ${s.niveau   ? `<span class="dr-badge dr-niv">🎓 ${s.niveau}</span>`  : ''}
             ${s.nb_eleves ? `<span class="dr-badge" style="background:var(--purple)">👥 ${s.nb_eleves}</span>` : ''}
         </div>
-        ${s.heure   ? `<div class="dr-note">🕐 ${s.heure}</div>` : ''}
-        ${s.prof    ? `<div class="dr-note">🎓 Prof: ${s.prof}</div>` : ''}
-        ${s.note    ? `<div class="dr-note">📝 ${s.note}</div>` : ''}
+        ${s.heure    ? `<div class="dr-note">🕐 ${s.heure}</div>` : ''}
+        ${s.prof     ? `<div class="dr-note">🎓 Prof: ${s.prof}</div>` : ''}
+        ${s.note     ? `<div class="dr-note">📝 ${s.note}</div>` : ''}
         ${s.remarque ? `<div class="dr-note">💬 ${s.remarque}</div>` : ''}
         <div class="dr-actions">
             <button type="button" class="btn-edit-s" data-skey="${key}"
@@ -1219,7 +1299,7 @@ function closeDet(evt) {
 }
 
 /* ══════════════════════════════════════
-   EDIT MODAL — avec tous les champs
+   EDIT MODAL
 ══════════════════════════════════════ */
 function setEditStatut(val) {
     ['passee','annulee','rattrapage'].forEach(v => {
@@ -1231,35 +1311,29 @@ function openEdit(s) {
     document.getElementById('edit-hdr').style.background = curCoord ? curCoord.color : 'var(--teal)';
     document.getElementById('edit-sub').textContent = '📅 ' + fmtDate(s.date) + (curCoord ? '  ·  👤 ' + curCoord.name : '');
 
-    // Route vers suivi_partenariat_modifier pour avoir tous les champs
     document.getElementById('edit-form').action = `/suivi_partenariat/modifier/${s.id}`;
 
-    document.getElementById('edit-date').value    = s.date;
-    document.getElementById('edit-heure').value   = s.heure   || '';
-    document.getElementById('edit-heures').value  = s.heures;
-    document.getElementById('edit-eleves').value  = s.nb_eleves || '';
-    document.getElementById('edit-note').value    = s.note    || '';
-    document.getElementById('edit-remarque').value= s.remarque|| '';
+    document.getElementById('edit-date').value     = s.date;
+    document.getElementById('edit-heure').value    = s.heure    || '';
+    document.getElementById('edit-heures').value   = s.heures;
+    document.getElementById('edit-eleves').value   = s.nb_eleves || '';
+    document.getElementById('edit-note').value     = s.note     || '';
+    document.getElementById('edit-remarque').value = s.remarque || '';
 
-    // Statut
     setEditStatut(s.statut || 'passee');
 
-    // Dar
-    const darSel = document.getElementById('edit-dar');
-    darSel.value = s.dar_id || '';
+    /* Rebuild dar select filtré par les dars du coordinateur */
+    const editDarSel = document.getElementById('edit-dar');
+    editDarSel.innerHTML = DO(s.dar_id || '');
 
-    // Matière
-    const matSel = document.getElementById('edit-matiere');
-    matSel.value = s.matiere || '';
+    document.getElementById('edit-matiere').value = s.matiere || '';
+    document.getElementById('edit-niveau').value  = s.niveau  || '';
 
-    // Niveau
-    const nivSel = document.getElementById('edit-niveau');
-    nivSel.value = s.niveau || '';
+    editProfIdHid.value   = s.professeur_id ? String(s.professeur_id) : '';
+    editProfNomHid.value  = s.prof          || '';
+    editProfSearch.value  = s.prof          || '';
 
-    // Prof
-    editProfHid.value    = s.prof || '';
-    editProfSearch.value = s.prof || '';
-
+    document.getElementById('edit-coord-hidden').value = s.coordinateur_id || '';
     document.getElementById('edit-redirect').value = window.location.href;
     document.getElementById('modal-edit').classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -1270,9 +1344,11 @@ function closeEdit(evt) {
     document.body.style.overflow = '';
 }
 
-/* ── Delete modal ── */
+/* ══════════════════════════════════════
+   DELETE MODAL
+══════════════════════════════════════ */
 function openDel(s) {
-    document.getElementById('del-form').action = `/heures/supprimer/${s.id}`;
+    document.getElementById('del-form').action = `/suivi_partenariat/supprimer/${s.id}`;
     document.getElementById('del-redirect').value = window.location.href;
     document.getElementById('del-body').innerHTML = `
         <div class="dr" style="border-left-color:var(--red);margin-bottom:0">

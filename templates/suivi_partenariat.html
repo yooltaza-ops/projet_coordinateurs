@@ -315,6 +315,12 @@
   }
   .sp-fg input::placeholder, .sp-fg textarea::placeholder { color: #b0bac9; font-size: 13px; }
 
+  /* Select disabled */
+  .sp-fg select:disabled {
+    background: #f0f4f8; color: #6b7a99; cursor: not-allowed; opacity: 1;
+    border-color: #dde3ec;
+  }
+
   .sp-input-icon { position: relative; }
   .sp-input-icon .ico {
     position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
@@ -402,6 +408,22 @@
   .prof-option:last-child { border-bottom: none; }
   .prof-option:hover { background: #fdf8f0; color: #1a3a6b; }
   .prof-option.selected { background: #fffbeb; font-weight: 600; color: #92400e; }
+
+  /* Hint sous dar */
+  .sp-dar-hint {
+    font-size: 11px; color: var(--sp-muted); margin-top: 4px;
+    font-style: italic; display: none;
+  }
+  .sp-dar-hint.show { display: block; }
+
+  /* Badge lock coordinateur */
+  .sp-coord-lock-badge {
+    display: none; align-items: center; gap: 6px;
+    background: #fff8ee; border: 1.5px solid #fce8c3;
+    border-radius: 8px; padding: 7px 12px; margin-top: 6px;
+    font-size: 12px; font-weight: 600; color: #92400e;
+  }
+  .sp-coord-lock-badge.show { display: flex; }
 
   /* Modal Footer */
   .sp-modal-footer {
@@ -518,7 +540,6 @@
 
   {# ── KPI Row ── #}
   <div class="sp-kpi-row">
-    
     <div class="sp-kpi">
         <div class="sp-kpi-icon blue">📅</div>
         <div><div class="sp-kpi-val">{{ total_seances }}</div><div class="sp-kpi-lbl">Total séances</div></div>
@@ -812,6 +833,7 @@
         <div class="sp-form-grid-1">
           <div class="sp-fg">
             <label>Coordinateur / Coordinatrice <span class="req">*</span></label>
+            {# Select coordinateur — sera rebuild par JS en mode locked #}
             <select name="coordinateur_id" id="spCoord" required>
               <option value="">— Choisir —</option>
               {% for c in coordinateurs %}
@@ -823,6 +845,10 @@
                 </option>
               {% endfor %}
             </select>
+            {# Badge affiché quand coordinateurs filtrés par dar #}
+            <div class="sp-coord-lock-badge" id="spCoordLockBadge">
+              🔒 <span id="spCoordLockText">Coordinateurs de cette dar uniquement</span>
+            </div>
           </div>
         </div>
 
@@ -888,6 +914,9 @@
                 <option value="{{ d.id }}">{{ d.nom }}</option>
               {% endfor %}
             </select>
+            <span class="sp-dar-hint" id="spDarHint">
+              💡 Choisissez d'abord un coordinateur pour filtrer les dars
+            </span>
           </div>
           <div class="sp-fg">
             <label>Matière</label>
@@ -907,7 +936,7 @@
           </div>
         </div>
 
-        {# ── Professeur — CORRIGÉ : name="professeur_id", stocke l'ID ── #}
+        {# ── Professeur ── #}
         <div class="sp-section-label">🎓 Professeur</div>
         <input type="hidden" name="professeur_id" id="spProfHidden">
         <div class="prof-search-wrapper">
@@ -959,16 +988,62 @@
 
 {% block extra_js %}
 <script>
-/* ════════════════════════════════
-   Données depuis le serveur
-════════════════════════════════ */
+/* ════════════════════════════════════════════════════════
+   DONNÉES SERVEUR
+════════════════════════════════════════════════════════ */
 
-/* ══ Liste des profs avec ID et nom ══ */
+/* Toutes les dars */
+var ALL_DOURS = [
+  {% for d in dours %}{ id: {{ d.id }}, nom: {{ d.nom | tojson }} }{% if not loop.last %},{% endif %}{% endfor %}
+];
+
+/* Dars par coordinateur */
+var COORD_DOURS = {};
+{% for c in coordinateurs %}
+COORD_DOURS[{{ c.id }}] = [{% for d in c.dours %}{ id: {{ d.id }}, nom: {{ d.nom | tojson }} }{% if not loop.last %},{% endif %}{% endfor %}];
+{% endfor %}
+
+/* Coordinateurs par dar : { darId: [ {id, label} ] } */
+var DAR_COORDS = {};
+{% for d in dours %}
+DAR_COORDS[{{ d.id }}] = [
+  {% for c in coordinateurs %}
+    {% if d in c.dours %}
+    {
+      id:    {{ c.id }},
+      label: {{ ('👨 ' if c.genre=='M' else '👩 ') | tojson }}
+             + {{ c.prenom | tojson }} + ' ' + {{ c.nom | tojson }}
+             + {{ (' (' + ('Coordinateur' if c.genre=='M' else 'Coordinatrice') + ')') | tojson }}
+             {% if c.responsable %}
+             + {{ (' — ' + c.responsable.prenom + ' ' + c.responsable.nom) | tojson }}
+             {% endif %}
+    }{% if not loop.last %},{% endif %}
+    {% endif %}
+  {% endfor %}
+];
+{% endfor %}
+
+/* Tous les coordinateurs (fallback) */
+var ALL_COORDS = [
+  {% for c in coordinateurs %}
+  {
+    id:    {{ c.id }},
+    label: {{ ('👨 ' if c.genre=='M' else '👩 ') | tojson }}
+           + {{ c.prenom | tojson }} + ' ' + {{ c.nom | tojson }}
+           + {{ (' (' + ('Coordinateur' if c.genre=='M' else 'Coordinatrice') + ')') | tojson }}
+           {% if c.responsable %}
+           + {{ (' — ' + c.responsable.prenom + ' ' + c.responsable.nom) | tojson }}
+           {% endif %}
+  }{% if not loop.last %},{% endif %}
+  {% endfor %}
+];
+
+/* Professeurs */
 var PROFS_DATA = [
   {% for p in professeurs %}{ id: {{ p.id }}, nom: {{ p.nom | tojson }} }{% if not loop.last %},{% endif %}{% endfor %}
 ];
 
-/* ══ Séances du mois (toutes) ══ */
+/* Séances du mois */
 var SEANCES_DATA = {};
 {% for s in seances_json %}
 SEANCES_DATA[{{ s.id }}] = {
@@ -989,9 +1064,136 @@ SEANCES_DATA[{{ s.id }}] = {
 };
 {% endfor %}
 
-/* ════════════════════════════════
-   Durée stepper
-════════════════════════════════ */
+/* ════════════════════════════════════════════════════════
+   ÉTAT GLOBAL DU MODAL
+════════════════════════════════════════════════════════ */
+var _lockedDarId   = null;   /* dar verrouillée (depuis carte dar) */
+var _lockedCoords  = false;  /* true = coordinateurs filtrés par dar */
+
+/* ════════════════════════════════════════════════════════
+   REBUILD SELECT COORDINATEUR
+   ─────────────────────────────────────────────────────
+   darId fourni → afficher seulement les coordinateurs
+                  qui ont cette dar
+   darId null   → afficher tous les coordinateurs
+════════════════════════════════════════════════════════ */
+function rebuildCoordSelect(darId, selectedCoordId) {
+    var sel   = document.getElementById('spCoord');
+    var badge = document.getElementById('spCoordLockBadge');
+    var list;
+
+    if (darId && DAR_COORDS[darId] && DAR_COORDS[darId].length > 0) {
+        list          = DAR_COORDS[darId];
+        _lockedCoords = true;
+        badge.classList.add('show');
+        document.getElementById('spCoordLockText').textContent =
+            'Coordinateurs assignés à cette dar';
+    } else {
+        list          = ALL_COORDS;
+        _lockedCoords = false;
+        badge.classList.remove('show');
+    }
+
+    sel.innerHTML = '<option value="">— Choisir —</option>';
+    list.forEach(function(c) {
+        var opt       = document.createElement('option');
+        opt.value     = c.id;
+        opt.textContent = c.label;
+        if (String(c.id) === String(selectedCoordId)) opt.selected = true;
+        sel.appendChild(opt);
+    });
+}
+
+/* ════════════════════════════════════════════════════════
+   REBUILD SELECT DAR
+   ─────────────────────────────────────────────────────
+   lockedDarId fourni → une seule dar, select disabled
+   coordId fourni     → groupement : dars du coord / autres
+   aucun              → toutes les dars, hint affiché
+════════════════════════════════════════════════════════ */
+function rebuildDarSelect(coordId, selectedDarId, lockedDarId) {
+    var sel  = document.getElementById('spDar');
+    var hint = document.getElementById('spDarHint');
+
+    /* ── Mode verrouillé : une seule dar ── */
+    if (lockedDarId !== undefined && lockedDarId !== null && lockedDarId !== '') {
+        _lockedDarId = String(lockedDarId);
+        var darObj = ALL_DOURS.find(function(d) { return String(d.id) === _lockedDarId; });
+        sel.innerHTML = '';
+        if (darObj) {
+            var opt       = document.createElement('option');
+            opt.value     = darObj.id;
+            opt.textContent = darObj.nom;
+            opt.selected  = true;
+            sel.appendChild(opt);
+        }
+        sel.disabled     = true;
+        hint.textContent = '🔒 Dar pré-sélectionnée depuis la carte';
+        hint.classList.add('show');
+        return;
+    }
+
+    /* ── Mode normal ── */
+    _lockedDarId = null;
+    sel.disabled = false;
+
+    sel.innerHTML = '<option value="">— Aucune —</option>';
+
+    if (coordId && COORD_DOURS[coordId] && COORD_DOURS[coordId].length > 0) {
+        /* Coordinateur choisi → ghi dars dyalo, bla autres */
+        hint.classList.remove('show');
+        COORD_DOURS[coordId].forEach(function(d) {
+            var o         = document.createElement('option');
+            o.value       = d.id;
+            o.textContent = d.nom;
+            if (String(d.id) === String(selectedDarId)) o.selected = true;
+            sel.appendChild(o);
+        });
+    } else {
+        /* Pas de coordinateur → toutes les dars */
+        hint.textContent = '💡 Choisissez d\'abord un coordinateur pour filtrer les dars';
+        hint.classList.add('show');
+        ALL_DOURS.forEach(function(d) {
+            var o         = document.createElement('option');
+            o.value       = d.id;
+            o.textContent = d.nom;
+            if (String(d.id) === String(selectedDarId)) o.selected = true;
+            sel.appendChild(o);
+        });
+    }
+}
+
+/* ════════════════════════════════════════════════════════
+   LISTENERS — changements dans le modal
+════════════════════════════════════════════════════════ */
+
+/* Changement coordinateur → rebuild dars (si pas locked) */
+document.getElementById('spCoord').addEventListener('change', function() {
+    if (_lockedDarId) return; /* dar verrouillée → ne pas toucher */
+    var currentDar = document.getElementById('spDar').value;
+    rebuildDarSelect(this.value, currentDar);
+});
+
+/* Changement dar → rebuild coordinateurs (si pas locked) */
+document.getElementById('spDar').addEventListener('change', function() {
+    if (_lockedDarId) return; /* dar locked → rien à faire */
+    var darId        = this.value;
+    var currentCoord = document.getElementById('spCoord').value;
+    if (darId) {
+        /* Dar choisie → filtre les coordinateurs de cette dar */
+        rebuildCoordSelect(darId, currentCoord);
+    } else {
+        /* Dar effacée → remet tous les coordinateurs */
+        rebuildCoordSelect(null, currentCoord);
+    }
+    /* Rebuild dars groupées selon le coord courant */
+    var newCoord = document.getElementById('spCoord').value;
+    rebuildDarSelect(newCoord, darId);
+});
+
+/* ════════════════════════════════════════════════════════
+   DURÉE STEPPER
+════════════════════════════════════════════════════════ */
 function changeHrs(delta) {
     var el = document.getElementById('spHeures');
     var v  = parseFloat(el.value) || 2;
@@ -999,18 +1201,18 @@ function changeHrs(delta) {
     el.value = (v % 1 === 0) ? v : v.toFixed(1);
 }
 
-/* ════════════════════════════════
-   Statut pills
-════════════════════════════════ */
+/* ════════════════════════════════════════════════════════
+   STATUT PILLS
+════════════════════════════════════════════════════════ */
 function setStatut(val) {
     document.querySelectorAll('input[name="statut"]').forEach(function(r) {
         r.checked = (r.value === val);
     });
 }
 
-/* ════════════════════════════════
-   Prof search dropdown
-════════════════════════════════ */
+/* ════════════════════════════════════════════════════════
+   PROF SEARCH DROPDOWN
+════════════════════════════════════════════════════════ */
 var profSearch   = document.getElementById('spProfSearch');
 var profDropdown = document.getElementById('spProfDropdown');
 var profHidden   = document.getElementById('spProfHidden');
@@ -1020,19 +1222,18 @@ function renderProfOptions(filter) {
     var filtered = PROFS_DATA.filter(function(p) { return p.nom.toLowerCase().includes(lower); });
     profDropdown.innerHTML = '';
 
-    /* option vide */
-    var emptyOpt = document.createElement('div');
-    emptyOpt.className    = 'prof-option';
-    emptyOpt.textContent  = '— Aucun professeur —';
+    var emptyOpt           = document.createElement('div');
+    emptyOpt.className     = 'prof-option';
+    emptyOpt.textContent   = '— Aucun professeur —';
     emptyOpt.dataset.value = '';
     emptyOpt.dataset.nom   = '';
     profDropdown.appendChild(emptyOpt);
 
     filtered.forEach(function(p) {
-        var opt = document.createElement('div');
+        var opt            = document.createElement('div');
         opt.className      = 'prof-option' + (String(p.id) === profHidden.value ? ' selected' : '');
         opt.textContent    = p.nom;
-        opt.dataset.value  = String(p.id);   /* ← ID numérique */
+        opt.dataset.value  = String(p.id);
         opt.dataset.nom    = p.nom;
         profDropdown.appendChild(opt);
     });
@@ -1040,8 +1241,8 @@ function renderProfOptions(filter) {
     profDropdown.querySelectorAll('.prof-option').forEach(function(opt) {
         opt.addEventListener('mousedown', function(e) {
             e.preventDefault();
-            profHidden.value = opt.dataset.value;     /* ← stocke l'ID */
-            profSearch.value = opt.dataset.nom || '';  /* ← affiche le nom */
+            profHidden.value = opt.dataset.value;
+            profSearch.value = opt.dataset.nom || '';
             profDropdown.classList.remove('open');
         });
     });
@@ -1060,9 +1261,9 @@ profSearch.addEventListener('blur', function() {
     setTimeout(function() { profDropdown.classList.remove('open'); }, 150);
 });
 
-/* ════════════════════════════════
-   Tabs
-════════════════════════════════ */
+/* ════════════════════════════════════════════════════════
+   TABS
+════════════════════════════════════════════════════════ */
 function switchTab(tab, btn) {
     document.getElementById('view-dar').style.display    = tab === 'dar'    ? '' : 'none';
     document.getElementById('view-niveau').style.display = tab === 'niveau' ? '' : 'none';
@@ -1070,7 +1271,6 @@ function switchTab(tab, btn) {
     btn.classList.add('active');
 }
 
-/* ── Toggle cards ── */
 function toggleCard(header) {
     var body = header.nextElementSibling;
     var icon = header.querySelector('.toggle-icon');
@@ -1083,69 +1283,121 @@ function toggleCard(header) {
     }
 }
 
-/* ════════════════════════════════
-   Modal ajouter / modifier
-════════════════════════════════ */
+/* ════════════════════════════════════════════════════════
+   MODAL AJOUTER / MODIFIER
+════════════════════════════════════════════════════════ */
 var backdrop = document.getElementById('spModalBackdrop');
 
+/* ─────────────────────────────────────────────────────
+   openAddModal(darId, niveau)
+   darId fourni  → dar verrouillée + coordinateurs filtrés
+   darId null    → mode libre, tous coords, toutes dars
+───────────────────────────────────────────────────── */
 function openAddModal(darId, niveau) {
-    document.getElementById('spModalTitle').textContent  = 'Ajouter une séance';
-    document.getElementById('spForm').action             = "{{ url_for('suivi_partenariat_ajouter') }}";
-    document.getElementById('spSubmitBtn').textContent   = '💾 Ajouter';
+    document.getElementById('spModalTitle').textContent = 'Ajouter une séance';
+    document.getElementById('spForm').action            = "{{ url_for('suivi_partenariat_ajouter') }}";
+    document.getElementById('spSubmitBtn').innerHTML    = '\uD83D\uDCBE Ajouter';
+
+    /* Reset complet */
     document.getElementById('spForm').reset();
     profHidden.value = '';
     profSearch.value = '';
+
+    /* Valeurs par défaut */
     document.getElementById('spDate').value   = new Date().toISOString().slice(0, 10);
     document.getElementById('spHeures').value = '2';
     setStatut('passee');
-    if (darId)  document.getElementById('spDar').value    = String(darId);
+
+    if (darId) {
+        /* ── Mode dar verrouillée ──
+           1. Dar : locked sur cette dar
+           2. Coordinateur : filtré sur les coords de cette dar */
+        rebuildDarSelect('', '', darId);
+        rebuildCoordSelect(darId, '');
+    } else {
+        /* ── Mode libre ── */
+        rebuildDarSelect('', '');
+        rebuildCoordSelect(null, '');
+    }
+
     if (niveau) document.getElementById('spNiveau').value = niveau;
+
     backdrop.classList.add('show');
 }
 
+/* ─────────────────────────────────────────────────────
+   openEditModal(id)
+   Modifier une séance existante
+   → Coordinateurs filtrés par la dar de la séance
+   → Dars groupées par le coordinateur de la séance
+   → Changement coord → rebuild dars
+   → Changement dar   → rebuild coords
+───────────────────────────────────────────────────── */
 function openEditModal(id) {
     var s = SEANCES_DATA[id];
     if (!s) { console.warn('Séance introuvable:', id); return; }
 
     document.getElementById('spModalTitle').textContent = 'Modifier la séance';
     document.getElementById('spForm').action            = '/suivi_partenariat/modifier/' + id;
-    document.getElementById('spSubmitBtn').textContent  = '💾 Enregistrer';
+    document.getElementById('spSubmitBtn').innerHTML    = '💾 Enregistrer';
 
-    document.getElementById('spCoord').value    = s.coordinateur_id || '';
-    document.getElementById('spDate').value     = s.date            || '';
-    document.getElementById('spHeure').value    = s.heure           || '';
-    document.getElementById('spHeures').value   = s.nb_heures       || 2;
-    document.getElementById('spDar').value      = s.dar_id          || '';
-    document.getElementById('spMatiere').value  = s.matiere         || '';
-    document.getElementById('spNiveau').value   = s.niveau          || '';
-    document.getElementById('spEleves').value   = s.nb_eleves       || '';
-    document.getElementById('spNote').value     = s.note            || '';
-    document.getElementById('spRemarque').value = s.remarque        || '';
+    /* Remplir les champs */
+    document.getElementById('spDate').value     = s.date      || '';
+    document.getElementById('spHeure').value    = s.heure     || '';
+    document.getElementById('spHeures').value   = s.nb_heures || 2;
+    document.getElementById('spMatiere').value  = s.matiere   || '';
+    document.getElementById('spNiveau').value   = s.niveau    || '';
+    document.getElementById('spEleves').value   = s.nb_eleves || '';
+    document.getElementById('spNote').value     = s.note      || '';
+    document.getElementById('spRemarque').value = s.remarque  || '';
     setStatut(s.statut || 'passee');
 
-    /* ← ID dans le hidden, nom dans le search */
+    /* ── Dar : locked sur la dar de la séance (bhal ajouter) ──
+       Coordinateurs : filtrés par cette dar                    */
+    if (s.dar_id) {
+        rebuildDarSelect('', '', s.dar_id);          /* dar locked */
+        rebuildCoordSelect(s.dar_id, s.coordinateur_id); /* coords filtrés */
+    } else {
+        /* Pas de dar → dars dyal coordinateur seulement */
+        rebuildCoordSelect(null, s.coordinateur_id);
+        rebuildDarSelect(s.coordinateur_id, '');
+    }
+
+    /* Professeur */
     profHidden.value = s.professeur_id ? String(s.professeur_id) : '';
     profSearch.value = s.prof          || '';
 
     backdrop.classList.add('show');
 }
 
-function closeModal() { backdrop.classList.remove('show'); }
+function closeModal() {
+    backdrop.classList.remove('show');
+    /* Reset lock state */
+    _lockedDarId  = null;
+    _lockedCoords = false;
+    document.getElementById('spDar').disabled = false;
+    document.getElementById('spCoordLockBadge').classList.remove('show');
+    document.getElementById('spDarHint').classList.remove('show');
+}
 
 backdrop.addEventListener('click', function(e) { if (e.target === backdrop) closeModal(); });
-document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeModal(); closeDelModal(); } });
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { closeModal(); closeDelModal(); }
+});
 
-/* ════════════════════════════════
-   Modal Supprimer
-════════════════════════════════ */
+/* ════════════════════════════════════════════════════════
+   MODAL SUPPRIMER
+════════════════════════════════════════════════════════ */
 var delBackdrop = document.getElementById('spDelBackdrop');
 
 function openDelModal(action, redirectUrl) {
-    document.getElementById('spDelForm').action        = action;
-    document.getElementById('spDelRedirect').value     = redirectUrl;
+    document.getElementById('spDelForm').action    = action;
+    document.getElementById('spDelRedirect').value = redirectUrl;
     delBackdrop.classList.add('show');
 }
 function closeDelModal() { delBackdrop.classList.remove('show'); }
-delBackdrop.addEventListener('click', function(e) { if (e.target === delBackdrop) closeDelModal(); });
+delBackdrop.addEventListener('click', function(e) {
+    if (e.target === delBackdrop) closeDelModal();
+});
 </script>
 {% endblock %}
