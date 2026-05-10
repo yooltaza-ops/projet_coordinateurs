@@ -301,12 +301,28 @@ body { font-family: 'DM Sans', sans-serif; }
 .prof-option:hover { background: #fdf8f0; color: var(--blue); }
 .prof-option.selected { background: #fffbeb; font-weight: 600; }
 
-/* dar lock hint */
 .dar-lock-hint {
     font-size: 11px; color: var(--grey); margin-top: 4px;
     font-style: italic; display: none;
 }
 .dar-lock-hint.show { display: block; }
+
+/* Style pour le select dar quand locked dans edit modal */
+.dar-locked-wrap {
+    position: relative;
+}
+.dar-locked-wrap select:disabled {
+    background: #f0f4f8;
+    color: #374151;
+    cursor: not-allowed;
+    opacity: 1;
+    border-color: #cbd5e1;
+}
+.dar-lock-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; color: #64748b; margin-top: 5px;
+    font-style: italic;
+}
 
 .sessions-list { display: flex; flex-direction: column; gap: 16px; }
 .session-card {
@@ -347,7 +363,7 @@ body { font-family: 'DM Sans', sans-serif; }
     border-color: var(--orange); box-shadow: 0 0 0 3px rgba(245,166,35,.12);
 }
 .fg textarea { resize: vertical; min-height: 60px; }
-.fg select:disabled { background: #f0f4f8; color: var(--grey); cursor: not-allowed; opacity: 1; }
+.fg select:disabled { background: #f0f4f8; color: #374151; cursor: not-allowed; opacity: 1; }
 
 .btn-add-row {
     display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -498,12 +514,19 @@ body { font-family: 'DM Sans', sans-serif; }
                 <div class="sc-grid-2">
                     <div class="fg">
                         <label>🏠 Dar Talib</label>
-                        <select name="dar_id" id="edit-dar">
-                            <option value="">— Aucune —</option>
-                            {% for d in dours %}
-                            <option value="{{ d.id }}">{{ d.nom }}</option>
-                            {% endfor %}
-                        </select>
+                        <!-- hidden input pour soumettre la valeur même quand select est disabled -->
+                        <input type="hidden" name="dar_id" id="edit-dar-hidden">
+                        <div class="dar-locked-wrap">
+                            <select id="edit-dar" onchange="document.getElementById('edit-dar-hidden').value=this.value">
+                                <option value="">— Aucune —</option>
+                                {% for d in dours %}
+                                <option value="{{ d.id }}">{{ d.nom }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="dar-lock-badge" id="edit-dar-lock-badge" style="display:none;">
+                                🔒 Dars du coordinateur uniquement
+                            </div>
+                        </div>
                     </div>
                     <div class="fg">
                         <label>🔬 Matière</label>
@@ -945,25 +968,15 @@ const MO = (sel) => '<option value="">— Matière —</option>' + MATIERES.map(
 const NO = (sel) => '<option value="">— Niveau —</option>' + NIVEAUX.map(n=>
     `<option value="${n}"${n===sel?' selected':''}>${n}</option>`).join('');
 
-/* Toutes les dars — pour modal edit */
 const DO = (sel) => '<option value="">— Aucune —</option>' + DOURS_JSON.map(d=>
     `<option value="${d.id}"${String(d.id)===String(sel)?' selected':''}>${d.nom}</option>`).join('');
 
-/* ══════════════════════════════════════
-   DOcoord(sel, locked)
-   ─────────────────────────────────────
-   - Si locked=true  → affiche UNIQUEMENT les dars du coordinateur courant
-                        et retourne { html, isLocked:true }
-   - Si locked=false → affiche toutes les dars du coordinateur (mode normal)
-══════════════════════════════════════ */
 function buildDarOptions(sel, locked) {
-    /* Dars du coordinateur courant */
     const coordDours = (curCoord && curCoord.dours && curCoord.dours.length)
         ? curCoord.dours
         : DOURS_JSON;
 
     if (locked && coordDours.length > 0) {
-        /* Mode verrouillé : une seule dar, disabled */
         let html = '';
         coordDours.forEach(d => {
             const isSelected = !sel || String(d.id) === String(sel);
@@ -972,7 +985,6 @@ function buildDarOptions(sel, locked) {
         return { html, isLocked: coordDours.length > 0 };
     }
 
-    /* Mode normal : toutes les dars du coordinateur */
     let html = '<option value="">— Aucune —</option>';
     coordDours.forEach(d => {
         html += `<option value="${d.id}"${String(d.id)===String(sel)?' selected':''}>${d.nom}</option>`;
@@ -1025,7 +1037,6 @@ function bindProfSearch(inp, drop, hidNom, hidId) {
     inp.addEventListener('blur', () => { setTimeout(() => drop.classList.remove('open'), 150); });
 }
 
-/* Bind edit modal prof search */
 const editProfSearch  = document.getElementById('edit-prof-search');
 const editProfDrop    = document.getElementById('edit-prof-dropdown');
 const editProfIdHid   = document.getElementById('edit-prof-id-hidden');
@@ -1033,10 +1044,7 @@ const editProfNomHid  = document.getElementById('edit-prof-nom-hidden');
 bindProfSearch(editProfSearch, editProfDrop, editProfNomHid, editProfIdHid);
 
 /* ══════════════════════════════════════
-   MODAL ADD — sessions multiples
-   ──────────────────────────────────────
-   _addLocked : true quand on ouvre depuis une cellule calendrier
-                (les dars sont filtrées ET verrouillées sur celles du coord)
+   MODAL ADD
 ══════════════════════════════════════ */
 let sc = 0, prefDate = '', _addLocked = false;
 
@@ -1047,7 +1055,6 @@ function addSession(date) {
     const d    = date || prefDate || new Date().toISOString().split('T')[0];
     const isFirst = list.children.length === 0;
 
-    /* ── Construire les options dar ── */
     const darResult = buildDarOptions('', _addLocked);
     const darHtml   = darResult.html;
     const isLocked  = darResult.isLocked;
@@ -1148,7 +1155,6 @@ function addSession(date) {
     `;
     list.appendChild(card);
 
-    /* Si dar verrouillée → ajouter un hidden avec la valeur pour que le form la soumette */
     if (isLocked && curCoord && curCoord.dours && curCoord.dours.length > 0) {
         const hidDar = document.createElement('input');
         hidDar.type  = 'hidden';
@@ -1198,18 +1204,11 @@ function updBadge() {
     if(b) b.textContent = n + (n>1?' séances':' séance');
 }
 
-/* ══════════════════════════════════════
-   openAdd :
-   - Depuis calendrier → _addLocked = true
-     (dars filtrées ET verrouillées sur le coordinateur)
-   - Depuis n'importe où → _addLocked = true par défaut
-     (on est toujours dans le contexte d'UN coordinateur)
-══════════════════════════════════════ */
 function openAdd(ds) {
     if (!curCoord) return;
     prefDate    = ds;
     sc          = 0;
-    _addLocked  = true; /* toujours verrouillé sur les dars du coord courant */
+    _addLocked  = true;
 
     document.getElementById('sessions-list').innerHTML = '';
     document.getElementById('hci').value = curCoord.id;
@@ -1299,7 +1298,7 @@ function closeDet(evt) {
 }
 
 /* ══════════════════════════════════════
-   EDIT MODAL
+   EDIT MODAL — FIX DAR TALIB LOCKED
 ══════════════════════════════════════ */
 function setEditStatut(val) {
     ['passee','annulee','rattrapage'].forEach(v => {
@@ -1322,9 +1321,34 @@ function openEdit(s) {
 
     setEditStatut(s.statut || 'passee');
 
-    /* Rebuild dar select filtré par les dars du coordinateur */
-    const editDarSel = document.getElementById('edit-dar');
-    editDarSel.innerHTML = DO(s.dar_id || '');
+    /* ══ FIX : Dar Talib — filtré ET verrouillé sur les dars du coordinateur ══ */
+    const editDarSel   = document.getElementById('edit-dar');
+    const editDarHid   = document.getElementById('edit-dar-hidden');
+    const lockBadge    = document.getElementById('edit-dar-lock-badge');
+
+    const coordDours = (curCoord && curCoord.dours && curCoord.dours.length)
+        ? curCoord.dours
+        : DOURS_JSON;
+
+    /* Construire les options filtrées sur les dars du coordinateur */
+    let darHtmlEdit = '<option value="">— Aucune —</option>';
+    coordDours.forEach(d => {
+        const isSelected = String(d.id) === String(s.dar_id || '');
+        darHtmlEdit += `<option value="${d.id}"${isSelected ? ' selected' : ''}>${d.nom}</option>`;
+    });
+    editDarSel.innerHTML = darHtmlEdit;
+
+    /* Synchroniser le hidden input avec la valeur actuelle */
+    editDarHid.value = s.dar_id || '';
+
+    /* Mettre à jour le hidden quand l'utilisateur change (cas non-locked) */
+    editDarSel.onchange = () => { editDarHid.value = editDarSel.value; };
+
+    /* Verrouiller si le coordinateur a des dars assignées */
+    const shouldLock = coordDours.length > 0;
+    editDarSel.disabled = shouldLock;
+    lockBadge.style.display = shouldLock ? 'inline-flex' : 'none';
+    /* ══ FIN FIX ══ */
 
     document.getElementById('edit-matiere').value = s.matiere || '';
     document.getElementById('edit-niveau').value  = s.niveau  || '';
