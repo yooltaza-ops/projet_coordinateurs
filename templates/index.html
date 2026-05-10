@@ -5,7 +5,9 @@
 
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/coord_panel.css') }}">
 <script src="{{ url_for('static', filename='js/dashboard.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/coord_panel.js') }}" defer></script>
 
 <!-- ══ CONFIRM DELETE MODAL ══ -->
 <div class="confirm-overlay" id="confirm-overlay">
@@ -33,7 +35,7 @@
 </div>
 
 <!-- Overlay panels -->
-<div class="overlay" id="overlay" onclick="closeAllPanels()"></div>
+<div class="overlay" id="overlay" onclick="document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active')});this.classList.remove('active')"></div>
 
 <!-- PANEL : Modifier Coordinateur -->
 <div class="panel" id="panel-modifier">
@@ -118,6 +120,8 @@
 </div>
 {% endif %}
 
+
+
 <main class="main-content">
 
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -166,7 +170,6 @@
                 <div class="stat-number teal">{{ "%.1f"|format(total_heures_mois) }}h</div>
                 <div class="stat-label">⏱️ Heures passées — {{ mois_nom_actuel }}</div>
             </div>
-            {# ══ زيد هاد الاثنين ══ #}
             <div class="stat-card" style="border-color:#dc2626;">
                 <div class="stat-number" style="color:#dc2626;">{{ total_annulees_mois }}</div>
                 <div class="stat-label">❌ Annulées — {{ mois_nom_actuel }}</div>
@@ -290,7 +293,6 @@
                     <div class="action-title">Calendrier</div>
                     <div class="action-desc">Calendrier et Matières</div>
                 </a>
-
                 <a href="{{ url_for('impression_seances') }}" class="action-card">
                     <div class="action-icon">🖨️</div>
                     <div class="action-title">Impression</div>
@@ -366,7 +368,6 @@
                     </tr>
                     {% endfor %}
 
-                    {# ══ صف Total ══ #}
                     {% set grand = namespace(seances=0, passees=0, annulees=0, rattrapages=0, heures=0) %}
                     {% for row in recap_seances %}
                         {% set grand.seances     = grand.seances     + row.nb_seances %}
@@ -397,110 +398,89 @@
         {% endif %}
     </div>
 
-    <!-- COORDINATEURS PAR RESPONSABLE -->
+    <!-- COORDINATEURS PAR RESPONSABLE — ACCORDION -->
     <div class="card">
         <div class="card-header" style="background:#1a3a6b;">
-            <h3 style="color:white;">📋 Coordinateurs par Responsable</h3>
+            <h3 style="color:white;">📋 Coordinateurs par Responsable
+                <span style="font-size:11px;font-weight:400;opacity:0.7;margin-left:8px;">— cliquez sur un responsable pour voir ses coordinateurs</span>
+            </h3>
         </div>
-        <!-- Desktop -->
-        <div class="desktop-table" style="overflow-x:auto;">
-            <table class="resp-table">
-                <thead>
-                    <tr>
-                        <th>Responsable</th><th style="text-align:center;">👨</th>
-                        <th style="text-align:center;">👩</th><th style="text-align:center;">Total</th><th>🏠 Dours</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in data %}
-                    <tr>
-                        <td style="font-weight:600;color:#1a3a6b;">
-                            {{ item.responsable.prenom }} {{ item.responsable.nom }}
-                            {% if current_user.is_admin %}
-                            <div style="margin-top:5px;">
-                                <button onclick="confirmDelete('{{ url_for('supprimer_responsable', id=item.responsable.id) }}', '{{ item.responsable.prenom }} {{ item.responsable.nom }}', 'responsable')"
-                                    style="background:#e74c3c;color:white;font-size:10px;padding:2px 9px;border-radius:10px;border:none;cursor:pointer;font-weight:600;font-family:'Poppins',sans-serif;">
-                                    🗑️ Supprimer
-                                </button>
-                            </div>
-                            {% endif %}
-                        </td>
-                        <td style="text-align:center;"><span style="background:#1a3a6b;color:white;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600;">{{ item.nb_coordinateurs }}</span></td>
-                        <td style="text-align:center;"><span style="background:#e91e8c;color:white;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600;">{{ item.nb_coordinatrices }}</span></td>
-                        <td style="text-align:center;"><span style="background:#95a5a6;color:white;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600;">{{ item.total }}</span></td>
-                        <td>
-                            {% for coord in item.responsable.coordinateurs %}
-                            <div style="background:#f8fafc;border-radius:9px;padding:9px 12px;margin-bottom:6px;border:1px solid #e8edf5;">
-                                <div style="font-weight:600;color:#1a3a6b;font-size:12px;margin-bottom:5px;">
-                                    {% if coord.genre == 'M' %}👨{% else %}👩{% endif %} {{ coord.prenom }} {{ coord.nom }}
-                                </div>
-                                <div>
-                                    {% if coord.dours %}{% for d in coord.dours %}
-                                    <span style="display:inline-block;margin:2px;padding:2px 8px;border-radius:10px;font-size:10px;color:white;font-weight:500;background:{% if d.type == 'talib' %}#1a3a6b{% elif d.type == 'taliba' %}#e91e8c{% else %}#f5a623{% endif %};">dar {{ d.type }} {{ d.nom }}</span>
-                                    {% endfor %}{% else %}
-                                    <span style="color:#bbb;font-size:11px;font-style:italic;">Mazal ma zidti dour</span>
-                                    {% endif %}
-                                </div>
-                                <div style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap;">
-                                    <button style="background:#f5a623;color:white;font-size:10px;padding:3px 10px;border-radius:10px;border:none;cursor:pointer;font-weight:600;font-family:'Poppins',sans-serif;"
-                                        onclick="openModifier({{ coord.id }}, '{{ coord.nom }}', '{{ coord.prenom }}', '{{ coord.genre }}', {{ coord.responsable_id }}, [{{ coord.dours|map(attribute='id')|join(',') }}])">✏️ Modifier</button>
-                                    <button onclick="confirmDelete('{{ url_for('supprimer_coordinateur', id=coord.id) }}', '{{ coord.prenom }} {{ coord.nom }}', 'coordinateur')"
-                                        style="background:#e74c3c;color:white;font-size:10px;padding:3px 10px;border-radius:10px;border:none;cursor:pointer;font-weight:600;font-family:'Poppins',sans-serif;">
-                                        🗑️
-                                    </button>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        <!-- Mobile -->
-        <div class="resp-card" style="padding:10px;">
+        <div style="padding:10px 16px;">
             {% for item in data %}
-            <div style="border-radius:12px;border:1.5px solid #e8edf5;overflow:hidden;margin-bottom:12px;">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:13px 14px;background:#f8fafc;border-bottom:1px solid #e8edf5;">
-                    <div>
-                        <div style="font-weight:700;color:#1a3a6b;font-size:13px;">{{ item.responsable.prenom }} {{ item.responsable.nom }}</div>
-                        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">
-                            <span style="padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;color:white;background:#1a3a6b;">👨 {{ item.nb_coordinateurs }}</span>
-                            <span style="padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;color:white;background:#e91e8c;">👩 {{ item.nb_coordinatrices }}</span>
-                            <span style="padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;color:white;background:#95a5a6;">Total {{ item.total }}</span>
+            <div class="acc-block" id="acc-{{ item.responsable.id }}">
+
+                <!-- ── ROW RESPONSABLE (header cliquable) ── -->
+                <div class="acc-header" onclick="toggleAcc({{ item.responsable.id }})">
+                    <div class="acc-header-left">
+                        <div class="acc-avatar">{{ (item.responsable.prenom or '?')[0].upper() }}</div>
+                        <div>
+                            <div class="acc-resp-name">{{ item.responsable.prenom }} {{ item.responsable.nom }}</div>
+                            <div class="acc-badges">
+                                <span class="acc-badge" style="background:#1a3a6b;">👨 {{ item.nb_coordinateurs }}</span>
+                                <span class="acc-badge" style="background:#e91e8c;">👩 {{ item.nb_coordinatrices }}</span>
+                                <span class="acc-badge" style="background:#95a5a6;">Total {{ item.total }}</span>
+                            </div>
                         </div>
                     </div>
-                    {% if current_user.is_admin %}
-                    <button onclick="confirmDelete('{{ url_for('supprimer_responsable', id=item.responsable.id) }}', '{{ item.responsable.prenom }} {{ item.responsable.nom }}', 'responsable')"
-                        style="background:#e74c3c;color:white;font-size:10px;padding:4px 10px;border-radius:10px;border:none;cursor:pointer;font-weight:600;font-family:'Poppins',sans-serif;white-space:nowrap;">
-                        🗑️
-                    </button>
-                    {% endif %}
+                    <div class="acc-header-right">
+                        {% if current_user.is_admin %}
+                        <button class="acc-del-resp"
+                            onclick="event.stopPropagation(); confirmDelete('{{ url_for('supprimer_responsable', id=item.responsable.id) }}', '{{ item.responsable.prenom | e }} {{ item.responsable.nom | e }}', 'responsable')">
+                            🗑️
+                        </button>
+                        {% endif %}
+                        <span class="acc-chevron" id="chev-{{ item.responsable.id }}">▶</span>
+                    </div>
                 </div>
-                <div style="padding:10px 14px;">
+
+                <!-- ── COORDINATEURS (body caché par défaut) ── -->
+                <div class="acc-body" id="body-{{ item.responsable.id }}">
                     {% for coord in item.responsable.coordinateurs %}
-                    <div style="background:white;border-radius:9px;padding:9px 12px;margin-bottom:6px;border:1px solid #e8edf5;">
-                        <div style="font-weight:600;color:#1a3a6b;font-size:12px;margin-bottom:5px;">
-                            {% if coord.genre == 'M' %}👨{% else %}👩{% endif %} {{ coord.prenom }} {{ coord.nom }}
+                    {%- set dours_json -%}[{% for d in coord.dours %}{"id":{{ d.id }},"nom":"{{ d.nom | e }}","type":"{{ d.type }}"}{% if not loop.last %},{% endif %}{% endfor %}]{%- endset -%}
+
+                    <div class="acc-coord-row">
+                        <!-- Info coord -->
+                        <div class="acc-coord-info">
+                            <div class="acc-coord-avatar" style="background:{% if coord.genre == 'M' %}#1a3a6b{% else %}#e91e8c{% endif %};">
+                                {{ (coord.prenom or '?')[0].upper() }}
+                            </div>
+                            <div>
+                                <div class="acc-coord-name">
+                                    {% if coord.genre == 'M' %}👨{% else %}👩{% endif %}
+                                    {{ coord.prenom }} {{ coord.nom }}
+                                </div>
+                                <div class="acc-coord-dours">
+                                    {% if coord.dours %}
+                                        {% for d in coord.dours %}
+                                        <span class="acc-dour-tag" style="background:{% if d.type == 'talib' %}#1a3a6b{% elif d.type == 'taliba' %}#e91e8c{% else %}#f5a623{% endif %};">
+                                            {% if d.type == 'talib' %}🧒{% elif d.type == 'taliba' %}👧{% else %}👩{% endif %}
+                                            dar {{ d.type }} {{ d.nom }}
+                                        </span>
+                                        {% endfor %}
+                                    {% else %}
+                                        <span class="acc-no-dour">Mazal ma zidti dour</span>
+                                    {% endif %}
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            {% if coord.dours %}{% for d in coord.dours %}
-                            <span style="display:inline-block;margin:2px;padding:2px 8px;border-radius:10px;font-size:10px;color:white;font-weight:500;background:{% if d.type == 'talib' %}#1a3a6b{% elif d.type == 'taliba' %}#e91e8c{% else %}#f5a623{% endif %};">{{ d.nom }}</span>
-                            {% endfor %}{% else %}
-                            <span style="color:#bbb;font-size:11px;font-style:italic;">Mazal ma zidti dour</span>
-                            {% endif %}
-                        </div>
-                        <div style="margin-top:6px;display:flex;gap:5px;">
-                            <button style="background:#f5a623;color:white;font-size:10px;padding:4px 12px;border-radius:10px;border:none;cursor:pointer;font-weight:600;font-family:'Poppins',sans-serif;"
-                                onclick="openModifier({{ coord.id }}, '{{ coord.nom }}', '{{ coord.prenom }}', '{{ coord.genre }}', {{ coord.responsable_id }}, [{{ coord.dours|map(attribute='id')|join(',') }}])">✏️ Modifier</button>
-                            <button onclick="confirmDelete('{{ url_for('supprimer_coordinateur', id=coord.id) }}', '{{ coord.prenom }} {{ coord.nom }}', 'coordinateur')"
-                                style="background:#e74c3c;color:white;font-size:10px;padding:4px 12px;border-radius:10px;border:none;cursor:pointer;font-weight:600;font-family:'Poppins',sans-serif;">
+                        <!-- Actions -->
+                        <div class="acc-coord-actions">
+                            <button class="acc-btn-edit"
+                                onclick="openModifier({{ coord.id }}, '{{ coord.nom | e }}', '{{ coord.prenom | e }}', '{{ coord.genre }}', {{ coord.responsable_id }}, [{{ coord.dours|map(attribute='id')|join(',') }}])">
+                                ✏️ Modifier
+                            </button>
+                            <button class="acc-btn-del"
+                                onclick="confirmDelete('{{ url_for('supprimer_coordinateur', id=coord.id) }}', '{{ coord.prenom | e }} {{ coord.nom | e }}', 'coordinateur')">
                                 🗑️
                             </button>
                         </div>
                     </div>
                     {% endfor %}
+                    {% if not item.responsable.coordinateurs %}
+                    <div class="acc-empty">Aucun coordinateur assigné</div>
+                    {% endif %}
                 </div>
+
             </div>
             {% endfor %}
         </div>
