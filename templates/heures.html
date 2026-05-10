@@ -96,6 +96,13 @@
     box-shadow:0 0 0 3px rgba(245,166,35,.13);
 }
 
+/* Dar locked style */
+.sp-fg select:disabled {
+    background-color:#f4f7fb;
+    cursor:not-allowed;
+    opacity:0.75;
+}
+
 /* Statut pills */
 .sp-statut-group { display:flex; gap:7px; flex-wrap:wrap; }
 .sp-statut-pill {
@@ -182,6 +189,13 @@
 .sp-badge.passee    { background:#dcfce7; color:#15803d; }
 .sp-badge.annulee   { background:#fee2e2; color:#b91c1c; }
 .sp-badge.rattrapage{ background:#fef3c7; color:#92400e; }
+
+/* Dar locked badge */
+.sp-dar-locked-badge {
+    display:inline-flex; align-items:center; gap:5px;
+    font-size:11px; color:#64748b; margin-top:3px;
+}
+.sp-dar-locked-badge span { font-size:10px; }
 </style>
 
 <div class="main-content">
@@ -276,12 +290,17 @@
         <div class="sp-g2">
           <div class="sp-fg">
             <label>🏠 Dar Talib</label>
-            <select name="dar_id" id="spDar">
+            {# hidden input pour envoyer la valeur même quand disabled #}
+            <input type="hidden" name="dar_id" id="spDarHidden">
+            <select id="spDar">
               <option value="">— Aucune —</option>
               {% for d in dours_list %}
                 <option value="{{ d.id }}">{{ d.nom }}</option>
               {% endfor %}
             </select>
+            <div class="sp-dar-locked-badge" id="spDarLockedBadge" style="display:none;">
+              <span>🔒</span> Dar assignée automatiquement
+            </div>
           </div>
           <div class="sp-fg">
             <label>🔬 Matière</label>
@@ -299,7 +318,7 @@
           </div>
         </div>
 
-        {# ── Professeur — champ CORRIGÉ : name="professeur_id" stocke l'ID ── #}
+        {# ── Professeur ── #}
         <div class="sp-slabel">🎓 Professeur</div>
         <input type="hidden" name="professeur_id" id="spProfHidden">
         <div class="sp-prof-wrap">
@@ -512,7 +531,7 @@
                             <td>{% if s.matiere %}<span class="mat-badge">{{ s.matiere }}</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}</td>
                             <td>{% if s.niveau %}<span class="niv-badge">{{ s.niveau }}</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}</td>
                             <td style="font-size:12px;font-weight:600;color:#1a3a6b;">{{ s.prof or '—' }}</td>
-                            <td>{% if s.dar %}<span style="background:#e8edf5;color:#1a3a6b;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:600;">{{ s.dar.nom }}</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}</td>
+                            <td>{% if s.dar %}<span style="background:#e8edf5;color:#1a3a6b;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:600;">{{ s.dar.type }} {{ s.dar.nom }}</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}</td>
                             <td>{% if s.nb_eleves %}<span style="background:#ede9fe;color:#6d28d9;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:700;">{{ s.nb_eleves }}</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}</td>
                             <td><span class="heures-chip">{{ "%.1f"|format(s.nb_heures) }}h</span></td>
                             <td>
@@ -576,7 +595,6 @@
                 </thead>
                 <tbody>
 
-                    {# ══ حساب grand totals بـ namespace ══ #}
                     {% set grand = namespace(seances=0, passees=0, annulees=0, rattrapages=0, heures=0, eleves=0) %}
 
                     {% for coord in coordinateurs %}
@@ -589,7 +607,6 @@
                     {% set nb_e = namespace(val=0) %}
                     {% for s in seances_m %}{% if s.nb_eleves and s.statut != 'annulee' %}{% set nb_e.val = nb_e.val + s.nb_eleves %}{% endif %}{% endfor %}
 
-                    {# ══ تجميع فـ grand totals ══ #}
                     {% set grand.seances     = grand.seances     + nb_s %}
                     {% set grand.passees     = grand.passees     + nb_p %}
                     {% set grand.annulees    = grand.annulees    + nb_a %}
@@ -611,11 +628,10 @@
                         <td>{% if nb_r > 0 %}<span style="font-weight:700;color:#d97706;">{{ nb_r }}</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}</td>
                         <td>{% if nb_h > 0 %}<span style="font-weight:700;color:#f5a623;">{{ "%.1f"|format(nb_h) }}h</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}</td>
                         <td>{% if nb_e.val > 0 %}<span style="font-weight:700;color:#7c3aed;">{{ nb_e.val }}</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}</td>
-                        <td>{% for d in coord.dours %}<span style="display:inline-block;margin:1px;padding:2px 7px;border-radius:8px;font-size:10px;color:white;font-weight:500;background:{% if d.type=='talib' %}#1a3a6b{% elif d.type=='taliba' %}#e91e8c{% else %}#f5a623{% endif %};">{{ d.nom }}</span>{% endfor %}</td>
+                        <td>{% for d in coord.dours %}<span style="display:inline-block;margin:1px;padding:2px 7px;border-radius:8px;font-size:10px;color:white;font-weight:500;background:{% if d.type=='talib' %}#1a3a6b{% elif d.type=='taliba' %}#e91e8c{% else %}#f5a623{% endif %};">{{ d.type }} {{ d.nom }}</span>{% endfor %}</td>
                     </tr>
                     {% endfor %}
 
-                    {# ══ صف Total الكامل بـ grand totals ══ #}
                     <tr style="background:#f8fafc;font-weight:700;">
                         <td colspan="2" style="color:#1a3a6b;">🔢 Total</td>
                         <td style="color:#1a3a6b;">{{ grand.seances }}</td>
@@ -661,6 +677,72 @@ SP_SEANCES[{{ s.id }}] = {
     remarque:        {{ (s.remarque or '') | tojson }},
 };
 {% endfor %}
+
+/* ══ Dours par coordinateur ══ */
+var SP_COORD_DOURS = {
+  {% for coord in coordinateurs %}
+  {{ coord.id }}: [
+    {% for d in coord.dours %}{ id: {{ d.id }}, nom: {{ d.nom | tojson }} }{% if not loop.last %},{% endif %}{% endfor %}
+  ]{% if not loop.last %},{% endif %}
+  {% endfor %}
+};
+
+/* ══ Lock Dar Talib selon coordinateur ══ */
+function spLockDar(coordId) {
+    var darSelect  = document.getElementById('spDar');
+    var darHidden  = document.getElementById('spDarHidden');
+    var darBadge   = document.getElementById('spDarLockedBadge');
+    var dours      = SP_COORD_DOURS[coordId] || [];
+
+    /* Reconstruire les options */
+    darSelect.innerHTML = '';
+
+    if (dours.length === 0) {
+        /* Aucun dar → vide + verrouillé */
+        var opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = '— Aucune —';
+        darSelect.appendChild(opt);
+        darHidden.value      = '';
+        darSelect.disabled   = true;
+        darBadge.style.display = 'none';
+        return;
+    }
+
+    if (dours.length === 1) {
+        /* Un seul dar → pré-sélectionné + verrouillé */
+        var opt = document.createElement('option');
+        opt.value       = dours[0].id;
+        opt.textContent = dours[0].nom;
+        opt.selected    = true;
+        darSelect.appendChild(opt);
+        darHidden.value        = String(dours[0].id);
+        darSelect.disabled     = true;
+        darBadge.style.display = 'flex';
+    } else {
+        /* Plusieurs dars → dropdown limité aux dars du coord */
+        var emptyOpt = document.createElement('option');
+        emptyOpt.value       = '';
+        emptyOpt.textContent = '— Aucune —';
+        darSelect.appendChild(emptyOpt);
+
+        dours.forEach(function(d) {
+            var opt = document.createElement('option');
+            opt.value       = d.id;
+            opt.textContent = d.nom;
+            darSelect.appendChild(opt);
+        });
+
+        darHidden.value        = '';
+        darSelect.disabled     = false;
+        darBadge.style.display = 'none';
+
+        /* Sync hidden à chaque changement */
+        darSelect.onchange = function() {
+            darHidden.value = darSelect.value;
+        };
+    }
+}
 
 /* ══ Stepper heures ══ */
 function spChgH(d) {
@@ -743,6 +825,10 @@ function spOpenAdd(coordId, defaultDate) {
     document.getElementById('spHeures').value   = '2';
     document.getElementById('spRedirectUrl').value = window.location.href;
     spSetStatut('passee');
+
+    /* ── Lock Dar selon le coordinateur ── */
+    spLockDar(coordId);
+
     spModal.classList.add('show');
 }
 
@@ -759,7 +845,6 @@ function spOpenEdit(id) {
     document.getElementById('spDate').value        = s.date;
     document.getElementById('spHeure').value       = s.heure;
     document.getElementById('spHeures').value      = s.nb_heures;
-    document.getElementById('spDar').value         = s.dar_id;
     document.getElementById('spMatiere').value     = s.matiere;
     document.getElementById('spNiveau').value      = s.niveau;
     document.getElementById('spEleves').value      = s.nb_eleves || '';
@@ -771,10 +856,28 @@ function spOpenEdit(id) {
     spProfSearch.value = s.prof || '';
 
     spSetStatut(s.statut || 'passee');
+
+    /* ── Lock Dar selon le coordinateur ── */
+    spLockDar(s.coordinateur_id);
+
+    /* Après lock, forcer la valeur sauvegardée de la séance */
+    var darSelect = document.getElementById('spDar');
+    var darHidden = document.getElementById('spDarHidden');
+    if (s.dar_id) {
+        darSelect.value = String(s.dar_id);
+        darHidden.value = String(s.dar_id);
+    }
+
     spModal.classList.add('show');
 }
 
-function spCloseModal() { spModal.classList.remove('show'); }
+function spCloseModal() {
+    spModal.classList.remove('show');
+    /* Reset dar */
+    var darSelect = document.getElementById('spDar');
+    darSelect.disabled = false;
+    document.getElementById('spDarLockedBadge').style.display = 'none';
+}
 
 spModal.addEventListener('click', function(e) { if (e.target === spModal) spCloseModal(); });
 document.addEventListener('keydown', function(e) { if (e.key === 'Escape') spCloseModal(); });
