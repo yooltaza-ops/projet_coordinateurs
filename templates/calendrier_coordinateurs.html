@@ -307,7 +307,6 @@ body { font-family: 'DM Sans', sans-serif; }
 }
 .dar-lock-hint.show { display: block; }
 
-/* Style pour le select dar quand locked dans edit modal */
 .dar-locked-wrap {
     position: relative;
 }
@@ -514,7 +513,6 @@ body { font-family: 'DM Sans', sans-serif; }
                 <div class="sc-grid-2">
                     <div class="fg">
                         <label>🏠 Dar Talib</label>
-                        <!-- hidden input pour soumettre la valeur même quand select est disabled -->
                         <input type="hidden" name="dar_id" id="edit-dar-hidden">
                         <div class="dar-locked-wrap">
                             <select id="edit-dar" onchange="document.getElementById('edit-dar-hidden').value=this.value">
@@ -647,7 +645,7 @@ body { font-family: 'DM Sans', sans-serif; }
         {% if stats %}
         {% for row in stats %}
         {% set ci = loop.index0 % 12 %}
-        {% set colors = ['#1a3a6b','#0d9488','#7c3aed','#e91e8c','#f5a623','#16a34a','#dc2626','#0ea5e9','#d97706','#6366f1','#ec4899','#14b8a6'] %}
+        {% set colors = ['#1a3a6b','#0d9488','#7c3aed','#e91e8c','#f5a623','#16a34a','#130e1b','#0ea5e9','#d97706','#6366f1','#ec4899','#14b8a6'] %}
         <div class="coord-card"
              onclick="openCalendar({{ row.coord.id }})"
              data-name="{{ (row.coord.prenom ~ ' ' ~ row.coord.nom) | lower }}">
@@ -744,7 +742,9 @@ const MATIERES  = {{ matieres  | tojson }};
 const NIVEAUX   = {{ niveaux   | tojson }};
 const MOIS_NOMS = {{ mois_noms | tojson }};
 
-const PROFS_DATA = [
+const PROFS_DATA = {{ professeurs | map(attribute='id') | list | tojson }};
+// rebuild as objects
+const PROFS_LIST = [
     {% for p in professeurs %}{ id: {{ p.id }}, nom: {{ p.nom | tojson }} }{% if not loop.last %},{% endif %}{% endfor %}
 ];
 
@@ -753,13 +753,13 @@ const DOURS_JSON = {{ dours_json | tojson }};
 const COORDS = {};
 {% for row in stats %}
 {% set ci = loop.index0 % 12 %}
-{% set colors = ['#1a3a6b','#0d9488','#7c3aed','#e91e8c','#f5a623','#16a34a','#dc2626','#0ea5e9','#d97706','#6366f1','#ec4899','#14b8a6'] %}
+{% set colors = ['#1a3a6b','#0d9488','#7c3aed','#e91e8c','#f5a623','#16a34a','#130e1b','#0ea5e9','#d97706','#6366f1','#ec4899','#14b8a6'] %}
 COORDS[{{ row.coord.id }}] = {
     id:       {{ row.coord.id }},
-    name:     "{{ row.coord.prenom }} {{ row.coord.nom }}",
-    initiales:"{{ row.initiales }}",
-    genre:    "{{ row.coord.genre }}",
-    color:    "{{ colors[ci] }}",
+    name:     {{ (row.coord.prenom ~ ' ' ~ row.coord.nom) | tojson }},
+    initiales:{{ row.initiales | tojson }},
+    genre:    {{ row.coord.genre | tojson }},
+    color:    {{ colors[ci] | tojson }},
     dours: [{% for d in row.coord.dours %}{ id: {{ d.id }}, nom: {{ d.nom | tojson }} }{% if not loop.last %},{% endif %}{% endfor %}],
 };
 {% endfor %}
@@ -769,23 +769,23 @@ const SBY = {};
 SBY[{{ row.coord.id }}] = {};
 {% for s in row.seances %}
 (function(){
-    const k = "{{ s.date.strftime('%Y-%m-%d') }}";
+    const k = {{ s.date.strftime('%Y-%m-%d') | tojson }};
     if (!SBY[{{ row.coord.id }}][k]) SBY[{{ row.coord.id }}][k] = [];
     SBY[{{ row.coord.id }}][k].push({
         id:             {{ s.id }},
         coordinateur_id:{{ s.coordinateur_id }},
         heures:         {{ s.nb_heures }},
-        heure:          "{{ s.heure or '' }}",
-        statut:         "{{ s.statut or 'passee' }}",
-        matiere:        "{{ s.matiere or '' }}",
-        niveau:         "{{ s.niveau or '' }}",
-        prof:           "{{ (s.prof or '')|replace('"','\\"') }}",
+        heure:          {{ (s.heure | string if s.heure else '') | tojson }},
+        statut:         {{ (s.statut or 'passee') | tojson }},
+        matiere:        {{ (s.matiere or '') | tojson }},
+        niveau:         {{ (s.niveau or '') | tojson }},
+        prof:           {{ (s.prof or '') | tojson }},
         professeur_id:  {{ s.professeur_id if s.professeur_id else 'null' }},
-        note:           "{{ (s.note or '')|replace('"','\\"') }}",
-        remarque:       "{{ (s.remarque or '')|replace('"','\\"') }}",
+        note:           {{ (s.note or '') | tojson }},
+        remarque:       {{ (s.remarque or '') | tojson }},
         nb_eleves:      {{ s.nb_eleves or 0 }},
-        dar_id:         "{{ s.dar_id or '' }}",
-        date:           "{{ s.date.strftime('%Y-%m-%d') }}",
+        dar_id:         {{ (s.dar_id | string if s.dar_id else '') | tojson }},
+        date:           {{ s.date.strftime('%Y-%m-%d') | tojson }},
     });
 })();
 {% endfor %}
@@ -809,7 +809,9 @@ function filterCoords(q) {
 }
 
 function openCalendar(id) {
+    id = parseInt(id);
     curCoord = COORDS[id];
+    if (!curCoord) return;
     document.getElementById('badge-av').textContent   = curCoord.initiales;
     document.getElementById('badge-name').textContent = curCoord.name;
     document.getElementById('coord-badge').style.background = curCoord.color;
@@ -998,7 +1000,7 @@ function buildDarOptions(sel, locked) {
 function bindProfSearch(inp, drop, hidNom, hidId) {
     function render(filter) {
         const lower = (filter||'').toLowerCase();
-        const list  = PROFS_DATA.filter(p => p.nom.toLowerCase().includes(lower));
+        const list  = PROFS_LIST.filter(p => p.nom.toLowerCase().includes(lower));
         drop.innerHTML = '';
 
         const empty = document.createElement('div');
@@ -1298,7 +1300,7 @@ function closeDet(evt) {
 }
 
 /* ══════════════════════════════════════
-   EDIT MODAL — FIX DAR TALIB LOCKED
+   EDIT MODAL
 ══════════════════════════════════════ */
 function setEditStatut(val) {
     ['passee','annulee','rattrapage'].forEach(v => {
@@ -1321,7 +1323,6 @@ function openEdit(s) {
 
     setEditStatut(s.statut || 'passee');
 
-    /* ══ FIX : Dar Talib — filtré ET verrouillé sur les dars du coordinateur ══ */
     const editDarSel   = document.getElementById('edit-dar');
     const editDarHid   = document.getElementById('edit-dar-hidden');
     const lockBadge    = document.getElementById('edit-dar-lock-badge');
@@ -1330,7 +1331,6 @@ function openEdit(s) {
         ? curCoord.dours
         : DOURS_JSON;
 
-    /* Construire les options filtrées sur les dars du coordinateur */
     let darHtmlEdit = '<option value="">— Aucune —</option>';
     coordDours.forEach(d => {
         const isSelected = String(d.id) === String(s.dar_id || '');
@@ -1338,17 +1338,12 @@ function openEdit(s) {
     });
     editDarSel.innerHTML = darHtmlEdit;
 
-    /* Synchroniser le hidden input avec la valeur actuelle */
     editDarHid.value = s.dar_id || '';
-
-    /* Mettre à jour le hidden quand l'utilisateur change (cas non-locked) */
     editDarSel.onchange = () => { editDarHid.value = editDarSel.value; };
 
-    /* Verrouiller si le coordinateur a des dars assignées */
     const shouldLock = coordDours.length > 0;
     editDarSel.disabled = shouldLock;
     lockBadge.style.display = shouldLock ? 'inline-flex' : 'none';
-    /* ══ FIN FIX ══ */
 
     document.getElementById('edit-matiere').value = s.matiere || '';
     document.getElementById('edit-niveau').value  = s.niveau  || '';
@@ -1409,7 +1404,7 @@ document.addEventListener('keydown', e => {
 /* ── Restore calendar after month nav ── */
 window.addEventListener('load', () => {
     const sid = sessionStorage.getItem('lastCoordId');
-    if (sid && COORDS[sid]) {
+    if (sid && COORDS[parseInt(sid)]) {
         sessionStorage.removeItem('lastCoordId');
         openCalendar(parseInt(sid));
     }

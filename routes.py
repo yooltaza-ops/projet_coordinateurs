@@ -52,7 +52,7 @@ def seance_to_dict(s):
         'statut':          s.statut or 'passee',
         'matiere':         s.matiere or '',
         'niveau':          s.niveau or '',
-        'prof':            s.prof_nom or '',        # FK nom ou legacy string
+        'prof':            s.prof_nom or '',
         'professeur_id':   s.professeur_id or '',
         'coordinateur_id': s.coordinateur_id,
         'nb_heures':       s.nb_heures or 0,
@@ -307,10 +307,12 @@ def heures():
     )
 
 
-# ── ajouter_seance ────────────────────────────────────────────────────────────
-@app.route('/heures/ajouter', methods=['POST'])
+# ─── Routes unifiées Séances (heures + calendrier + suivi) ───────────────────
+
+# ── seance_ajouter ────────────────────────────────────────────────────────────
+@app.route('/seances/ajouter', methods=['POST'])
 @login_required
-def ajouter_seance():
+def seance_ajouter():
     coord_id      = int(request.form['coordinateur_id'])
     date_str      = request.form['date']
     nb_heures     = float(request.form['nb_heures'])
@@ -321,6 +323,7 @@ def ajouter_seance():
     remarque      = request.form.get('remarque', '').strip() or None
     statut        = normalise_statut(request.form.get('statut', 'passee'))
     professeur_id = parse_professeur_id(request.form)
+    redirect_url  = request.form.get('redirect_url', '').strip()
 
     nb_eleves_str = request.form.get('nb_eleves', '').strip()
     nb_eleves = int(nb_eleves_str) if nb_eleves_str.isdigit() else None
@@ -334,7 +337,6 @@ def ajouter_seance():
             abort(403)
 
     date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
-    # Récupère le nom du prof pour le champ legacy (compatibilité affichage)
     prof_nom_legacy = None
     if professeur_id:
         p = Professeur.query.get(professeur_id)
@@ -361,19 +363,23 @@ def ajouter_seance():
     db.session.add(s)
     db.session.commit()
     flash(f'Séance ajoutée pour {coord.prenom} {coord.nom}!', 'success')
+
+    if redirect_url:
+        return redirect(redirect_url)
     return redirect(url_for('heures', mois=date_obj.month, annee=date_obj.year, coord_id=coord_id))
 
 
-# ── modifier_seance ───────────────────────────────────────────────────────────
-@app.route('/heures/modifier/<int:id>', methods=['POST'])
+# ── seance_modifier ───────────────────────────────────────────────────────────
+@app.route('/seances/modifier/<int:id>', methods=['POST'])
 @login_required
-def modifier_seance(id):
+def seance_modifier(id):
     s = Seance.query.get_or_404(id)
     coord = s.coordinateur
     if not current_user.is_admin:
         if not current_user.responsable or coord.responsable_id != current_user.responsable.id:
             abort(403)
 
+    redirect_url  = request.form.get('redirect_url', '').strip()
     date_obj      = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
     s.date        = date_obj
     s.mois        = date_obj.month
@@ -386,7 +392,6 @@ def modifier_seance(id):
     s.remarque    = request.form.get('remarque', '').strip() or None
     s.statut      = normalise_statut(request.form.get('statut', 'passee'))
     s.professeur_id = parse_professeur_id(request.form)
-    # Sync champ legacy prof
     if s.professeur_id:
         p = Professeur.query.get(s.professeur_id)
         s.prof = p.nom if p else None
@@ -401,39 +406,44 @@ def modifier_seance(id):
 
     db.session.commit()
     flash('Séance modifiée!', 'success')
-    redirect_url = request.form.get('redirect_url', '').strip()
+
     if redirect_url:
         return redirect(redirect_url)
     return redirect(url_for('heures', mois=s.mois, annee=s.annee, coord_id=coord.id))
 
 
-@app.route('/heures/supprimer/<int:id>', methods=['GET', 'POST'])
+# ── seance_supprimer ──────────────────────────────────────────────────────────
+@app.route('/seances/supprimer/<int:id>', methods=['POST'])
 @login_required
-def supprimer_seance(id):
+def seance_supprimer(id):
     s = Seance.query.get_or_404(id)
     mois, annee, coord_id = s.mois, s.annee, s.coordinateur_id
     coord = s.coordinateur
     if not current_user.is_admin:
         if not current_user.responsable or coord.responsable_id != current_user.responsable.id:
             abort(403)
+
+    redirect_url = request.form.get('redirect_url', '').strip()
     db.session.delete(s)
     db.session.commit()
     flash('Séance supprimée!', 'success')
-    redirect_url = request.form.get('redirect_url', '').strip()
+
     if redirect_url:
         return redirect(redirect_url)
     return redirect(url_for('heures', mois=mois, annee=annee, coord_id=coord_id))
 
 
-# ── ajouter_seances_multiple ──────────────────────────────────────────────────
-@app.route('/heures/ajouter_multiple', methods=['POST'])
+# ── seances_ajouter_multiple ──────────────────────────────────────────────────
+@app.route('/seances/ajouter_multiple', methods=['POST'])
 @login_required
-def ajouter_seances_multiple():
+def seances_ajouter_multiple():
     coord_id     = request.form.get('coordinateur_id', type=int)
     redirect_url = request.form.get('redirect_url', '').strip()
 
     if not coord_id:
         flash('Coordinateur manquant.', 'error')
+        if redirect_url:
+            return redirect(redirect_url)
         return redirect(url_for('calendrier_coordinateurs'))
 
     coord = Coordinateur.query.get_or_404(coord_id)
@@ -488,7 +498,6 @@ def ajouter_seances_multiple():
             errors.append(f'Séance {idx}: valeur invalide ({e}).')
             continue
 
-        # Champ legacy prof
         prof_nom_legacy = None
         if professeur_id:
             p = Professeur.query.get(professeur_id)
@@ -526,6 +535,68 @@ def ajouter_seances_multiple():
     if redirect_url:
         return redirect(redirect_url)
     return redirect(url_for('calendrier_coordinateurs'))
+
+
+# ─── Routes legacy (compatibilité — redirigent vers les routes unifiées) ──────
+# Ces routes gardent les anciens URLs fonctionnels si des bookmarks ou liens existent
+
+@app.route('/heures/ajouter', methods=['POST'])
+@login_required
+def ajouter_seance():
+    return seance_ajouter()
+
+@app.route('/heures/modifier/<int:id>', methods=['POST'])
+@login_required
+def modifier_seance(id):
+    return seance_modifier(id)
+
+@app.route('/heures/supprimer/<int:id>', methods=['GET', 'POST'])
+@login_required
+def supprimer_seance(id):
+    if request.method == 'GET':
+        # Compatibilité GET: supprimer directement
+        s = Seance.query.get_or_404(id)
+        mois, annee, coord_id = s.mois, s.annee, s.coordinateur_id
+        coord = s.coordinateur
+        if not current_user.is_admin:
+            if not current_user.responsable or coord.responsable_id != current_user.responsable.id:
+                abort(403)
+        db.session.delete(s)
+        db.session.commit()
+        flash('Séance supprimée!', 'success')
+        return redirect(url_for('heures', mois=mois, annee=annee, coord_id=coord_id))
+    return seance_supprimer(id)
+
+@app.route('/heures/ajouter_multiple', methods=['POST'])
+@login_required
+def ajouter_seances_multiple():
+    return seances_ajouter_multiple()
+
+@app.route('/suivi_partenariat/ajouter', methods=['POST'])
+@login_required
+def suivi_partenariat_ajouter():
+    return seance_ajouter()
+
+@app.route('/suivi_partenariat/modifier/<int:id>', methods=['POST'])
+@login_required
+def suivi_partenariat_modifier(id):
+    return seance_modifier(id)
+
+@app.route('/suivi_partenariat/supprimer/<int:id>', methods=['GET', 'POST'])
+@login_required
+def suivi_partenariat_supprimer(id):
+    if request.method == 'GET':
+        s = Seance.query.get_or_404(id)
+        mois, annee = s.mois, s.annee
+        coord = s.coordinateur
+        if not current_user.is_admin:
+            if not current_user.responsable or coord.responsable_id != current_user.responsable.id:
+                abort(403)
+        db.session.delete(s)
+        db.session.commit()
+        flash('Séance supprimée!', 'success')
+        return redirect(url_for('suivi_partenariat', mois=mois, annee=annee))
+    return seance_supprimer(id)
 
 
 # ─── Paramètres ───────────────────────────────────────────────────────────────
@@ -901,7 +972,7 @@ def supprimer_dour(id):
 @login_required
 def impression_seances():
     from collections import defaultdict
- 
+
     now   = datetime.now()
     mois  = request.args.get('mois',  now.month,  type=int)
     annee = request.args.get('annee', now.year,   type=int)
@@ -909,54 +980,51 @@ def impression_seances():
     filtre_niveau  = request.args.get('filtre_niveau',  '').strip()
     filtre_coord   = request.args.get('filtre_coord',   '').strip()
     filtre_dar     = request.args.get('filtre_dar',     '').strip()
- 
+
     mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin',
                  'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
- 
+
     if current_user.is_admin:
         coordinateurs = Coordinateur.query.order_by(Coordinateur.nom).all()
     else:
         resp = current_user.responsable
         coordinateurs = sorted(resp.coordinateurs, key=lambda c: c.nom) if resp else []
- 
+
     all_dours = Dour.query.order_by(Dour.nom).all()
- 
+
     stats = []
     heures_par_mat = defaultdict(float)
     heures_par_niv = defaultdict(float)
- 
+
     for coord in coordinateurs:
-        # ── Filtre coordinateur ──
         if filtre_coord and str(coord.id) != filtre_coord:
             continue
- 
+
         seances = coord.seances_mois(mois, annee)
- 
-        # ── Filtre dar ──
+
         if filtre_dar:
             try:
                 filtre_dar_int = int(filtre_dar)
                 seances = [s for s in seances if s.dar_id == filtre_dar_int]
             except ValueError:
                 pass
- 
+
         if filtre_matiere:
             seances = [s for s in seances if s.matiere == filtre_matiere]
         if filtre_niveau:
             seances = [s for s in seances if s.niveau == filtre_niveau]
- 
-        # ── Ma tbaynch coordinateur ila ma3ndoch séances waqt filtre ──
+
         if (filtre_dar or filtre_matiere or filtre_niveau or filtre_coord) and len(seances) == 0:
             continue
- 
+
         nb_h = sum(s.nb_heures for s in seances if s.statut == 'passee')
         mats = sorted({s.matiere for s in seances if s.matiere})
         nivs = sorted({s.niveau  for s in seances if s.niveau})
- 
+
         for s in seances:
             if s.matiere: heures_par_mat[s.matiere] += s.nb_heures
             if s.niveau:  heures_par_niv[s.niveau]  += s.nb_heures
- 
+
         stats.append({
             'coord':          coord,
             'seances':        seances,
@@ -971,9 +1039,9 @@ def impression_seances():
             'nb_rattrapage':  sum(1 for s in seances if s.statut == 'rattrapage'),
             'total_eleves':   sum(s.nb_eleves for s in seances if s.nb_eleves and s.statut != 'annulee'),
         })
- 
+
     stats.sort(key=lambda x: x['nb_heures'], reverse=True)
- 
+
     total_heures     = sum(s['nb_heures']     for s in stats)
     total_seances    = sum(s['nb_seances']    for s in stats)
     total_coords     = sum(1 for s in stats if s['nb_seances'] > 0)
@@ -981,11 +1049,11 @@ def impression_seances():
     total_annulees   = sum(s['nb_annulees']   for s in stats)
     total_rattrapage = sum(s['nb_rattrapage'] for s in stats)
     total_eleves     = sum(s['total_eleves']  for s in stats)
- 
+
     breakdown_mat = sorted(heures_par_mat.items(), key=lambda x: x[1], reverse=True)
     breakdown_niv = sorted(heures_par_niv.items(), key=lambda x: x[1], reverse=True)
     generated_at  = now.strftime('%d/%m/%Y à %H:%M')
- 
+
     return render_template('impression_seances.html',
         stats=stats,
         mois=mois, annee=annee,
@@ -1432,125 +1500,3 @@ def suivi_partenariat():
         total_eleves=total_eleves,
         total_seances=len(all_seances),
     )
-
-
-@app.route('/suivi_partenariat/ajouter', methods=['POST'])
-@login_required
-def suivi_partenariat_ajouter():
-    coord_id      = int(request.form['coordinateur_id'])
-    date_str      = request.form['date']
-    nb_heures     = float(request.form['nb_heures'])
-    note          = request.form.get('note',     '').strip() or None
-    matiere       = request.form.get('matiere',  '').strip() or None
-    niveau        = request.form.get('niveau',   '').strip() or None
-    heure         = request.form.get('heure',    '').strip() or None
-    remarque      = request.form.get('remarque', '').strip() or None
-    statut        = normalise_statut(request.form.get('statut', 'passee'))
-    professeur_id = parse_professeur_id(request.form)
-
-    nb_eleves_str = request.form.get('nb_eleves', '').strip()
-    nb_eleves = int(nb_eleves_str) if nb_eleves_str.isdigit() else None
-
-    dar_id_str = request.form.get('dar_id', '').strip()
-    dar_id = int(dar_id_str) if dar_id_str.isdigit() else None
-
-    coord = Coordinateur.query.get_or_404(coord_id)
-    if not current_user.is_admin:
-        if not current_user.responsable or coord.responsable_id != current_user.responsable.id:
-            abort(403)
-
-    # Champ legacy prof
-    prof_nom_legacy = None
-    if professeur_id:
-        p = Professeur.query.get(professeur_id)
-        if p:
-            prof_nom_legacy = p.nom
-
-    date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
-    s = Seance(
-        coordinateur_id=coord_id,
-        date=date_obj,
-        mois=date_obj.month,
-        annee=date_obj.year,
-        nb_heures=nb_heures,
-        note=note,
-        matiere=matiere,
-        niveau=niveau,
-        statut=statut,
-        heure=heure,
-        prof=prof_nom_legacy,
-        professeur_id=professeur_id,
-        nb_eleves=nb_eleves,
-        dar_id=dar_id,
-        remarque=remarque,
-    )
-    db.session.add(s)
-    db.session.commit()
-    flash(f'Séance ajoutée pour {coord.prenom} {coord.nom}!', 'success')
-
-    redirect_url = request.form.get('redirect_url', '').strip()
-    if redirect_url:
-        return redirect(redirect_url)
-    return redirect(url_for('suivi_partenariat', mois=date_obj.month, annee=date_obj.year))
-
-
-@app.route('/suivi_partenariat/modifier/<int:id>', methods=['POST'])
-@login_required
-def suivi_partenariat_modifier(id):
-    s = Seance.query.get_or_404(id)
-    coord = s.coordinateur
-    if not current_user.is_admin:
-        if not current_user.responsable or coord.responsable_id != current_user.responsable.id:
-            abort(403)
-
-    date_obj      = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
-    s.date        = date_obj
-    s.mois        = date_obj.month
-    s.annee       = date_obj.year
-    s.nb_heures   = float(request.form['nb_heures'])
-    s.note        = request.form.get('note',     '').strip() or None
-    s.matiere     = request.form.get('matiere',  '').strip() or None
-    s.niveau      = request.form.get('niveau',   '').strip() or None
-    s.remarque    = request.form.get('remarque', '').strip() or None
-    s.heure       = request.form.get('heure',    '').strip() or None
-    s.statut      = normalise_statut(request.form.get('statut', 'passee'))
-    s.professeur_id = parse_professeur_id(request.form)
-    # Sync champ legacy prof
-    if s.professeur_id:
-        p = Professeur.query.get(s.professeur_id)
-        s.prof = p.nom if p else None
-    else:
-        s.prof = None
-
-    nb_eleves_str = request.form.get('nb_eleves', '').strip()
-    s.nb_eleves   = int(nb_eleves_str) if nb_eleves_str.isdigit() else None
-
-    dar_id_str = request.form.get('dar_id', '').strip()
-    s.dar_id   = int(dar_id_str) if dar_id_str.isdigit() else None
-
-    db.session.commit()
-    flash('Séance modifiée!', 'success')
-
-    redirect_url = request.form.get('redirect_url', '').strip()
-    if redirect_url:
-        return redirect(redirect_url)
-    return redirect(url_for('suivi_partenariat', mois=s.mois, annee=s.annee))
-
-
-@app.route('/suivi_partenariat/supprimer/<int:id>', methods=['GET', 'POST'])
-@login_required
-def suivi_partenariat_supprimer(id):
-    s = Seance.query.get_or_404(id)
-    mois, annee = s.mois, s.annee
-    coord = s.coordinateur
-    if not current_user.is_admin:
-        if not current_user.responsable or coord.responsable_id != current_user.responsable.id:
-            abort(403)
-    db.session.delete(s)
-    db.session.commit()
-    flash('Séance supprimée!', 'success')
-
-    redirect_url = request.form.get('redirect_url', '').strip()
-    if redirect_url:
-        return redirect(redirect_url)
-    return redirect(url_for('suivi_partenariat', mois=mois, annee=annee))
