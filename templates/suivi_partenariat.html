@@ -580,11 +580,11 @@
       </select>
     </div>
     <div class="form-group">
-      <label>Dar Talib</label>
+      <label>Dar</label>
       <select name="filtre_dar">
         <option value="">Toutes les dars</option>
         {% for d in dours %}
-          <option value="{{ d.id }}" {{ 'selected' if filtre_dar==d.id|string }}>{{ d.nom }}</option>
+          <option value="{{ d.id }}" {{ 'selected' if filtre_dar==d.id|string }}>{{ d.type }} {{ d.nom }}</option>
         {% endfor %}
       </select>
     </div>
