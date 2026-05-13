@@ -581,10 +581,15 @@ body { font-family: 'DM Sans', sans-serif; background: #f8faff; }
                     </div>
                     <div class="seance-body">
                         <div class="seance-badges">
-                            <span class="sbadge {{ s.statut }}">
-                                {{ '✅' if s.statut=='passee' else ('❌' if s.statut=='annulee' else '🔄') }}
-                                {{ s.statut_label }}
-                            </span>
+                            {% if s.statut == 'passee' %}
+                                <span class="sbadge passee">✅ Passée</span>
+                            {% elif s.statut == 'annulee' %}
+                                <span class="sbadge annulee">❌ Annulée</span>
+                            {% elif s.statut == 'rattrapage' %}
+                                <span class="sbadge rattrapage">🔄 Rattrapage</span>
+                            {% else %}
+                                <span class="sbadge" style="background:#f1f5f9;color:#94a3b8;">— Sans statut</span>
+                            {% endif %}
                             {% if s.matiere %}<span class="sbadge mat">{{ s.matiere }}</span>{% endif %}
                             {% if s.dar %}<span class="sbadge dar">🏠 {{ s.dar.nom }}</span>{% endif %}
                             {% if s.nb_eleves %}<span class="sbadge elev">👥 {{ s.nb_eleves }}</span>{% endif %}

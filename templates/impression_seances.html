@@ -681,11 +681,13 @@ body { font-family: 'DM Sans', sans-serif; background: #eef2f7; }
                             </td>
                             <td>
                                 {% if s.statut == 'passee' %}
-                                <span class="st-badge passee">✅ Passée</span>
+                                    <span class="st-badge passee">✅ Passée</span>
                                 {% elif s.statut == 'annulee' %}
-                                <span class="st-badge annulee">❌ Annulée</span>
+                                    <span class="st-badge annulee">❌ Annulée</span>
+                                {% elif s.statut == 'rattrapage' %}
+                                    <span class="st-badge rattrapage">🔄 Rattrapage</span>
                                 {% else %}
-                                <span class="st-badge rattrapage">🔄 Rattrapage</span>
+                                    <span style="color:#94a3b8;font-size:11px;">— Sans statut</span>
                                 {% endif %}
                             </td>
                             <td>

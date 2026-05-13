@@ -36,7 +36,7 @@ def normalise_statut(val):
         'annulee':    'annulee',
         'rattrapage': 'rattrapage',
     }
-    return mapping.get((val or '').strip(), 'passee')
+    return mapping.get((val or '').strip(), None)
 
 # ── Helper: parse professeur_id from form ─────────────────────────────────────
 def parse_professeur_id(form):
@@ -49,7 +49,7 @@ def seance_to_dict(s):
         'id':              s.id,
         'date':            s.date.isoformat() if s.date else '',
         'heure':           s.heure or '',
-        'statut':          s.statut or 'passee',
+        'statut': s.statut or '',
         'matiere':         s.matiere or '',
         'niveau':          s.niveau or '',
         'prof':            s.prof_nom or '',
@@ -321,7 +321,7 @@ def seance_ajouter():
     niveau        = request.form.get('niveau',   '').strip() or None
     heure         = request.form.get('heure',    '').strip() or None
     remarque      = request.form.get('remarque', '').strip() or None
-    statut        = normalise_statut(request.form.get('statut', 'passee'))
+    statut = normalise_statut(request.form.get('statut', '')) or None
     professeur_id = parse_professeur_id(request.form)
     redirect_url  = request.form.get('redirect_url', '').strip()
 
@@ -390,7 +390,7 @@ def seance_modifier(id):
     s.niveau      = request.form.get('niveau',   '').strip() or None
     s.heure       = request.form.get('heure',    '').strip() or None
     s.remarque    = request.form.get('remarque', '').strip() or None
-    s.statut      = normalise_statut(request.form.get('statut', 'passee'))
+    s.statut = normalise_statut(request.form.get('statut', ''))
     s.professeur_id = parse_professeur_id(request.form)
     if s.professeur_id:
         p = Professeur.query.get(s.professeur_id)
@@ -474,7 +474,7 @@ def seances_ajouter_multiple():
         note      = data.get('note',      '').strip() or None
         heure     = data.get('heure',     '').strip() or None
         remarque  = data.get('remarque',  '').strip() or None
-        statut    = normalise_statut(data.get('statut', 'passee'))
+        statut = normalise_statut(data.get('statut', ''))
 
         prof_id_str   = data.get('professeur_id', '').strip()
         professeur_id = int(prof_id_str) if prof_id_str.isdigit() else None

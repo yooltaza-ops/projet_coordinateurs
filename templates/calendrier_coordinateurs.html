@@ -496,7 +496,7 @@ body { font-family: 'DM Sans', sans-serif; }
                 <div class="sp-section-label">📊 Statut</div>
                 <div class="sp-statut-group">
                     <label class="sp-statut-pill s-passee">
-                        <input type="radio" name="statut" value="passee" id="edit-s-passee" checked>
+                        <input type="radio" name="statut" value="passee" id="edit-s-passee" >
                         <span class="sdot"></span> Passée
                     </label>
                     <label class="sp-statut-pill s-annulee">
@@ -776,7 +776,7 @@ SBY[{{ row.coord.id }}] = {};
         coordinateur_id:{{ s.coordinateur_id }},
         heures:         {{ s.nb_heures }},
         heure:          {{ (s.heure | string if s.heure else '') | tojson }},
-        statut:         {{ (s.statut or 'passee') | tojson }},
+        statut:         {{ (s.statut or '') | tojson }},
         matiere:        {{ (s.matiere or '') | tojson }},
         niveau:         {{ (s.niveau or '') | tojson }},
         prof:           {{ (s.prof or '') | tojson }},
@@ -798,7 +798,8 @@ let curAnnee = {{ annee }};
 function chipColor(s, coordColor) {
     if (s.statut === 'annulee')    return '#dc2626';
     if (s.statut === 'rattrapage') return '#f5a623';
-    return coordColor;
+    if (s.statut === 'passee')     return coordColor;
+    return '#94a3b8';  // ← رمادي إلا ما كانش statut
 }
 
 function filterCoords(q) {
@@ -1098,7 +1099,7 @@ function addSession(date) {
         <div class="sp-section-label">📊 Statut</div>
         <div class="sp-statut-group">
             <label class="sp-statut-pill s-passee">
-                <input type="radio" name="seances[${idx}][statut]" value="passee" checked>
+                <input type="radio" name="seances[${idx}][statut]" value="passee">
                 <span class="sdot"></span> Passée
             </label>
             <label class="sp-statut-pill s-annulee">
@@ -1243,7 +1244,8 @@ let _seanceCacheKey = 0;
 function statutBadge(statut) {
     if (statut === 'annulee')    return `<span class="dr-badge dr-annulee">❌ Annulée</span>`;
     if (statut === 'rattrapage') return `<span class="dr-badge dr-rattrapage">🔄 Rattrapage</span>`;
-    return `<span class="dr-badge dr-passee">✅ Passée</span>`;
+    if (statut === 'passee')     return `<span class="dr-badge dr-passee">✅ Passée</span>`;
+    return `<span class="dr-badge" style="background:#94a3b8">— Sans statut</span>`;
 }
 
 function drHtml(s, color) {

@@ -198,7 +198,7 @@ class Seance(db.Model):
     created_at      = db.Column(db.DateTime, default=datetime.utcnow)
 
     # ── CHAMPS SUIVI PARTENARIAT ──────────────────────────────────────────
-    statut    = db.Column(db.String(20),  nullable=False, default='passee')
+    statut = db.Column(db.String(20), nullable=True, default=None)
     heure     = db.Column(db.String(5),   nullable=True)
     nb_eleves = db.Column(db.Integer,     nullable=True)
     remarque  = db.Column(db.String(500), nullable=True)
@@ -226,7 +226,7 @@ class Seance(db.Model):
             'Annulée':    'Annulée',
             'Rattrapage': 'Rattrapage',
         }
-        return mapping.get(self.statut, self.statut or 'Passée')
+        return mapping.get(self.statut, '—')
 
     @property
     def statut_normalise(self):
@@ -238,7 +238,7 @@ class Seance(db.Model):
             'Annulée':    'annulee',
             'Rattrapage': 'rattrapage',
         }
-        return mapping.get(self.statut, 'passee')
+        return mapping.get(self.statut, '')
 
     @property
     def statut_color(self):

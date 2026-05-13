@@ -682,7 +682,17 @@
                   </td>
                   <td>{% if s.nb_eleves %}<span class="sp-pill eleves">{{ s.nb_eleves }}</span>{% else %}—{% endif %}</td>
                   <td><strong style="color:#1a3a6b;">{{ s.nb_heures }}h</strong></td>
-                  <td><span class="badge-statut badge-{{ s.statut }}">{{ s.statut_label }}</span></td>
+                  <td>
+                      {% if s.statut == 'passee' %}
+                        <span class="badge-statut badge-passee">✅ Passée</span>
+                      {% elif s.statut == 'annulee' %}
+                          <span class="badge-statut badge-annulee">❌ Annulée</span>
+                      {% elif s.statut == 'rattrapage' %}
+                          <span class="badge-statut badge-rattrapage">🔄 Rattrapage</span>
+                      {% else %}
+                          <span style="color:#94a3b8;font-size:12px;">— Sans statut</span>
+                      {% endif %}
+                  </td>
                   <td style="max-width:160px;font-size:11px;color:#888;font-style:italic;">{{ s.remarque or (s.note or '—') }}</td>
                   <td style="white-space:nowrap;">
                     <button class="btn-action btn-edit" onclick="openEditModal({{ s.id }})">✏️</button>
@@ -752,7 +762,17 @@
                   <td>{% if s.coordinateur %}{% if s.coordinateur.genre=='M' %}👨{% else %}👩{% endif %} {{ s.coordinateur.prenom }} {{ s.coordinateur.nom }}{% else %}—{% endif %}</td>
                   <td>{% if s.nb_eleves %}<span class="sp-pill eleves">{{ s.nb_eleves }}</span>{% else %}—{% endif %}</td>
                   <td><strong style="color:#1a3a6b;">{{ s.nb_heures }}h</strong></td>
-                  <td><span class="badge-statut badge-{{ s.statut }}">{{ s.statut_label }}</span></td>
+                  <td>
+                      {% if s.statut == 'passee' %}
+                        <span class="badge-statut badge-passee">✅ Passée</span>
+                      {% elif s.statut == 'annulee' %}
+                          <span class="badge-statut badge-annulee">❌ Annulée</span>
+                      {% elif s.statut == 'rattrapage' %}
+                          <span class="badge-statut badge-rattrapage">🔄 Rattrapage</span>
+                      {% else %}
+                          <span style="color:#94a3b8;font-size:12px;">— Sans statut</span>
+                      {% endif %}
+                  </td>
                   <td style="max-width:150px;font-size:11px;color:#888;font-style:italic;">{{ s.remarque or (s.note or '—') }}</td>
                   <td style="white-space:nowrap;">
                     <button class="btn-action btn-edit" onclick="openEditModal({{ s.id }})">✏️</button>
@@ -883,7 +903,7 @@
             <label>Statut <span class="req">*</span></label>
             <div class="sp-statut-group">
               <label class="sp-statut-pill s-passee">
-                <input type="radio" name="statut" value="passee" id="spStatutPassee" checked>
+                <input type="radio" name="statut" value="passee" id="spStatutPassee">
                 <span class="sdot"></span> Passée
               </label>
               <label class="sp-statut-pill s-annulee">
@@ -1297,7 +1317,7 @@ function openAddModal(darId, niveau) {
 
     document.getElementById('spDate').value   = new Date().toISOString().slice(0, 10);
     document.getElementById('spHeures').value = '2';
-    setStatut('passee');
+    // setStatut('passee');
 
     if (darId) {
         /* Dar verrouillée → hidden mis à jour dans rebuildDarSelect */
@@ -1329,7 +1349,7 @@ function openEditModal(id) {
     document.getElementById('spEleves').value   = s.nb_eleves || '';
     document.getElementById('spNote').value     = s.note      || '';
     document.getElementById('spRemarque').value = s.remarque  || '';
-    setStatut(s.statut || 'passee');
+    if (s.statut) setStatut(s.statut);
 
     if (s.dar_id) {
         /* Dar verrouillée → hidden sync dans rebuildDarSelect */
