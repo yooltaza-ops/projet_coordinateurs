@@ -283,13 +283,18 @@
                 <a href="{{ url_for('gerer_coordinateurs') }}" class="action-card">
                     <div class="action-icon">👥</div><div class="action-title">Gérer Coordinateurs</div><div class="action-desc">Voir, modifier, supprimer</div>
                 </a>
-                <a href="{{ url_for('heures') }}" class="action-card" style="border-color:#e8d5f5;">
+                <a href="{{ url_for('heures') }}" class="action-card" >
                     <div class="action-icon">⏱️</div>
-                    <div class="action-title" style="color:#9b59b6;">Séances & Heures</div>
+                    <div class="action-title" >Séances & Heures</div>
+                    <div class="action-desc">Gérer les séances par coordinateur</div>
+                </a>
+                <a href="{{ url_for('suivi_partenariat') }}" class="action-card" >
+                    <div class="action-icon">📊</div>
+                    <div class="action-title" >Suivi Partenariat</div>
                     <div class="action-desc">Gérer les séances par coordinateur</div>
                 </a>
                 <a href="{{ url_for('calendrier_coordinateurs') }}" class="action-card">
-                    <div class="action-icon">📊</div>
+                    <div class="action-icon">📅</div>
                     <div class="action-title">Calendrier</div>
                     <div class="action-desc">Calendrier et Matières</div>
                 </a>

@@ -245,6 +245,7 @@ def gerer_coordinateurs():
 # ─── Heures / Séances ─────────────────────────────────────────────────────────
 @app.route('/heures')
 @login_required
+@admin_required
 def heures():
     now      = datetime.now()
     mois     = request.args.get('mois',  now.month, type=int)
