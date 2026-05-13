@@ -1323,7 +1323,7 @@ function openEdit(s) {
     document.getElementById('edit-note').value     = s.note     || '';
     document.getElementById('edit-remarque').value = s.remarque || '';
 
-    setEditStatut(s.statut || 'passee');
+    if (s.statut) setEditStatut(s.statut);
 
     const editDarSel   = document.getElementById('edit-dar');
     const editDarHid   = document.getElementById('edit-dar-hidden');
