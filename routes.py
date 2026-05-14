@@ -76,7 +76,7 @@ def login():
         if user and user.check_password(pwd):
             login_user(user)
             return redirect(url_for('index'))
-        error = 'Email aw mot de passe khata.'
+        error = 'Identifiants incorrects.'
     return render_template('login.html', error=error)
 
 

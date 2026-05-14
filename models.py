@@ -104,6 +104,7 @@ PROFESSEURS_LISTE = [
 ]
 
 
+
 # ── Models ──────────────────────────────────────────────────────────────────
 
 class User(db.Model, UserMixin):
