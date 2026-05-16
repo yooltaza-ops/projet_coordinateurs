@@ -1517,3 +1517,49 @@ def suivi_partenariat():
         total_eleves=total_eleves,
         total_seances=len(all_seances),
     )
+
+@app.before_request
+def update_last_seen():
+    """Met à jour last_seen à chaque requête (throttle : 1 commit / 60s max)."""
+    if current_user.is_authenticated:
+        now = datetime.now()
+        if (
+            not current_user.last_seen
+            or (now - current_user.last_seen).total_seconds() > 60
+        ):
+            current_user.last_seen = now
+            db.session.commit()
+ 
+ 
+# ── 3. Colle ces deux routes n'importe où dans routes.py ─────────────────────
+ 
+@app.route('/api/statut_responsables')
+@login_required
+@admin_required
+def api_statut_responsables():
+    """
+    Retourne JSON {user_id: bool} — qui est en ligne (actif < 5 min).
+    Appelé en AJAX depuis gerer_responsables.html toutes les 30s.
+    """
+    from models import User
+    users = User.query.all()
+    data  = {str(u.id): u.is_online for u in users}
+    return Response(json.dumps(data), mimetype='application/json')
+ 
+ 
+@app.route('/api/statut_user/<int:user_id>')
+@login_required
+@admin_required
+def api_statut_user(user_id):
+    """Statut détaillé d'un seul user (optionnel, pour debug)."""
+    from models import User
+    u = User.query.get_or_404(user_id)
+    return Response(
+        json.dumps({
+            'online':       u.is_online,
+            'last_seen':    u.last_seen.isoformat() if u.last_seen else None,
+            'last_seen_fr': u.last_seen_display,
+        }),
+        mimetype='application/json'
+    )
+ 

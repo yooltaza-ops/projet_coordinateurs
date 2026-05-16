@@ -104,7 +104,6 @@ PROFESSEURS_LISTE = [
 ]
 
 
-
 # ── Models ──────────────────────────────────────────────────────────────────
 
 class User(db.Model, UserMixin):
@@ -123,6 +122,9 @@ class User(db.Model, UserMixin):
     linkedin       = db.Column(db.String(300), nullable=True)
     website        = db.Column(db.String(300), nullable=True)
 
+    # ── NOUVEAU : dernière activité ──────────────────────────────────────
+    last_seen      = db.Column(db.DateTime, nullable=True)
+
     def set_password(self, pwd):
         self.password = generate_password_hash(pwd)
 
@@ -132,6 +134,31 @@ class User(db.Model, UserMixin):
     @property
     def is_admin(self):
         return self.role == 'admin'
+
+    # ── NOUVEAU : en ligne si actif dans les 5 dernières minutes ─────────
+    @property
+    def is_online(self):
+        if not self.last_seen:
+            return False
+        return (datetime.now() - self.last_seen).total_seconds() < 300
+
+    # ── NOUVEAU : texte lisible de la dernière connexion ──────────────────
+    @property
+    def last_seen_display(self):
+        if not self.last_seen:
+            return "Jamais connecté"
+        delta   = datetime.now() - self.last_seen
+        seconds = int(delta.total_seconds())
+        if seconds < 60:
+            return "À l'instant"
+        elif seconds < 3600:
+            mins = seconds // 60
+            return f"Il y a {mins} min"
+        elif seconds < 86400:
+            hrs = seconds // 3600
+            return f"Il y a {hrs}h"
+        else:
+            return self.last_seen.strftime('%d/%m à %H:%M')
 
 
 class Responsable(db.Model):
@@ -156,7 +183,6 @@ class Dour(db.Model):
     nom  = db.Column(db.String(100), nullable=False)
     type = db.Column(db.Enum('talib', 'taliba', 'fatat'), nullable=False)
 
-    # Professeurs qui interviennent dans cette dour
     professeurs = db.relationship('Professeur', secondary=professeur_dour,
                                   back_populates='dours', lazy=True)
 
@@ -198,25 +224,20 @@ class Seance(db.Model):
     niveau          = db.Column(db.String(100), nullable=True)
     created_at      = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # ── CHAMPS SUIVI PARTENARIAT ──────────────────────────────────────────
     statut          = db.Column(db.String(20),  nullable=True, default=None)
     heure           = db.Column(db.String(5),   nullable=True)
     nb_eleves       = db.Column(db.Integer,     nullable=True)
-    nb_eleves_total = db.Column(db.Integer,     nullable=True)   # ← NOUVEAU : effectif total du niveau
+    nb_eleves_total = db.Column(db.Integer,     nullable=True)
     remarque        = db.Column(db.String(500), nullable=True)
 
-    # FK vers Dour (dar où se déroule la séance)
     dar_id = db.Column(db.Integer, db.ForeignKey('dour.id'), nullable=True)
     dar    = db.relationship('Dour', foreign_keys=[dar_id])
 
-    # Champ legacy — conservé pour les anciennes séances saisies avant la migration FK
     prof = db.Column(db.String(200), nullable=True)
 
-    # FK vers Professeur (nouveau champ structuré)
     professeur_id = db.Column(db.Integer, db.ForeignKey('professeur.id'), nullable=True)
     professeur    = db.relationship('Professeur', foreign_keys=[professeur_id],
                                     back_populates='seances')
-    # ─────────────────────────────────────────────────────────────────────
 
     @property
     def statut_label(self):
@@ -253,7 +274,6 @@ class Seance(db.Model):
 
     @property
     def prof_nom(self):
-        """Retourne le nom du prof: via FK si dispo, sinon champ legacy string."""
         if self.professeur:
             return self.professeur.nom
         return self.prof or None
@@ -265,11 +285,9 @@ class Professeur(db.Model):
     nom   = db.Column(db.String(200), nullable=False)
     actif = db.Column(db.Boolean, default=True, nullable=False)
 
-    # Dours où ce professeur intervient
     dours   = db.relationship('Dour', secondary=professeur_dour,
                                back_populates='professeurs', lazy=True)
 
-    # Séances assurées par ce professeur
     seances = db.relationship('Seance', foreign_keys='Seance.professeur_id',
                                back_populates='professeur', lazy=True)
 
@@ -277,7 +295,6 @@ class Professeur(db.Model):
         return f'<Professeur {self.nom}>'
 
     def dours_actives(self):
-        """Liste des dours où ce professeur a au moins une séance passée."""
         return list({s.dar for s in self.seances if s.dar is not None})
 
     def total_seances(self):

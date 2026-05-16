@@ -11,6 +11,35 @@
         .stat-number { font-size:28px; font-weight:700; color:#1a3a6b; }
         .stat-label  { font-size:12px; color:#888; font-weight:500; }
 
+        /* ── Badge en ligne ── */
+        .badge-online {
+            display:inline-flex; align-items:center; gap:5px;
+            background:#198754; color:#fff;
+            font-size:.68rem; font-weight:600;
+            padding:3px 9px; border-radius:20px;
+            white-space:nowrap;
+        }
+        .badge-offline {
+            display:inline-flex; align-items:center; gap:5px;
+            background:#6c757d; color:#fff;
+            font-size:.68rem; font-weight:500;
+            padding:3px 9px; border-radius:20px;
+            white-space:nowrap;
+        }
+        .dot-online {
+            width:7px; height:7px; background:#90ee90;
+            border-radius:50%; display:inline-block; flex-shrink:0;
+            animation:pulse-green 1.5s infinite;
+        }
+        .dot-offline {
+            width:7px; height:7px; background:#ccc;
+            border-radius:50%; display:inline-block; flex-shrink:0;
+        }
+        @keyframes pulse-green {
+            0%,100% { opacity:1; transform:scale(1); }
+            50%      { opacity:.4; transform:scale(1.35); }
+        }
+
         .section-title {
             display:flex; align-items:center; gap:10px;
             font-size:15px; font-weight:700; color:#1a3a6b;
@@ -93,11 +122,7 @@
         .mod-submit:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(245,166,35,0.35); }
 
         /* ══ DELETE MODAL ══ */
-        .del-modal-icon {
-            width:80px; height:80px; background:#fdecea; border-radius:50%;
-            display:flex; align-items:center; justify-content:center;
-            margin:0 auto 20px; font-size:36px;
-        }
+        .del-modal-icon { width:80px; height:80px; background:#fdecea; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; font-size:36px; }
         .del-modal-title { font-size:19px; font-weight:700; color:#1a3a6b; margin-bottom:10px; text-align:center; }
         .del-modal-sub { font-size:13px; color:#888; margin-bottom:22px; line-height:1.6; text-align:center; }
         .del-modal-name-box { background:#f8fafc; border-radius:12px; padding:14px 18px; margin-bottom:14px; text-align:center; }
@@ -245,6 +270,13 @@
             <div class="stat-number">{{ total_coordinateurs }}</div>
             <div class="stat-label">👥 Coordinateurs</div>
         </div>
+        {# ── stat : combien sont en ligne maintenant ── #}
+        <div class="stat-card" style="border-color:#198754;">
+            <div class="stat-number" id="nb-online-count">
+                {{ responsables_only | selectattr('user') | selectattr('user.is_online') | list | length }}
+            </div>
+            <div class="stat-label">🟢 En ligne</div>
+        </div>
     </div>
 
     <!-- ══ SECTION 1: RESPONSABLES ══ -->
@@ -266,6 +298,22 @@
                 <div class="resp-info">
                     <div class="resp-name">{{ r.prenom }} {{ r.nom }}</div>
                     <div class="resp-email">{{ r.email or '—' }}</div>
+                    {# ── Badge statut en ligne ── #}
+                    {% if r.user %}
+                    <div style="margin-top:5px;">
+                        <span
+                            class="{% if r.user.is_online %}badge-online{% else %}badge-offline{% endif %}"
+                            data-user-id="{{ r.user.id }}"
+                            title="{{ r.user.last_seen_display }}"
+                            id="badge-user-{{ r.user.id }}"
+                        >
+                            <span class="{% if r.user.is_online %}dot-online{% else %}dot-offline{% endif %}"></span>
+                            <span class="badge-label">
+                                {% if r.user.is_online %}En ligne{% else %}{{ r.user.last_seen_display }}{% endif %}
+                            </span>
+                        </span>
+                    </div>
+                    {% endif %}
                 </div>
                 <span class="role-badge responsable">👤 Resp.</span>
             </div>
@@ -328,6 +376,20 @@
                     {% if u.prenom and u.nom %}{{ u.prenom }} {{ u.nom }}{% else %}{{ u.email.split('@')[0] }}{% endif %}
                 </div>
                 <div style="font-size:11px; color:#aaa; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ u.email }}</div>
+                {# ── Badge en ligne pour admins purs ── #}
+                <div style="margin-top:5px;">
+                    <span
+                        class="{% if u.is_online %}badge-online{% else %}badge-offline{% endif %}"
+                        data-user-id="{{ u.id }}"
+                        title="{{ u.last_seen_display }}"
+                        id="badge-user-{{ u.id }}"
+                    >
+                        <span class="{% if u.is_online %}dot-online{% else %}dot-offline{% endif %}"></span>
+                        <span class="badge-label">
+                            {% if u.is_online %}En ligne{% else %}{{ u.last_seen_display }}{% endif %}
+                        </span>
+                    </span>
+                </div>
             </div>
             <span class="role-badge admin">🛡️ Admin</span>
         </div>
@@ -392,11 +454,46 @@ function selectAddRole(role) {
 
 /* ── ESC key close ── */
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeModal();
-        closeAddModal();
-        closeDelModal();
-    }
+    if (e.key === 'Escape') { closeModal(); closeAddModal(); closeDelModal(); }
 });
+
+/* ══════════════════════════════════════════════════════════════════════
+   Polling statut en ligne — toutes les 30 secondes
+   ══════════════════════════════════════════════════════════════════════ */
+function updateOnlineStatuses() {
+    fetch('/api/statut_responsables')
+        .then(r => r.json())
+        .then(data => {
+            let nbOnline = 0;
+
+            document.querySelectorAll('[data-user-id]').forEach(el => {
+                const uid    = String(el.dataset.userId);
+                const online = data[uid] === true;
+                const dot    = el.querySelector('span:first-child');
+                const label  = el.querySelector('.badge-label');
+
+                if (online) {
+                    el.className   = 'badge-online';
+                    if (dot)   dot.className   = 'dot-online';
+                    if (label) label.textContent = 'En ligne';
+                    nbOnline++;
+                } else {
+                    el.className   = 'badge-offline';
+                    if (dot)   dot.className   = 'dot-offline';
+                    // Le texte "Il y a X min" est mis à jour au prochain rechargement
+                    // (on ne peut pas recalculer sans la date exacte en JS)
+                }
+            });
+
+            // Mise à jour compteur stat-card "En ligne"
+            const ctr = document.getElementById('nb-online-count');
+            if (ctr) ctr.textContent = nbOnline;
+        })
+        .catch(err => console.warn('Polling statut en ligne :', err));
+}
+
+// Premier appel immédiat + polling toutes les 30s
+updateOnlineStatuses();
+setInterval(updateOnlineStatuses, 30000);
 </script>
 {% endblock %}
