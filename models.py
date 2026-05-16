@@ -199,10 +199,11 @@ class Seance(db.Model):
     created_at      = db.Column(db.DateTime, default=datetime.utcnow)
 
     # ── CHAMPS SUIVI PARTENARIAT ──────────────────────────────────────────
-    statut = db.Column(db.String(20), nullable=True, default=None)
-    heure     = db.Column(db.String(5),   nullable=True)
-    nb_eleves = db.Column(db.Integer,     nullable=True)
-    remarque  = db.Column(db.String(500), nullable=True)
+    statut          = db.Column(db.String(20),  nullable=True, default=None)
+    heure           = db.Column(db.String(5),   nullable=True)
+    nb_eleves       = db.Column(db.Integer,     nullable=True)
+    nb_eleves_total = db.Column(db.Integer,     nullable=True)   # ← NOUVEAU : effectif total du niveau
+    remarque        = db.Column(db.String(500), nullable=True)
 
     # FK vers Dour (dar où se déroule la séance)
     dar_id = db.Column(db.Integer, db.ForeignKey('dour.id'), nullable=True)

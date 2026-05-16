@@ -137,6 +137,7 @@
   .sp-pill.rattrapage{ background: #fff8ee; color: #856404; }
   .sp-pill.heures    { background: #e8edf5; color: #1a3a6b; }
   .sp-pill.eleves    { background: #f3e8ff; color: #6d28d9; }
+  .sp-pill.total     { background: #e0f2fe; color: #0369a1; }  /* ← NOUVEAU */
 
   .sp-dar-body { padding: 16px 20px; }
 
@@ -195,8 +196,19 @@
   }
   .sp-niveau-header:hover { background: var(--sp-surface); }
   .sp-niveau-name { font-weight: 700; font-size: 14px; color: var(--sp-text); }
-  .sp-niveau-pills { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+  .sp-niveau-pills { margin-left: auto; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
   .sp-niveau-body { padding: 0 20px 16px; }
+
+  /* Badge effectif total dans le header niveau */
+  .sp-effectif-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: #e0f2fe; color: #0369a1;
+    border: 1.5px solid #bae6fd; border-radius: 20px;
+    padding: 3px 10px; font-size: 11px; font-weight: 700;
+  }
+  .sp-effectif-badge .ef-label {
+    font-size: 10px; color: #0284c7; opacity: .8;
+  }
 
   .toggle-icon { transition: transform .2s; color: var(--sp-muted); }
 
@@ -274,6 +286,7 @@
   }
 
   .sp-form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .sp-form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }  /* ← NOUVEAU */
   .sp-form-grid-1 { display: grid; grid-template-columns: 1fr; gap: 12px; }
 
   .sp-fg { display: flex; flex-direction: column; gap: 6px; }
@@ -308,7 +321,6 @@
   }
   .sp-fg input::placeholder, .sp-fg textarea::placeholder { color: #b0bac9; font-size: 13px; }
 
-  /* Select disabled */
   .sp-fg select:disabled {
     background: #f0f4f8 !important; color: #6b7a99; cursor: not-allowed; opacity: 1;
     border-color: #dde3ec;
@@ -321,7 +333,6 @@
   }
   .sp-input-icon input { padding-left: 36px; }
 
-  /* Statut pills */
   .sp-statut-group { display: flex; gap: 8px; flex-wrap: wrap; }
   .sp-statut-pill {
     display: flex; align-items: center; gap: 7px;
@@ -341,7 +352,6 @@
   .sp-statut-pill.s-rattrapage:has(input:checked) { background: #fffbeb; border-color: #fbbf24; color: #92400e; box-shadow: 0 0 0 3px rgba(251,191,36,.12); }
   .sp-statut-pill:has(input:checked) .sdot { opacity: 1; }
 
-  /* Number stepper */
   .sp-num-wrap {
     display: inline-flex; align-items: center;
     border: 1.5px solid #d1d9e6; border-radius: 10px;
@@ -365,7 +375,6 @@
     flex: 1; outline: none; font-family: 'DM Sans', sans-serif; padding: 0; min-width: 0;
   }
 
-  /* Prof search dropdown */
   .prof-search-wrapper { position: relative; }
   .prof-search-input {
     width: 100%; outline: none; box-sizing: border-box;
@@ -408,7 +417,6 @@
   }
   .sp-dar-hint.show { display: block; }
 
-  /* Badge lock dar */
   .sp-dar-lock-badge {
     display: none; align-items: center; gap: 6px;
     background: #fff8ee; border: 1.5px solid #fce8c3;
@@ -507,7 +515,7 @@
   @media (max-width: 600px) {
     .sp-modal-body { padding: 16px; }
     .sp-modal-head, .sp-modal-footer { padding: 16px; }
-    .sp-form-grid-2 { grid-template-columns: 1fr; }
+    .sp-form-grid-2, .sp-form-grid-3 { grid-template-columns: 1fr; }
     .sp-kpi { min-width: 110px; }
     .sp-kpi-val { font-size: 20px; }
     .sp-table th:nth-child(n+6), .sp-table td:nth-child(n+6) { display: none; }
@@ -660,7 +668,8 @@
               <thead>
                 <tr>
                   <th>Date</th><th>Heure</th><th>Matière</th><th>Niveau</th>
-                  <th>Professeur</th><th>Coordinateur</th><th>Élèves</th>
+                  <th>Professeur</th><th>Coordinateur</th>
+                  <th>Présents</th><th>Effectif total</th>
                   <th>Heures</th><th>Statut</th><th>Remarque</th><th></th>
                 </tr>
               </thead>
@@ -680,7 +689,8 @@
                       </span>
                     {% else %}—{% endif %}
                   </td>
-                  <td>{% if s.nb_eleves %}<span class="sp-pill eleves">{{ s.nb_eleves }}</span>{% else %}—{% endif %}</td>
+                  <td>{% if s.nb_eleves %}<span class="sp-pill eleves">👥 {{ s.nb_eleves }}</span>{% else %}—{% endif %}</td>
+                  <td>{% if s.nb_eleves_total %}<span class="sp-pill total">🏫 {{ s.nb_eleves_total }}</span>{% else %}—{% endif %}</td>
                   <td><strong style="color:#1a3a6b;">{{ s.nb_heures }}h</strong></td>
                   <td>
                       {% if s.statut == 'passee' %}
@@ -732,6 +742,15 @@
         <div class="sp-niveau-header" onclick="toggleCard(this)">
           <span style="font-size:18px;color:#f5a623;">🎓</span>
           <span class="sp-niveau-name">{{ bloc.niveau }}</span>
+
+          {# ── Effectif total bien visible ── #}
+          {% if bloc.effectif_total %}
+          <div class="sp-effectif-badge" style="margin-left: 10px;">
+            🏫 <strong>{{ bloc.effectif_total }}</strong>
+            <span class="ef-label">inscrits</span>
+          </div>
+          {% endif %}
+
           <div class="sp-niveau-pills">
             {% if bloc.nb_passees > 0 %}<span class="sp-pill passee">✅ {{ bloc.nb_passees }}</span>{% endif %}
             {% if bloc.nb_annulees > 0 %}<span class="sp-pill annulee">❌ {{ bloc.nb_annulees }}</span>{% endif %}
@@ -747,7 +766,8 @@
               <thead>
                 <tr>
                   <th>Date</th><th>Heure</th><th>Dar Talib</th><th>Matière</th>
-                  <th>Professeur</th><th>Coordinateur</th><th>Élèves</th>
+                  <th>Professeur</th><th>Coordinateur</th>
+                  <th>Présents</th><th>Effectif total</th>
                   <th>Heures</th><th>Statut</th><th>Remarque</th><th></th>
                 </tr>
               </thead>
@@ -760,7 +780,8 @@
                   <td>{% if s.matiere %}<span style="background:#e6faf7;color:#0d9488;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">{{ s.matiere }}</span>{% else %}—{% endif %}</td>
                   <td style="font-weight:600;color:#1a3a6b;">{{ s.prof or '—' }}</td>
                   <td>{% if s.coordinateur %}{% if s.coordinateur.genre=='M' %}👨{% else %}👩{% endif %} {{ s.coordinateur.prenom }} {{ s.coordinateur.nom }}{% else %}—{% endif %}</td>
-                  <td>{% if s.nb_eleves %}<span class="sp-pill eleves">{{ s.nb_eleves }}</span>{% else %}—{% endif %}</td>
+                  <td>{% if s.nb_eleves %}<span class="sp-pill eleves">👥 {{ s.nb_eleves }}</span>{% else %}—{% endif %}</td>
+                  <td>{% if s.nb_eleves_total %}<span class="sp-pill total">🏫 {{ s.nb_eleves_total }}</span>{% else %}—{% endif %}</td>
                   <td><strong style="color:#1a3a6b;">{{ s.nb_heures }}h</strong></td>
                   <td>
                       {% if s.statut == 'passee' %}
@@ -839,8 +860,6 @@
 
     <form id="spForm" method="POST">
       <input type="hidden" name="redirect_url" id="spRedirectUrl" value="{{ request.url }}">
-
-      {# ══ FIX CRITIQUE : hidden dar_id — soumet la valeur même quand select disabled ══ #}
       <input type="hidden" name="dar_id" id="spDarHidden">
 
       <div class="sp-modal-body">
@@ -923,11 +942,6 @@
         <div class="sp-form-grid-2">
           <div class="sp-fg">
             <label>Dar Talib</label>
-            {#
-              ══ FIX PRINCIPAL ══
-              - Le select n'a PLUS name="dar_id" → c'est le hidden input #spDarHidden qui envoie la valeur
-              - Quand disabled, le select ne soumet rien → le hidden prend le relais
-            #}
             <select id="spDar">
               <option value="">— Aucune —</option>
               {% for d in dours %}
@@ -971,16 +985,29 @@
 
         {# ── Présence & Notes ── #}
         <div class="sp-section-label">📝 Présence & notes</div>
+
+        {# Ligne 1 : Présents + Effectif total #}
         <div class="sp-form-grid-2">
           <div class="sp-fg">
-            <label>Élèves présents</label>
+            <label>👥 Élèves présents</label>
             <div class="sp-input-icon">
               <span class="ico">👥</span>
               <input type="number" name="nb_eleves" id="spEleves" min="0" placeholder="0">
             </div>
           </div>
           <div class="sp-fg">
-            <label>Note interne</label>
+            <label>🏫 Effectif total du niveau</label>
+            <div class="sp-input-icon">
+              <span class="ico">🏫</span>
+              <input type="number" name="nb_eleves_total" id="spElevesTotal" min="0" placeholder="Ex: 50">
+            </div>
+          </div>
+        </div>
+
+        {# Ligne 2 : Note + Remarque #}
+        <div style="margin-top:12px;">
+          <div class="sp-fg">
+            <label>🏷️ Note interne</label>
             <div class="sp-input-icon">
               <span class="ico">🏷️</span>
               <input type="text" name="note" id="spNote" placeholder="Note courte…">
@@ -989,7 +1016,7 @@
         </div>
         <div style="margin-top:12px;">
           <div class="sp-fg">
-            <label>Remarque</label>
+            <label>💬 Remarque</label>
             <textarea name="remarque" id="spRemarque"
                       placeholder="Remarques sur le déroulement de la séance…"></textarea>
           </div>
@@ -1075,6 +1102,7 @@ SEANCES_DATA[{{ s.id }}] = {
     prof:            {{ s.prof | tojson }},
     professeur_id:   {{ s.professeur_id if s.professeur_id else 'null' }},
     nb_eleves:       {{ s.nb_eleves }},
+    nb_eleves_total: {{ s.nb_eleves_total }},
     note:            {{ s.note | tojson }},
     remarque:        {{ s.remarque | tojson }},
 };
@@ -1088,7 +1116,6 @@ var _lockedCoords = false;
 
 /* ════════════════════════════════════════════════════════
    SYNC hidden dar_id
-   — appelée à chaque changement du select spDar
 ════════════════════════════════════════════════════════ */
 function syncDarHidden(val) {
     document.getElementById('spDarHidden').value = val || '';
@@ -1132,7 +1159,6 @@ function rebuildDarSelect(coordId, selectedDarId, lockedDarId) {
     var hint      = document.getElementById('spDarHint');
     var lockBadge = document.getElementById('spDarLockBadge');
 
-    /* ── Mode verrouillé : une seule dar ── */
     if (lockedDarId !== undefined && lockedDarId !== null && lockedDarId !== '') {
         _lockedDarId = String(lockedDarId);
         var darObj = ALL_DOURS.find(function(d) { return String(d.id) === _lockedDarId; });
@@ -1145,13 +1171,12 @@ function rebuildDarSelect(coordId, selectedDarId, lockedDarId) {
             sel.appendChild(opt);
         }
         sel.disabled = true;
-        syncDarHidden(_lockedDarId);         /* ← FIX : on sync le hidden */
+        syncDarHidden(_lockedDarId);
         lockBadge.classList.add('show');
         hint.classList.remove('show');
         return;
     }
 
-    /* ── Mode normal ── */
     _lockedDarId = null;
     sel.disabled = false;
     lockBadge.classList.remove('show');
@@ -1178,24 +1203,20 @@ function rebuildDarSelect(coordId, selectedDarId, lockedDarId) {
         });
     }
 
-    /* Sync hidden avec la valeur courante du select */
     syncDarHidden(sel.value);
 }
 
 /* ════════════════════════════════════════════════════════
    LISTENERS
 ════════════════════════════════════════════════════════ */
-
-/* Changement coordinateur → rebuild dars */
 document.getElementById('spCoord').addEventListener('change', function() {
     if (_lockedDarId) return;
     var currentDar = document.getElementById('spDar').value;
     rebuildDarSelect(this.value, currentDar);
 });
 
-/* Changement dar (select) → sync hidden + rebuild coords */
 document.getElementById('spDar').addEventListener('change', function() {
-    syncDarHidden(this.value);           /* ← FIX : toujours sync */
+    syncDarHidden(this.value);
     if (_lockedDarId) return;
     var darId        = this.value;
     var currentCoord = document.getElementById('spCoord').value;
@@ -1313,14 +1334,13 @@ function openAddModal(darId, niveau) {
     document.getElementById('spForm').reset();
     profHidden.value = '';
     profSearch.value = '';
-    document.getElementById('spDarHidden').value = '';
+    document.getElementById('spDarHidden').value    = '';
+    document.getElementById('spElevesTotal').value  = '';
 
     document.getElementById('spDate').value   = new Date().toISOString().slice(0, 10);
     document.getElementById('spHeures').value = '2';
-    // setStatut('passee');
 
     if (darId) {
-        /* Dar verrouillée → hidden mis à jour dans rebuildDarSelect */
         rebuildDarSelect('', '', darId);
         rebuildCoordSelect(darId, '');
     } else {
@@ -1341,18 +1361,18 @@ function openEditModal(id) {
     document.getElementById('spForm').action            = '/suivi_partenariat/modifier/' + id;
     document.getElementById('spSubmitBtn').innerHTML    = '💾 Enregistrer';
 
-    document.getElementById('spDate').value     = s.date      || '';
-    document.getElementById('spHeure').value    = s.heure     || '';
-    document.getElementById('spHeures').value   = s.nb_heures || 2;
-    document.getElementById('spMatiere').value  = s.matiere   || '';
-    document.getElementById('spNiveau').value   = s.niveau    || '';
-    document.getElementById('spEleves').value   = s.nb_eleves || '';
-    document.getElementById('spNote').value     = s.note      || '';
-    document.getElementById('spRemarque').value = s.remarque  || '';
+    document.getElementById('spDate').value      = s.date      || '';
+    document.getElementById('spHeure').value     = s.heure     || '';
+    document.getElementById('spHeures').value    = s.nb_heures || 2;
+    document.getElementById('spMatiere').value   = s.matiere   || '';
+    document.getElementById('spNiveau').value    = s.niveau    || '';
+    document.getElementById('spEleves').value    = s.nb_eleves || '';
+    document.getElementById('spElevesTotal').value = s.nb_eleves_total || '';   /* ← NOUVEAU */
+    document.getElementById('spNote').value      = s.note      || '';
+    document.getElementById('spRemarque').value  = s.remarque  || '';
     if (s.statut) setStatut(s.statut);
 
     if (s.dar_id) {
-        /* Dar verrouillée → hidden sync dans rebuildDarSelect */
         rebuildDarSelect('', '', s.dar_id);
         rebuildCoordSelect(s.dar_id, s.coordinateur_id);
     } else {

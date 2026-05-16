@@ -307,20 +307,13 @@ body { font-family: 'DM Sans', sans-serif; }
 }
 .dar-lock-hint.show { display: block; }
 
-.dar-locked-wrap {
-    position: relative;
-}
+.dar-locked-wrap { position: relative; }
 .dar-locked-wrap select:disabled {
-    background: #f0f4f8;
-    color: #374151;
-    cursor: not-allowed;
-    opacity: 1;
-    border-color: #cbd5e1;
+    background: #f0f4f8; color: #374151; cursor: not-allowed; opacity: 1; border-color: #cbd5e1;
 }
 .dar-lock-badge {
     display: inline-flex; align-items: center; gap: 4px;
-    font-size: 11px; color: #64748b; margin-top: 5px;
-    font-style: italic;
+    font-size: 11px; color: #64748b; margin-top: 5px; font-style: italic;
 }
 
 .sessions-list { display: flex; flex-direction: column; gap: 16px; }
@@ -496,7 +489,7 @@ body { font-family: 'DM Sans', sans-serif; }
                 <div class="sp-section-label">📊 Statut</div>
                 <div class="sp-statut-group">
                     <label class="sp-statut-pill s-passee">
-                        <input type="radio" name="statut" value="passee" id="edit-s-passee" >
+                        <input type="radio" name="statut" value="passee" id="edit-s-passee">
                         <span class="sdot"></span> Passée
                     </label>
                     <label class="sp-statut-pill s-annulee">
@@ -557,6 +550,10 @@ body { font-family: 'DM Sans', sans-serif; }
                     <div class="fg">
                         <label>👥 Élèves présents</label>
                         <input type="number" name="nb_eleves" id="edit-eleves" min="0" placeholder="0">
+                    </div>
+                    <div class="fg">
+                        <label>🏫 Effectif total du niveau</label>
+                        <input type="number" name="nb_eleves_total" id="edit-eleves-total" min="0" placeholder="Ex: 50">
                     </div>
                     <div class="fg">
                         <label>🏷️ Note interne</label>
@@ -742,8 +739,6 @@ const MATIERES  = {{ matieres  | tojson }};
 const NIVEAUX   = {{ niveaux   | tojson }};
 const MOIS_NOMS = {{ mois_noms | tojson }};
 
-const PROFS_DATA = {{ professeurs | map(attribute='id') | list | tojson }};
-// rebuild as objects
 const PROFS_LIST = [
     {% for p in professeurs %}{ id: {{ p.id }}, nom: {{ p.nom | tojson }} }{% if not loop.last %},{% endif %}{% endfor %}
 ];
@@ -772,20 +767,21 @@ SBY[{{ row.coord.id }}] = {};
     const k = {{ s.date.strftime('%Y-%m-%d') | tojson }};
     if (!SBY[{{ row.coord.id }}][k]) SBY[{{ row.coord.id }}][k] = [];
     SBY[{{ row.coord.id }}][k].push({
-        id:             {{ s.id }},
-        coordinateur_id:{{ s.coordinateur_id }},
-        heures:         {{ s.nb_heures }},
-        heure:          {{ (s.heure | string if s.heure else '') | tojson }},
-        statut:         {{ (s.statut or '') | tojson }},
-        matiere:        {{ (s.matiere or '') | tojson }},
-        niveau:         {{ (s.niveau or '') | tojson }},
-        prof:           {{ (s.prof or '') | tojson }},
-        professeur_id:  {{ s.professeur_id if s.professeur_id else 'null' }},
-        note:           {{ (s.note or '') | tojson }},
-        remarque:       {{ (s.remarque or '') | tojson }},
-        nb_eleves:      {{ s.nb_eleves or 0 }},
-        dar_id:         {{ (s.dar_id | string if s.dar_id else '') | tojson }},
-        date:           {{ s.date.strftime('%Y-%m-%d') | tojson }},
+        id:              {{ s.id }},
+        coordinateur_id: {{ s.coordinateur_id }},
+        heures:          {{ s.nb_heures }},
+        heure:           {{ (s.heure | string if s.heure else '') | tojson }},
+        statut:          {{ (s.statut or '') | tojson }},
+        matiere:         {{ (s.matiere or '') | tojson }},
+        niveau:          {{ (s.niveau or '') | tojson }},
+        prof:            {{ (s.prof or '') | tojson }},
+        professeur_id:   {{ s.professeur_id if s.professeur_id else 'null' }},
+        note:            {{ (s.note or '') | tojson }},
+        remarque:        {{ (s.remarque or '') | tojson }},
+        nb_eleves:       {{ s.nb_eleves or 0 }},
+        nb_eleves_total: {{ s.nb_eleves_total or 0 }},
+        dar_id:          {{ (s.dar_id | string if s.dar_id else '') | tojson }},
+        date:            {{ s.date.strftime('%Y-%m-%d') | tojson }},
     });
 })();
 {% endfor %}
@@ -799,7 +795,7 @@ function chipColor(s, coordColor) {
     if (s.statut === 'annulee')    return '#dc2626';
     if (s.statut === 'rattrapage') return '#f5a623';
     if (s.statut === 'passee')     return coordColor;
-    return '#94a3b8';  // ← رمادي إلا ما كانش statut
+    return '#94a3b8';
 }
 
 function filterCoords(q) {
@@ -963,22 +959,15 @@ function goToday() {
     document.getElementById('filter-form').submit();
 }
 
-/* ══════════════════════════════════════
-   HELPERS — options HTML
-══════════════════════════════════════ */
+/* ══ HELPERS options HTML ══ */
 const MO = (sel) => '<option value="">— Matière —</option>' + MATIERES.map(m=>
     `<option value="${m}"${m===sel?' selected':''}>${m}</option>`).join('');
 const NO = (sel) => '<option value="">— Niveau —</option>' + NIVEAUX.map(n=>
     `<option value="${n}"${n===sel?' selected':''}>${n}</option>`).join('');
 
-const DO = (sel) => '<option value="">— Aucune —</option>' + DOURS_JSON.map(d=>
-    `<option value="${d.id}"${String(d.id)===String(sel)?' selected':''}>${d.nom}</option>`).join('');
-
 function buildDarOptions(sel, locked) {
     const coordDours = (curCoord && curCoord.dours && curCoord.dours.length)
-        ? curCoord.dours
-        : DOURS_JSON;
-
+        ? curCoord.dours : DOURS_JSON;
     if (locked && coordDours.length > 0) {
         let html = '';
         coordDours.forEach(d => {
@@ -987,7 +976,6 @@ function buildDarOptions(sel, locked) {
         });
         return { html, isLocked: coordDours.length > 0 };
     }
-
     let html = '<option value="">— Aucune —</option>';
     coordDours.forEach(d => {
         html += `<option value="${d.id}"${String(d.id)===String(sel)?' selected':''}>${d.nom}</option>`;
@@ -995,22 +983,18 @@ function buildDarOptions(sel, locked) {
     return { html, isLocked: false };
 }
 
-/* ══════════════════════════════════════
-   PROF SEARCH
-══════════════════════════════════════ */
+/* ══ PROF SEARCH ══ */
 function bindProfSearch(inp, drop, hidNom, hidId) {
     function render(filter) {
         const lower = (filter||'').toLowerCase();
         const list  = PROFS_LIST.filter(p => p.nom.toLowerCase().includes(lower));
         drop.innerHTML = '';
-
         const empty = document.createElement('div');
         empty.className   = 'prof-option';
         empty.textContent = '— Aucun professeur —';
         empty.dataset.id  = '';
         empty.dataset.nom = '';
         drop.appendChild(empty);
-
         list.forEach(p => {
             const opt = document.createElement('div');
             opt.className   = 'prof-option' + (String(p.id) === hidId.value ? ' selected' : '');
@@ -1019,7 +1003,6 @@ function bindProfSearch(inp, drop, hidNom, hidId) {
             opt.dataset.nom = p.nom;
             drop.appendChild(opt);
         });
-
         drop.querySelectorAll('.prof-option').forEach(opt => {
             opt.addEventListener('mousedown', e => {
                 e.preventDefault();
@@ -1031,24 +1014,17 @@ function bindProfSearch(inp, drop, hidNom, hidId) {
         });
     }
     inp.addEventListener('focus', () => { render(inp.value); drop.classList.add('open'); });
-    inp.addEventListener('input', () => {
-        render(inp.value);
-        drop.classList.add('open');
-        hidId.value  = '';
-        hidNom.value = '';
-    });
-    inp.addEventListener('blur', () => { setTimeout(() => drop.classList.remove('open'), 150); });
+    inp.addEventListener('input', () => { render(inp.value); drop.classList.add('open'); hidId.value=''; hidNom.value=''; });
+    inp.addEventListener('blur',  () => { setTimeout(() => drop.classList.remove('open'), 150); });
 }
 
-const editProfSearch  = document.getElementById('edit-prof-search');
-const editProfDrop    = document.getElementById('edit-prof-dropdown');
-const editProfIdHid   = document.getElementById('edit-prof-id-hidden');
-const editProfNomHid  = document.getElementById('edit-prof-nom-hidden');
+const editProfSearch = document.getElementById('edit-prof-search');
+const editProfDrop   = document.getElementById('edit-prof-dropdown');
+const editProfIdHid  = document.getElementById('edit-prof-id-hidden');
+const editProfNomHid = document.getElementById('edit-prof-nom-hidden');
 bindProfSearch(editProfSearch, editProfDrop, editProfNomHid, editProfIdHid);
 
-/* ══════════════════════════════════════
-   MODAL ADD
-══════════════════════════════════════ */
+/* ══ MODAL ADD ══ */
 let sc = 0, prefDate = '', _addLocked = false;
 
 function addSession(date) {
@@ -1135,8 +1111,7 @@ function addSession(date) {
         <div class="prof-search-wrapper">
             <span class="prof-search-icon">🔍</span>
             <input type="text" class="prof-search-input prof-inp-${idx}"
-                   placeholder="Rechercher un professeur…" autocomplete="off"
-                   data-idx="${idx}">
+                   placeholder="Rechercher un professeur…" autocomplete="off" data-idx="${idx}">
             <div class="prof-dropdown" id="pdrop-${idx}"></div>
         </div>
 
@@ -1145,6 +1120,10 @@ function addSession(date) {
             <div class="fg">
                 <label>👥 Élèves présents</label>
                 <input type="number" name="seances[${idx}][nb_eleves]" min="0" placeholder="0">
+            </div>
+            <div class="fg">
+                <label>🏫 Effectif total du niveau</label>
+                <input type="number" name="seances[${idx}][nb_eleves_total]" min="0" placeholder="Ex: 50">
             </div>
             <div class="fg">
                 <label>🏷️ Note</label>
@@ -1212,7 +1191,6 @@ function openAdd(ds) {
     prefDate    = ds;
     sc          = 0;
     _addLocked  = true;
-
     document.getElementById('sessions-list').innerHTML = '';
     document.getElementById('hci').value = curCoord.id;
     document.getElementById('hru').value = window.location.href;
@@ -1232,9 +1210,7 @@ function closeAdd(evt) {
     document.body.style.overflow = '';
 }
 
-/* ══════════════════════════════════════
-   DETAIL MODAL
-══════════════════════════════════════ */
+/* ══ DETAIL MODAL ══ */
 function fmtDate(ds) {
     return new Date(ds+'T00:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 }
@@ -1261,6 +1237,7 @@ function drHtml(s, color) {
             ${s.matiere  ? `<span class="dr-badge dr-mat">🔬 ${s.matiere}</span>` : ''}
             ${s.niveau   ? `<span class="dr-badge dr-niv">🎓 ${s.niveau}</span>`  : ''}
             ${s.nb_eleves ? `<span class="dr-badge" style="background:var(--purple)">👥 ${s.nb_eleves}</span>` : ''}
+            ${s.nb_eleves_total ? `<span class="dr-badge" style="background:#0369a1">🏫 ${s.nb_eleves_total}</span>` : ''}
         </div>
         ${s.heure    ? `<div class="dr-note">🕐 ${s.heure}</div>` : ''}
         ${s.prof     ? `<div class="dr-note">🎓 Prof: ${s.prof}</div>` : ''}
@@ -1301,9 +1278,7 @@ function closeDet(evt) {
     document.body.style.overflow = '';
 }
 
-/* ══════════════════════════════════════
-   EDIT MODAL
-══════════════════════════════════════ */
+/* ══ EDIT MODAL ══ */
 function setEditStatut(val) {
     ['passee','annulee','rattrapage'].forEach(v => {
         document.getElementById(`edit-s-${v}`).checked = (v === val);
@@ -1316,22 +1291,22 @@ function openEdit(s) {
 
     document.getElementById('edit-form').action = `/suivi_partenariat/modifier/${s.id}`;
 
-    document.getElementById('edit-date').value     = s.date;
-    document.getElementById('edit-heure').value    = s.heure    || '';
-    document.getElementById('edit-heures').value   = s.heures;
-    document.getElementById('edit-eleves').value   = s.nb_eleves || '';
-    document.getElementById('edit-note').value     = s.note     || '';
-    document.getElementById('edit-remarque').value = s.remarque || '';
+    document.getElementById('edit-date').value          = s.date;
+    document.getElementById('edit-heure').value         = s.heure    || '';
+    document.getElementById('edit-heures').value        = s.heures;
+    document.getElementById('edit-eleves').value        = s.nb_eleves || '';
+    document.getElementById('edit-eleves-total').value  = s.nb_eleves_total || '';   /* ← NOUVEAU */
+    document.getElementById('edit-note').value          = s.note     || '';
+    document.getElementById('edit-remarque').value      = s.remarque || '';
 
     if (s.statut) setEditStatut(s.statut);
 
-    const editDarSel   = document.getElementById('edit-dar');
-    const editDarHid   = document.getElementById('edit-dar-hidden');
-    const lockBadge    = document.getElementById('edit-dar-lock-badge');
+    const editDarSel = document.getElementById('edit-dar');
+    const editDarHid = document.getElementById('edit-dar-hidden');
+    const lockBadge  = document.getElementById('edit-dar-lock-badge');
 
     const coordDours = (curCoord && curCoord.dours && curCoord.dours.length)
-        ? curCoord.dours
-        : DOURS_JSON;
+        ? curCoord.dours : DOURS_JSON;
 
     let darHtmlEdit = '<option value="">— Aucune —</option>';
     coordDours.forEach(d => {
@@ -1339,7 +1314,6 @@ function openEdit(s) {
         darHtmlEdit += `<option value="${d.id}"${isSelected ? ' selected' : ''}>${d.nom}</option>`;
     });
     editDarSel.innerHTML = darHtmlEdit;
-
     editDarHid.value = s.dar_id || '';
     editDarSel.onchange = () => { editDarHid.value = editDarSel.value; };
 
@@ -1350,9 +1324,9 @@ function openEdit(s) {
     document.getElementById('edit-matiere').value = s.matiere || '';
     document.getElementById('edit-niveau').value  = s.niveau  || '';
 
-    editProfIdHid.value   = s.professeur_id ? String(s.professeur_id) : '';
-    editProfNomHid.value  = s.prof          || '';
-    editProfSearch.value  = s.prof          || '';
+    editProfIdHid.value  = s.professeur_id ? String(s.professeur_id) : '';
+    editProfNomHid.value = s.prof          || '';
+    editProfSearch.value = s.prof          || '';
 
     document.getElementById('edit-coord-hidden').value = s.coordinateur_id || '';
     document.getElementById('edit-redirect').value = window.location.href;
@@ -1365,9 +1339,7 @@ function closeEdit(evt) {
     document.body.style.overflow = '';
 }
 
-/* ══════════════════════════════════════
-   DELETE MODAL
-══════════════════════════════════════ */
+/* ══ DELETE MODAL ══ */
 function openDel(s) {
     document.getElementById('del-form').action = `/suivi_partenariat/supprimer/${s.id}`;
     document.getElementById('del-redirect').value = window.location.href;

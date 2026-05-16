@@ -49,7 +49,7 @@ def seance_to_dict(s):
         'id':              s.id,
         'date':            s.date.isoformat() if s.date else '',
         'heure':           s.heure or '',
-        'statut': s.statut or '',
+        'statut':          s.statut or '',
         'matiere':         s.matiere or '',
         'niveau':          s.niveau or '',
         'prof':            s.prof_nom or '',
@@ -57,6 +57,7 @@ def seance_to_dict(s):
         'coordinateur_id': s.coordinateur_id,
         'nb_heures':       s.nb_heures or 0,
         'nb_eleves':       s.nb_eleves or 0,
+        'nb_eleves_total': s.nb_eleves_total or 0,   # ← NOUVEAU
         'remarque':        s.remarque or '',
         'note':            s.note or '',
         'dar_id':          s.dar_id or '',
@@ -322,12 +323,15 @@ def seance_ajouter():
     niveau        = request.form.get('niveau',   '').strip() or None
     heure         = request.form.get('heure',    '').strip() or None
     remarque      = request.form.get('remarque', '').strip() or None
-    statut = normalise_statut(request.form.get('statut', '')) or None
+    statut        = normalise_statut(request.form.get('statut', '')) or None
     professeur_id = parse_professeur_id(request.form)
     redirect_url  = request.form.get('redirect_url', '').strip()
 
     nb_eleves_str = request.form.get('nb_eleves', '').strip()
     nb_eleves = int(nb_eleves_str) if nb_eleves_str.isdigit() else None
+
+    nb_eleves_total_str = request.form.get('nb_eleves_total', '').strip()       # ← NOUVEAU
+    nb_eleves_total = int(nb_eleves_total_str) if nb_eleves_total_str.isdigit() else None  # ← NOUVEAU
 
     dar_id_str = request.form.get('dar_id', '').strip()
     dar_id = int(dar_id_str) if dar_id_str.isdigit() else None
@@ -358,6 +362,7 @@ def seance_ajouter():
         prof=prof_nom_legacy,
         professeur_id=professeur_id,
         nb_eleves=nb_eleves,
+        nb_eleves_total=nb_eleves_total,     # ← NOUVEAU
         dar_id=dar_id,
         remarque=remarque,
     )
@@ -391,7 +396,7 @@ def seance_modifier(id):
     s.niveau      = request.form.get('niveau',   '').strip() or None
     s.heure       = request.form.get('heure',    '').strip() or None
     s.remarque    = request.form.get('remarque', '').strip() or None
-    s.statut = normalise_statut(request.form.get('statut', ''))
+    s.statut      = normalise_statut(request.form.get('statut', ''))
     s.professeur_id = parse_professeur_id(request.form)
     if s.professeur_id:
         p = Professeur.query.get(s.professeur_id)
@@ -401,6 +406,9 @@ def seance_modifier(id):
 
     nb_eleves_str = request.form.get('nb_eleves', '').strip()
     s.nb_eleves = int(nb_eleves_str) if nb_eleves_str.isdigit() else None
+
+    nb_eleves_total_str = request.form.get('nb_eleves_total', '').strip()           # ← NOUVEAU
+    s.nb_eleves_total = int(nb_eleves_total_str) if nb_eleves_total_str.isdigit() else None  # ← NOUVEAU
 
     dar_id_str = request.form.get('dar_id', '').strip()
     s.dar_id   = int(dar_id_str) if dar_id_str.isdigit() else None
@@ -475,13 +483,16 @@ def seances_ajouter_multiple():
         note      = data.get('note',      '').strip() or None
         heure     = data.get('heure',     '').strip() or None
         remarque  = data.get('remarque',  '').strip() or None
-        statut = normalise_statut(data.get('statut', ''))
+        statut    = normalise_statut(data.get('statut', ''))
 
         prof_id_str   = data.get('professeur_id', '').strip()
         professeur_id = int(prof_id_str) if prof_id_str.isdigit() else None
 
         nb_eleves_str = data.get('nb_eleves', '').strip()
         nb_eleves = int(nb_eleves_str) if nb_eleves_str.isdigit() else None
+
+        nb_eleves_total_str = data.get('nb_eleves_total', '').strip()          # ← NOUVEAU
+        nb_eleves_total = int(nb_eleves_total_str) if nb_eleves_total_str.isdigit() else None  # ← NOUVEAU
 
         dar_id_str = data.get('dar_id', '').strip()
         dar_id = int(dar_id_str) if dar_id_str.isdigit() else None
@@ -519,6 +530,7 @@ def seances_ajouter_multiple():
             prof=prof_nom_legacy,
             professeur_id=professeur_id,
             nb_eleves=nb_eleves,
+            nb_eleves_total=nb_eleves_total,   # ← NOUVEAU
             dar_id=dar_id,
             remarque=remarque,
         )
@@ -539,7 +551,6 @@ def seances_ajouter_multiple():
 
 
 # ─── Routes legacy (compatibilité — redirigent vers les routes unifiées) ──────
-# Ces routes gardent les anciens URLs fonctionnels si des bookmarks ou liens existent
 
 @app.route('/heures/ajouter', methods=['POST'])
 @login_required
@@ -555,7 +566,6 @@ def modifier_seance(id):
 @login_required
 def supprimer_seance(id):
     if request.method == 'GET':
-        # Compatibilité GET: supprimer directement
         s = Seance.query.get_or_404(id)
         mois, annee, coord_id = s.mois, s.annee, s.coordinateur_id
         coord = s.coordinateur
@@ -1451,6 +1461,7 @@ def suivi_partenariat():
             'niveaux_uniq':  sorted({s.niveau for s in seances_d if s.niveau}),
         })
 
+    # ── blocs par niveau ── avec total_eleves_total ─────────────────────────
     par_niveau = defaultdict(list)
     for s in seances_raw:
         key = s.niveau or '— Non défini —'
@@ -1458,14 +1469,19 @@ def suivi_partenariat():
 
     blocs_niveau = []
     for niv, seances_n in sorted(par_niveau.items()):
+        # Pour effectif total : on prend la valeur max non-nulle trouvée dans les séances du niveau
+        valeurs_total = [s.nb_eleves_total for s in seances_n if s.nb_eleves_total]
+        effectif_total = max(valeurs_total) if valeurs_total else None
+
         blocs_niveau.append({
-            'niveau':        niv,
-            'seances':       seances_n,
-            'nb_passees':    sum(1 for s in seances_n if s.statut == 'passee'),
-            'nb_annulees':   sum(1 for s in seances_n if s.statut == 'annulee'),
-            'nb_rattrapage': sum(1 for s in seances_n if s.statut == 'rattrapage'),
-            'total_heures':  sum(s.nb_heures for s in seances_n if s.statut == 'passee'),
-            'total_eleves':  sum(s.nb_eleves for s in seances_n if s.nb_eleves and s.statut != 'annulee'),
+            'niveau':          niv,
+            'seances':         seances_n,
+            'nb_passees':      sum(1 for s in seances_n if s.statut == 'passee'),
+            'nb_annulees':     sum(1 for s in seances_n if s.statut == 'annulee'),
+            'nb_rattrapage':   sum(1 for s in seances_n if s.statut == 'rattrapage'),
+            'total_heures':    sum(s.nb_heures for s in seances_n if s.statut == 'passee'),
+            'total_eleves':    sum(s.nb_eleves for s in seances_n if s.nb_eleves and s.statut != 'annulee'),
+            'effectif_total':  effectif_total,   # ← NOUVEAU
         })
 
     total_passees    = sum(1 for s in all_seances if s.statut == 'passee')
