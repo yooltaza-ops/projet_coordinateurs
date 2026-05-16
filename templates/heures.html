@@ -336,6 +336,10 @@
             <input type="number" name="nb_eleves" id="spEleves" min="0" placeholder="0">
           </div>
           <div class="sp-fg">
+            <label>🏫 Effectif total du niveau</label>
+            <input type="number" name="nb_eleves_total" id="spElevesTotal" min="0" placeholder="Ex: 50">
+          </div>
+          <div class="sp-fg">
             <label>🏷️ Note interne</label>
             <input type="text" name="note" id="spNote" placeholder="Note courte…">
           </div>
@@ -517,6 +521,7 @@
                             <th>🎓 Prof</th>
                             <th>🏠 Dar</th>
                             <th>👥 Élèves</th>
+                            <th>🏫 Effectif</th>
                             <th>⏱️ Heures</th>
                             <th>📊 Statut</th>
                             <th>📝 Note</th>
@@ -533,6 +538,7 @@
                             <td style="font-size:12px;font-weight:600;color:#1a3a6b;">{{ s.prof or '—' }}</td>
                             <td>{% if s.dar %}<span style="background:#e8edf5;color:#1a3a6b;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:600;">{{ s.dar.type }} {{ s.dar.nom }}</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}</td>
                             <td>{% if s.nb_eleves %}<span style="background:#ede9fe;color:#6d28d9;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:700;">{{ s.nb_eleves }}</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}</td>
+                            <td>{% if s.nb_eleves_total %}<span style="background:#dbeafe;color:#1d4ed8;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:700;">{{ s.nb_eleves_total }}</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}</td>
                             <td><span class="heures-chip">{{ "%.1f"|format(s.nb_heures) }}h</span></td>
                             <td>
                                 {% if s.statut == 'passee' %}
@@ -678,6 +684,7 @@ SP_SEANCES[{{ s.id }}] = {
     prof:            {{ (s.prof or '') | tojson }},
     professeur_id:   {{ s.professeur_id or 'null' }},
     nb_eleves:       {{ s.nb_eleves or 0 }},
+    nb_eleves_total: {{ s.nb_eleves_total or 0 }},
     note:            {{ (s.note or '') | tojson }},
     remarque:        {{ (s.remarque or '') | tojson }},
 };
@@ -853,6 +860,7 @@ function spOpenEdit(id) {
     document.getElementById('spMatiere').value     = s.matiere;
     document.getElementById('spNiveau').value      = s.niveau;
     document.getElementById('spEleves').value      = s.nb_eleves || '';
+    document.getElementById('spElevesTotal').value = s.nb_eleves_total || '';
     document.getElementById('spNote').value        = s.note;
     document.getElementById('spRemarque').value    = s.remarque;
     document.getElementById('spRedirectUrl').value = window.location.href;
