@@ -79,6 +79,20 @@
     font-family:'DM Sans',sans-serif; align-self:flex-end; text-decoration:none;
   }
 
+  /* ── Tabs ── */
+  .sp-tabs {
+    display:flex; gap:8px; margin-bottom:0;
+    border-bottom:1.5px solid var(--sp-border);
+  }
+  .sp-tab {
+    padding:10px 20px; font-size:13px; font-weight:600; color:var(--sp-muted);
+    cursor:pointer; border:none; background:none;
+    border-bottom:2px solid transparent; margin-bottom:-2px;
+    transition:all .15s; font-family:'DM Sans',sans-serif;
+  }
+  .sp-tab.active { color:#1a3a6b; border-bottom-color:#f5a623; }
+  .sp-tab:hover  { color:#1a3a6b; }
+
   .btn-new-seance {
     display:inline-flex; align-items:center; gap:6px;
     background:#f5a623; color:white; border:none; border-radius:25px;
@@ -107,6 +121,30 @@
   .sp-resp-name { font-weight:700; font-size:15px; color:var(--sp-text); }
   .sp-resp-sub  { font-size:11px; color:var(--sp-muted); margin-top:2px; }
   .sp-resp-pills { margin-left:auto; display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+
+  /* ── Niveau card ── */
+  .sp-niveau-card {
+    background:white; border:1.5px solid var(--sp-border);
+    border-left:4px solid #f5a623; border-radius:14px;
+    margin-bottom:16px; overflow:hidden;
+    box-shadow:0 4px 15px rgba(0,0,0,0.07);
+  }
+  .sp-niveau-header {
+    display:flex; align-items:center; gap:12px;
+    padding:12px 20px; cursor:pointer; transition:background .15s;
+  }
+  .sp-niveau-header:hover { background:var(--sp-surface); }
+  .sp-niveau-name { font-weight:700; font-size:14px; color:var(--sp-text); }
+  .sp-niveau-pills { margin-left:auto; display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+  .sp-niveau-body { padding:0 20px 16px; }
+
+  .sp-effectif-badge {
+    display:inline-flex; align-items:center; gap:5px;
+    background:#e0f2fe; color:#0369a1;
+    border:1.5px solid #bae6fd; border-radius:20px;
+    padding:3px 10px; font-size:11px; font-weight:700;
+  }
+  .sp-effectif-badge .ef-label { font-size:10px; color:#0284c7; opacity:.8; }
 
   .sp-pill {
     display:inline-flex; align-items:center; gap:4px;
@@ -306,7 +344,7 @@
   <div class="sp-header">
     <div style="position:relative;z-index:1">
       <h2>🏢 Suivi B2C</h2>
-      <p>{{ mois_noms[mois] }} {{ annee }} — Vue par Responsable</p>
+      <p>{{ mois_noms[mois] }} {{ annee }} — Vue par Responsable & Niveau</p>
     </div>
   </div>
 
@@ -406,95 +444,187 @@
     <a href="{{ url_for('suivi_b2c') }}" class="btn-clear">↺ Réinitialiser</a>
   </form>
 
-  <div style="display:flex; justify-content:flex-end; margin-bottom:20px;">
+  {# ── Tabs + Bouton ── #}
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+    <div class="sp-tabs" id="spTabs">
+      <button class="sp-tab active" onclick="switchTab('resp', this)">👤 Par Responsable</button>
+      <button class="sp-tab" onclick="switchTab('niveau', this)">🎓 Par Niveau</button>
+    </div>
     <button class="btn-new-seance" onclick="openAddModal(null)">➕ Nouvelle séance B2C</button>
   </div>
 
-  {# ── Blocs par Responsable ── #}
-  {% if blocs_resp %}
-    {% for bloc in blocs_resp %}
-    <div class="sp-resp-card">
-      <div class="sp-resp-header" onclick="toggleCard(this)">
-        <div class="sp-resp-avatar">
-          {{ bloc.responsable.prenom[0]|upper }}{{ bloc.responsable.nom[0]|upper }}
+  {# ══ VUE PAR RESPONSABLE ══ #}
+  <div id="view-resp">
+    {% if blocs_resp %}
+      {% for bloc in blocs_resp %}
+      <div class="sp-resp-card">
+        <div class="sp-resp-header" onclick="toggleCard(this)">
+          <div class="sp-resp-avatar">
+            {{ bloc.responsable.prenom[0]|upper }}{{ bloc.responsable.nom[0]|upper }}
+          </div>
+          <div>
+            <div class="sp-resp-name">{{ bloc.responsable.prenom }} {{ bloc.responsable.nom }}</div>
+            <div class="sp-resp-sub">Responsable B2C</div>
+          </div>
+          <div class="sp-resp-pills">
+            {% if bloc.nb_passees > 0 %}<span class="sp-pill passee">✅ {{ bloc.nb_passees }}</span>{% endif %}
+            {% if bloc.nb_annulees > 0 %}<span class="sp-pill annulee">❌ {{ bloc.nb_annulees }}</span>{% endif %}
+            {% if bloc.nb_rattrapage > 0 %}<span class="sp-pill rattrapage">🔄 {{ bloc.nb_rattrapage }}</span>{% endif %}
+            <span class="sp-pill heures">⏱️ {{ "%.1f"|format(bloc.total_heures) }}h</span>
+            {% if bloc.total_eleves %}<span class="sp-pill eleves">👥 {{ bloc.total_eleves }}</span>{% endif %}
+            {% if bloc.effectif_total %}<span class="sp-pill total">🏫 {{ bloc.effectif_total }}</span>{% endif %}
+            <span class="toggle-icon" style="font-size:12px;">▾</span>
+          </div>
         </div>
-        <div>
-          <div class="sp-resp-name">{{ bloc.responsable.prenom }} {{ bloc.responsable.nom }}</div>
-          <div class="sp-resp-sub">Responsable B2C</div>
-        </div>
-        <div class="sp-resp-pills">
-          {% if bloc.nb_passees > 0 %}<span class="sp-pill passee">✅ {{ bloc.nb_passees }}</span>{% endif %}
-          {% if bloc.nb_annulees > 0 %}<span class="sp-pill annulee">❌ {{ bloc.nb_annulees }}</span>{% endif %}
-          {% if bloc.nb_rattrapage > 0 %}<span class="sp-pill rattrapage">🔄 {{ bloc.nb_rattrapage }}</span>{% endif %}
-          <span class="sp-pill heures">⏱️ {{ "%.1f"|format(bloc.total_heures) }}h</span>
-          {% if bloc.total_eleves %}<span class="sp-pill eleves">👥 {{ bloc.total_eleves }}</span>{% endif %}
-          {% if bloc.effectif_total %}<span class="sp-pill total">🏫 {{ bloc.effectif_total }}</span>{% endif %}
-          <span class="toggle-icon" style="font-size:12px;">▾</span>
-        </div>
-      </div>
 
-      <div class="sp-resp-body">
-        {% if bloc.seances %}
-        <div style="overflow-x:auto;">
-          <table class="sp-table">
-            <thead>
-              <tr>
-                <th>Date</th><th>Heure</th><th>Matière</th><th>Niveau</th>
-                <th>Professeur</th>
-                <th>Présents</th><th>Effectif total</th>
-                <th>Heures</th><th>Statut</th><th>Remarque</th><th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for s in bloc.seances %}
-              <tr>
-                <td><strong>{{ s.date.strftime('%d/%m/%Y') }}</strong></td>
-                <td>{{ s.heure or '—' }}</td>
-                <td>
-                  {% if s.matiere %}
-                    <span style="background:#e6faf7;color:#0d9488;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">{{ s.matiere }}</span>
-                  {% else %}—{% endif %}
-                </td>
-                <td><span style="font-size:12px;color:#888;">{{ s.niveau or '—' }}</span></td>
-                <td style="font-weight:600;color:#1a3a6b;">{{ s.prof_nom or '—' }}</td>
-                <td>{% if s.nb_eleves %}<span class="sp-pill eleves">👥 {{ s.nb_eleves }}</span>{% else %}—{% endif %}</td>
-                <td>{% if s.nb_eleves_total %}<span class="sp-pill total">🏫 {{ s.nb_eleves_total }}</span>{% else %}—{% endif %}</td>
-                <td><strong style="color:#1a3a6b;">{{ s.nb_heures }}h</strong></td>
-                <td>
-                  {% if s.statut == 'passee' %}<span class="badge-statut badge-passee">✅ Passée</span>
-                  {% elif s.statut == 'annulee' %}<span class="badge-statut badge-annulee">❌ Annulée</span>
-                  {% elif s.statut == 'rattrapage' %}<span class="badge-statut badge-rattrapage">🔄 Rattrapage</span>
-                  {% else %}<span style="color:#94a3b8;font-size:12px;">—</span>{% endif %}
-                </td>
-                <td style="max-width:160px;font-size:11px;color:#888;font-style:italic;">{{ s.remarque or (s.note or '—') }}</td>
-                <td style="white-space:nowrap;">
-                  <button class="btn-action btn-edit" onclick="openEditModal({{ s.id }})">✏️</button>
-                  <button class="btn-action btn-delete" onclick="openDelModal('{{ url_for('suivi_b2c_supprimer', id=s.id) }}', '{{ request.url }}')">🗑️</button>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+        <div class="sp-resp-body">
+          {% if bloc.seances %}
+          <div style="overflow-x:auto;">
+            <table class="sp-table">
+              <thead>
+                <tr>
+                  <th>Date</th><th>Heure</th><th>Matière</th><th>Niveau</th>
+                  <th>Professeur</th>
+                  <th>Présents</th><th>Effectif total</th>
+                  <th>Heures</th><th>Statut</th><th>Remarque</th><th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for s in bloc.seances %}
+                <tr>
+                  <td><strong>{{ s.date.strftime('%d/%m/%Y') }}</strong></td>
+                  <td>{{ s.heure or '—' }}</td>
+                  <td>
+                    {% if s.matiere %}
+                      <span style="background:#e6faf7;color:#0d9488;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">{{ s.matiere }}</span>
+                    {% else %}—{% endif %}
+                  </td>
+                  <td><span style="font-size:12px;color:#888;">{{ s.niveau or '—' }}</span></td>
+                  <td style="font-weight:600;color:#1a3a6b;">{{ s.prof_nom or '—' }}</td>
+                  <td>{% if s.nb_eleves %}<span class="sp-pill eleves">👥 {{ s.nb_eleves }}</span>{% else %}—{% endif %}</td>
+                  <td>{% if s.nb_eleves_total %}<span class="sp-pill total">🏫 {{ s.nb_eleves_total }}</span>{% else %}—{% endif %}</td>
+                  <td><strong style="color:#1a3a6b;">{{ s.nb_heures }}h</strong></td>
+                  <td>
+                    {% if s.statut == 'passee' %}<span class="badge-statut badge-passee">✅ Passée</span>
+                    {% elif s.statut == 'annulee' %}<span class="badge-statut badge-annulee">❌ Annulée</span>
+                    {% elif s.statut == 'rattrapage' %}<span class="badge-statut badge-rattrapage">🔄 Rattrapage</span>
+                    {% else %}<span style="color:#94a3b8;font-size:12px;">—</span>{% endif %}
+                  </td>
+                  <td style="max-width:160px;font-size:11px;color:#888;font-style:italic;">{{ s.remarque or (s.note or '—') }}</td>
+                  <td style="white-space:nowrap;">
+                    <button class="btn-action btn-edit" onclick="openEditModal({{ s.id }})">✏️</button>
+                    <button class="btn-action btn-delete" onclick="openDelModal('{{ url_for('suivi_b2c_supprimer', id=s.id) }}', '{{ request.url }}')">🗑️</button>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+            <p style="color:#bbb;font-size:13px;font-style:italic;margin-bottom:8px;">Aucune séance ce mois.</p>
+          {% endif %}
+          <button class="btn-add-seance" onclick="openAddModal({{ bloc.responsable.id }})">
+            ➕ Ajouter une séance
+          </button>
         </div>
-        {% else %}
-          <p style="color:#bbb;font-size:13px;font-style:italic;margin-bottom:8px;">Aucune séance ce mois.</p>
-        {% endif %}
-        <button class="btn-add-seance" onclick="openAddModal({{ bloc.responsable.id }})">
-          ➕ Ajouter une séance
-        </button>
       </div>
-    </div>
-    {% endfor %}
-  {% else %}
-    <div class="sp-empty">
-      <div class="ei">📭</div>
-      <p>Aucune séance B2C enregistrée pour ce mois.<br>
-        <button class="btn-new-seance" style="margin-top:12px;" onclick="openAddModal(null)">
-          ➕ Ajouter la première séance
-        </button>
-      </p>
-    </div>
-  {% endif %}
+      {% endfor %}
+    {% else %}
+      <div class="sp-empty">
+        <div class="ei">📭</div>
+        <p>Aucune séance B2C enregistrée pour ce mois.<br>
+          <button class="btn-new-seance" style="margin-top:12px;" onclick="openAddModal(null)">
+            ➕ Ajouter la première séance
+          </button>
+        </p>
+      </div>
+    {% endif %}
+  </div>
+
+  {# ══ VUE PAR NIVEAU ══ #}
+  <div id="view-niveau" style="display:none">
+    {% if blocs_niveau %}
+      {% for bloc in blocs_niveau %}
+      <div class="sp-niveau-card">
+        <div class="sp-niveau-header" onclick="toggleCard(this)">
+          <span style="font-size:18px;color:#f5a623;">🎓</span>
+          <span class="sp-niveau-name">{{ bloc.niveau }}</span>
+
+          {% if bloc.effectif_total %}
+          <div class="sp-effectif-badge" style="margin-left:10px;">
+            🏫 <strong>{{ bloc.effectif_total }}</strong>
+            <span class="ef-label">inscrits</span>
+          </div>
+          {% endif %}
+
+          <div class="sp-niveau-pills">
+            {% if bloc.nb_passees > 0 %}<span class="sp-pill passee">✅ {{ bloc.nb_passees }}</span>{% endif %}
+            {% if bloc.nb_annulees > 0 %}<span class="sp-pill annulee">❌ {{ bloc.nb_annulees }}</span>{% endif %}
+            {% if bloc.nb_rattrapage > 0 %}<span class="sp-pill rattrapage">🔄 {{ bloc.nb_rattrapage }}</span>{% endif %}
+            <span class="sp-pill heures">⏱️ {{ "%.1f"|format(bloc.total_heures) }}h</span>
+            {% if bloc.total_eleves %}<span class="sp-pill eleves">👥 {{ bloc.total_eleves }}</span>{% endif %}
+            <span class="toggle-icon" style="font-size:12px;">▾</span>
+          </div>
+        </div>
+
+        <div class="sp-niveau-body">
+          <div style="overflow-x:auto;">
+            <table class="sp-table">
+              <thead>
+                <tr>
+                  <th>Date</th><th>Heure</th><th>Responsable</th><th>Matière</th>
+                  <th>Professeur</th>
+                  <th>Présents</th><th>Effectif total</th>
+                  <th>Heures</th><th>Statut</th><th>Remarque</th><th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for s in bloc.seances %}
+                <tr>
+                  <td><strong>{{ s.date.strftime('%d/%m/%Y') }}</strong></td>
+                  <td>{{ s.heure or '—' }}</td>
+                  <td>
+                    {% if s.responsable %}
+                      <span style="background:#e8edf5;color:#1a3a6b;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600;">
+                        {{ s.responsable.prenom }} {{ s.responsable.nom }}
+                      </span>
+                    {% else %}—{% endif %}
+                  </td>
+                  <td>
+                    {% if s.matiere %}
+                      <span style="background:#e6faf7;color:#0d9488;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">{{ s.matiere }}</span>
+                    {% else %}—{% endif %}
+                  </td>
+                  <td style="font-weight:600;color:#1a3a6b;">{{ s.prof_nom or '—' }}</td>
+                  <td>{% if s.nb_eleves %}<span class="sp-pill eleves">👥 {{ s.nb_eleves }}</span>{% else %}—{% endif %}</td>
+                  <td>{% if s.nb_eleves_total %}<span class="sp-pill total">🏫 {{ s.nb_eleves_total }}</span>{% else %}—{% endif %}</td>
+                  <td><strong style="color:#1a3a6b;">{{ s.nb_heures }}h</strong></td>
+                  <td>
+                    {% if s.statut == 'passee' %}<span class="badge-statut badge-passee">✅ Passée</span>
+                    {% elif s.statut == 'annulee' %}<span class="badge-statut badge-annulee">❌ Annulée</span>
+                    {% elif s.statut == 'rattrapage' %}<span class="badge-statut badge-rattrapage">🔄 Rattrapage</span>
+                    {% else %}<span style="color:#94a3b8;font-size:12px;">—</span>{% endif %}
+                  </td>
+                  <td style="max-width:150px;font-size:11px;color:#888;font-style:italic;">{{ s.remarque or (s.note or '—') }}</td>
+                  <td style="white-space:nowrap;">
+                    <button class="btn-action btn-edit" onclick="openEditModal({{ s.id }})">✏️</button>
+                    <button class="btn-action btn-delete" onclick="openDelModal('{{ url_for('suivi_b2c_supprimer', id=s.id) }}', '{{ request.url }}')">🗑️</button>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="sp-empty">
+        <div class="ei">📭</div>
+        <p>Aucune séance B2C enregistrée pour ce mois.</p>
+      </div>
+    {% endif %}
+  </div>
 
 </div>
 
@@ -704,6 +834,14 @@ SEANCES_DATA[{{ s.id }}] = {
   remarque:       {{ s.remarque|tojson }},
 };
 {% endfor %}
+
+/* ── Tabs ── */
+function switchTab(tab, btn) {
+  document.getElementById('view-resp').style.display   = tab === 'resp'   ? '' : 'none';
+  document.getElementById('view-niveau').style.display = tab === 'niveau' ? '' : 'none';
+  document.querySelectorAll('.sp-tab').forEach(function(t) { t.classList.remove('active'); });
+  btn.classList.add('active');
+}
 
 /* ── Durée stepper ── */
 function changeHrs(delta) {

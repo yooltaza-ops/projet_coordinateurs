@@ -1771,35 +1771,39 @@ def seance_b2c_to_dict(s):
 @app.route('/suivi_b2c')
 @login_required
 def suivi_b2c():
+    from collections import defaultdict
+ 
     now   = datetime.now()
     mois  = safe_int(request.args.get('mois',  now.month),  min_val=1, max_val=12) or now.month
     annee = safe_int(request.args.get('annee', now.year),   min_val=2000, max_val=2100) or now.year
-
+ 
     filtre_niveau  = request.args.get('filtre_niveau',  '').strip()
     filtre_statut  = request.args.get('filtre_statut',  '').strip()
     filtre_matiere = request.args.get('filtre_matiere', '').strip()
     filtre_resp    = request.args.get('filtre_resp',    '').strip()
-
+ 
     mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin',
                  'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
-
+ 
     if current_user.is_admin:
         all_resp = Responsable.query.all()
         responsables = [r for r in all_resp if r.user and r.user.role == 'responsable']
     else:
         resp = current_user.responsable
         responsables = [resp] if resp else []
-
+ 
     resp_ids = [r.id for r in responsables]
-
+ 
     professeurs = Professeur.query.filter_by(actif=True).order_by(Professeur.nom).all()
-
+ 
+    # Toutes les séances du mois (sans filtres) — pour KPIs et seances_json
     all_seances = SeanceB2C.query.filter(
         SeanceB2C.mois == mois,
         SeanceB2C.annee == annee,
         SeanceB2C.responsable_id.in_(resp_ids)
     ).order_by(SeanceB2C.date.desc()).all()
-
+ 
+    # Séances filtrées — pour les blocs
     q = SeanceB2C.query.filter(
         SeanceB2C.mois == mois,
         SeanceB2C.annee == annee,
@@ -1816,15 +1820,15 @@ def suivi_b2c():
             q = q.filter(SeanceB2C.responsable_id == int(filtre_resp))
         except ValueError:
             pass
-
+ 
     seances_filtrees = q.order_by(SeanceB2C.date.desc()).all()
     seances_json = [seance_b2c_to_dict(s) for s in all_seances]
-
-    from collections import defaultdict
+ 
+    # ── Blocs par Responsable ──────────────────────────────────────────────────
     par_resp = defaultdict(list)
     for s in seances_filtrees:
         par_resp[s.responsable_id].append(s)
-
+ 
     blocs_resp = []
     for resp in responsables:
         if filtre_resp and str(resp.id) != filtre_resp:
@@ -1832,25 +1836,48 @@ def suivi_b2c():
         seances_r = par_resp.get(resp.id, [])
         valeurs_total = [s.nb_eleves_total for s in seances_r if s.nb_eleves_total]
         blocs_resp.append({
-            'responsable':   resp,
-            'seances':       seances_r,
-            'nb_passees':    sum(1 for s in seances_r if s.statut == 'passee'),
-            'nb_annulees':   sum(1 for s in seances_r if s.statut == 'annulee'),
-            'nb_rattrapage': sum(1 for s in seances_r if s.statut == 'rattrapage'),
-            'total_heures':  sum(s.nb_heures for s in seances_r if s.statut == 'passee'),
-            'total_eleves':  sum(s.nb_eleves for s in seances_r if s.nb_eleves and s.statut != 'annulee'),
+            'responsable':    resp,
+            'seances':        seances_r,
+            'nb_passees':     sum(1 for s in seances_r if s.statut == 'passee'),
+            'nb_annulees':    sum(1 for s in seances_r if s.statut == 'annulee'),
+            'nb_rattrapage':  sum(1 for s in seances_r if s.statut == 'rattrapage'),
+            'total_heures':   sum(s.nb_heures for s in seances_r if s.statut == 'passee'),
+            'total_eleves':   sum(s.nb_eleves for s in seances_r if s.nb_eleves and s.statut != 'annulee'),
             'effectif_total': max(valeurs_total) if valeurs_total else None,
         })
-
-    total_seances         = len(all_seances)
-    total_passees         = sum(1 for s in all_seances if s.statut == 'passee')
-    total_annulees        = sum(1 for s in all_seances if s.statut == 'annulee')
-    total_rattrapage      = sum(1 for s in all_seances if s.statut == 'rattrapage')
-    total_passees_heures  = sum(s.nb_heures for s in all_seances if s.statut == 'passee')
-    total_eleves          = sum(s.nb_eleves for s in all_seances if s.nb_eleves and s.statut != 'annulee')
-
+ 
+    # ── Blocs par Niveau ──────────────────────────────────────────────────────
+    par_niveau = defaultdict(list)
+    for s in seances_filtrees:
+        key = s.niveau or '— Non défini —'
+        par_niveau[key].append(s)
+ 
+    blocs_niveau = []
+    for niv, seances_n in sorted(par_niveau.items()):
+        valeurs_total = [s.nb_eleves_total for s in seances_n if s.nb_eleves_total]
+        effectif_total = max(valeurs_total) if valeurs_total else None
+        blocs_niveau.append({
+            'niveau':         niv,
+            'seances':        seances_n,
+            'nb_passees':     sum(1 for s in seances_n if s.statut == 'passee'),
+            'nb_annulees':    sum(1 for s in seances_n if s.statut == 'annulee'),
+            'nb_rattrapage':  sum(1 for s in seances_n if s.statut == 'rattrapage'),
+            'total_heures':   sum(s.nb_heures for s in seances_n if s.statut == 'passee'),
+            'total_eleves':   sum(s.nb_eleves for s in seances_n if s.nb_eleves and s.statut != 'annulee'),
+            'effectif_total': effectif_total,
+        })
+ 
+    # ── KPIs globaux ──────────────────────────────────────────────────────────
+    total_seances        = len(all_seances)
+    total_passees        = sum(1 for s in all_seances if s.statut == 'passee')
+    total_annulees       = sum(1 for s in all_seances if s.statut == 'annulee')
+    total_rattrapage     = sum(1 for s in all_seances if s.statut == 'rattrapage')
+    total_passees_heures = sum(s.nb_heures for s in all_seances if s.statut == 'passee')
+    total_eleves         = sum(s.nb_eleves for s in all_seances if s.nb_eleves and s.statut != 'annulee')
+ 
     return render_template('suivi_b2c.html',
         blocs_resp=blocs_resp,
+        blocs_niveau=blocs_niveau,       # ← NOUVEAU
         seances_json=seances_json,
         responsables=responsables,
         professeurs=professeurs,
