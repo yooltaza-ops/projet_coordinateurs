@@ -3,7 +3,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from extensions import limiter
 from app import app
 from models import (
-    db, Responsable, Coordinateur, Dour, User, Seance, Professeur,
+    db, Responsable, Coordinateur, Dour, User, Seance, SeanceB2C, Professeur,
     MATIERES, NIVEAUX, STATUTS_SEANCE, sanitize_text, validate_email
 )
 from functools import wraps
@@ -16,11 +16,9 @@ from werkzeug.utils import secure_filename
 def redirect_back(fallback='index'):
     ref = request.referrer
     if ref:
-        # Validate referrer to prevent open redirect
         from urllib.parse import urlparse
         parsed = urlparse(ref)
         if parsed.netloc == '' or parsed.netloc == request.host:
-        # also validate scheme
             if parsed.scheme in ('', 'http', 'https'):
                 return redirect(ref)
     return redirect(url_for(fallback))
@@ -34,7 +32,6 @@ def admin_required(f):
     return decorated
 
 def password_required(f):
-    """Decorator to check if user must change password"""
     @wraps(f)
     def decorated(*args, **kwargs):
         if current_user.is_authenticated and current_user.must_change_password:
@@ -50,7 +47,6 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXT
 
 def validate_image_file(file):
-    """Validate uploaded image file"""
     if not file or file.filename == '':
         return False, "Aucun fichier sélectionné"
     if not allowed_file(file.filename):
@@ -60,13 +56,12 @@ def validate_image_file(file):
     header = file.read(8)
     file.seek(0)
     
-    # Magic numbers pour les formats d'image
     magic_numbers = {
         b'\x89PNG': 'png',
         b'\xff\xd8\xff': 'jpeg',
         b'GIF87a': 'gif',
         b'GIF89a': 'gif',
-        b'RIFF': 'webp',  # webp = RIFF....WEBP
+        b'RIFF': 'webp',
     }
     
     valid = False
@@ -82,10 +77,8 @@ def validate_image_file(file):
         return False, "Fichier image invalide"
     return True, None
 
-# ── Input Sanitization ───────────────────────────────────────────────────────
 
 def safe_int(value, default=None, min_val=None, max_val=None):
-    """Safely parse integer with bounds checking"""
     try:
         val = int(value)
         if min_val is not None and val < min_val:
@@ -97,7 +90,6 @@ def safe_int(value, default=None, min_val=None, max_val=None):
         return default
 
 def safe_float(value, default=None, min_val=0, max_val=24):
-    """Safely parse float with bounds checking"""
     try:
         val = float(value)
         if min_val is not None and val < min_val:
@@ -109,7 +101,6 @@ def safe_float(value, default=None, min_val=0, max_val=24):
         return default
 
 
-# ── Helper: normalise statut ──────────────────────────────────────────────────
 def normalise_statut(val):
     mapping = {
         'Passée': 'passee', 'Annulée': 'annulee', 'Rattrapage': 'rattrapage',
@@ -117,15 +108,11 @@ def normalise_statut(val):
     }
     return mapping.get((val or '').strip(), None)
 
-# ── Helper: parse professeur_id from form ─────────────────────────────────────
 def parse_professeur_id(form):
     val = form.get('professeur_id', '').strip()
     return safe_int(val)
 
 
-
-
-# ── Helper: seance → dict (pour JSON) ────────────────────────────────────────
 def seance_to_dict(s):
     return {
         'id':              s.id,
@@ -139,7 +126,7 @@ def seance_to_dict(s):
         'coordinateur_id': s.coordinateur_id,
         'nb_heures':       s.nb_heures or 0,
         'nb_eleves':       s.nb_eleves or 0,
-        'nb_eleves_total': s.nb_eleves_total or 0,   # ← NOUVEAU
+        'nb_eleves_total': s.nb_eleves_total or 0,
         'remarque':        s.remarque or '',
         'note':            s.note or '',
         'dar_id':          s.dar_id or '',
@@ -148,7 +135,7 @@ def seance_to_dict(s):
 
 # ─── Auth ─────────────────────────────────────────────────────────────────────
 @app.route('/login', methods=['GET', 'POST'])
-@limiter.limit("5 per minute")  # Brute force protection
+@limiter.limit("5 per minute")
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
@@ -158,7 +145,6 @@ def login():
         email = request.form.get('email', '').strip().lower()
         pwd = request.form.get('password', '')
 
-        # Basic validation
         if not email or not pwd:
             error = 'Email et mot de passe requis.'
             return render_template('login.html', error=error)
@@ -170,26 +156,21 @@ def login():
         user = User.query.filter_by(email=email).first()
 
         if user:
-            # Check if account is locked
             if user.is_locked():
                 error = 'Compte temporairement verrouillé. Réessayez plus tard.'
                 return render_template('login.html', error=error)
 
             if user.check_password(pwd):
-                # Reset failed attempts
                 user.login_attempts = 0
                 db.session.commit()
-
                 login_user(user)
 
-                # Force password change for default password
                 if user.must_change_password:
                     flash('Vous devez changer votre mot de passe par défaut.', 'warning')
                     return redirect(url_for('change_password'))
 
                 return redirect(url_for('index'))
             else:
-                # Increment failed attempts
                 user.login_attempts += 1
                 if user.login_attempts >= 5:
                     user.locked_until = datetime.now() + timedelta(minutes=30)
@@ -199,7 +180,6 @@ def login():
                     error = f'Identifiants incorrects. {remaining} tentatives restantes.'
                 db.session.commit()
         else:
-            # Don't reveal if email exists
             error = 'Identifiants incorrects.'
 
     return render_template('login.html', error=error)
@@ -207,7 +187,6 @@ def login():
 @app.route('/change_password', methods=['GET', 'POST'])
 @login_required
 def change_password():
-    """Forced password change page"""
     if request.method == 'POST':
         new_pwd = request.form.get('new_password', '')
         confirm_pwd = request.form.get('confirm_password', '')
@@ -238,20 +217,20 @@ def logout():
 @login_required
 def index():
     now   = datetime.now()
-    mois = safe_int(request.args.get('mois', now.month), min_val=1, max_val=12) or now.month
+    mois  = safe_int(request.args.get('mois', now.month), min_val=1, max_val=12) or now.month
     annee = safe_int(request.args.get('annee', now.year), min_val=2000, max_val=2100) or now.year
     mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin',
                 'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
-
+ 
     dours = Dour.query.all()
-
+ 
     if current_user.is_admin:
         all_resp = Responsable.query.all()
         responsables = [r for r in all_resp if r.user and r.user.role == 'responsable']
     else:
         resp = current_user.responsable
         responsables = [resp] if resp else []
-
+ 
     data = []
     for r in responsables:
         data.append({
@@ -260,7 +239,7 @@ def index():
             'nb_coordinatrices': r.count_coordinatrices(),
             'total': len(r.coordinateurs)
         })
-
+ 
     if current_user.is_admin:
         all_seances_mois = Seance.query.filter_by(mois=mois, annee=annee).all()
     else:
@@ -271,18 +250,19 @@ def index():
             Seance.annee == annee,
             Seance.coordinateur_id.in_(coord_ids)
         ).all()
+ 
     total_heures_mois    = sum(s.nb_heures for s in all_seances_mois if s.statut == 'passee')
     total_seances_mois   = sum(1 for s in all_seances_mois if s.statut == 'passee')
     total_annulees_mois  = sum(1 for s in all_seances_mois if s.statut == 'annulee')
     total_rattrapage_mois= sum(1 for s in all_seances_mois if s.statut == 'rattrapage')
-
+ 
     recap_seances = []
     if current_user.is_admin:
         all_coords = Coordinateur.query.all()
     else:
         resp = current_user.responsable
         all_coords = resp.coordinateurs if resp else []
-
+ 
     for coord in all_coords:
         seances = Seance.query.filter_by(coordinateur_id=coord.id, mois=mois, annee=annee).all()
         nb_s = len(seances)
@@ -302,7 +282,7 @@ def index():
                 'nb_annulees': nb_a,
                 'nb_rattrapages': nb_r,
             })
-
+ 
     if current_user.is_admin:
         admins = User.query.filter(
             User.role == 'admin',
@@ -311,7 +291,7 @@ def index():
     else:
         admins = []
     nb_admins = len(admins)
-
+ 
     if current_user.is_admin:
         all_resp_all      = Responsable.query.order_by(Responsable.nom).all()
         responsables_only = [r for r in all_resp_all if r.user and r.user.role == 'responsable']
@@ -319,13 +299,31 @@ def index():
     else:
         resp = current_user.responsable
         nb_responsables = len(resp.coordinateurs) if resp else 0
-
+ 
     if current_user.is_admin:
         responsables_select = [r for r in Responsable.query.all() if r.user and r.user.role == 'responsable']
     else:
         resp = current_user.responsable
         responsables_select = [resp] if resp else []
-
+ 
+    # ── Stats B2C du mois ─────────────────────────────────────────────────────
+    if current_user.is_admin:
+        b2c_seances_mois = SeanceB2C.query.filter_by(mois=mois, annee=annee).all()
+    else:
+        resp = current_user.responsable
+        if resp:
+            b2c_seances_mois = SeanceB2C.query.filter_by(
+                mois=mois, annee=annee, responsable_id=resp.id
+            ).all()
+        else:
+            b2c_seances_mois = []
+ 
+    total_b2c_mois      = len(b2c_seances_mois)
+    total_b2c_passees   = sum(1 for s in b2c_seances_mois if s.statut == 'passee')
+    total_b2c_annulees  = sum(1 for s in b2c_seances_mois if s.statut == 'annulee')
+    total_b2c_rattrapages = sum(1 for s in b2c_seances_mois if s.statut == 'rattrapage')
+    total_b2c_heures    = sum(s.nb_heures for s in b2c_seances_mois if s.statut == 'passee')
+ 
     return render_template('index.html',
                         data=data,
                         responsables=responsables_select,
@@ -339,7 +337,13 @@ def index():
                         recap_seances=recap_seances,
                         admins=admins,
                         nb_admins=nb_admins,
-                        nb_responsables=nb_responsables)
+                        nb_responsables=nb_responsables,
+                        total_b2c_mois=total_b2c_mois,
+                        total_b2c_passees=total_b2c_passees,
+                        total_b2c_annulees=total_b2c_annulees,
+                        total_b2c_rattrapages=total_b2c_rattrapages,
+                        total_b2c_heures=total_b2c_heures,
+                        b2c_seances_mois=b2c_seances_mois)
 
 
 # ─── Pages dédiées ────────────────────────────────────────────────────────────
@@ -454,9 +458,8 @@ def heures():
     )
 
 
-# ─── Routes unifiées Séances (heures + calendrier + suivi) ───────────────────
+# ─── Routes unifiées Séances ───────────────────────────────────────────────────
 
-# ── seance_ajouter ────────────────────────────────────────────────────────────
 @app.route('/seances/ajouter', methods=['POST'])
 @login_required
 @password_required
@@ -473,7 +476,6 @@ def seance_ajouter():
 
         date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
 
-        # Validate date range
         if date_obj.year < 2000 or date_obj.year > 2100:
             flash('Date invalide.', 'error')
             return redirect_back()
@@ -483,7 +485,6 @@ def seance_ajouter():
             flash('Heures invalides (0.5 - 12).', 'error')
             return redirect_back()
 
-        # Sanitize text inputs
         note = sanitize_text(request.form.get('note', ''), max_length=300)
         matiere = sanitize_text(request.form.get('matiere', ''), max_length=100)
         niveau = sanitize_text(request.form.get('niveau', ''), max_length=100)
@@ -496,13 +497,11 @@ def seance_ajouter():
         nb_eleves_total = safe_int(request.form.get('nb_eleves_total'), min_val=0, max_val=1000)
         dar_id = safe_int(request.form.get('dar_id'))
 
-        # Authorization check
         coord = Coordinateur.query.get_or_404(coord_id)
         if not current_user.is_admin:
             if not current_user.responsable or coord.responsable_id != current_user.responsable.id:
                 abort(403)
 
-        # Validate professeur
         prof_nom_legacy = None
         if professeur_id:
             p = Professeur.query.get(professeur_id)
@@ -511,7 +510,6 @@ def seance_ajouter():
             else:
                 professeur_id = None
 
-        # Validate dar
         if dar_id:
             d = Dour.query.get(dar_id)
             if not d:
@@ -549,8 +547,6 @@ def seance_ajouter():
     return redirect(url_for('heures', mois=date_obj.month, annee=date_obj.year, coord_id=coord_id))
 
 
-
-# ── seance_modifier ───────────────────────────────────────────────────────────
 @app.route('/seances/modifier/<int:id>', methods=['POST'])
 @login_required
 def seance_modifier(id):
@@ -584,8 +580,8 @@ def seance_modifier(id):
     nb_eleves_str = request.form.get('nb_eleves', '').strip()
     s.nb_eleves = int(nb_eleves_str) if nb_eleves_str.isdigit() else None
 
-    nb_eleves_total_str = request.form.get('nb_eleves_total', '').strip()           # ← NOUVEAU
-    s.nb_eleves_total = int(nb_eleves_total_str) if nb_eleves_total_str.isdigit() else None  # ← NOUVEAU
+    nb_eleves_total_str = request.form.get('nb_eleves_total', '').strip()
+    s.nb_eleves_total = int(nb_eleves_total_str) if nb_eleves_total_str.isdigit() else None
 
     dar_id_str = request.form.get('dar_id', '').strip()
     s.dar_id   = int(dar_id_str) if dar_id_str.isdigit() else None
@@ -598,7 +594,6 @@ def seance_modifier(id):
     return redirect(url_for('heures', mois=s.mois, annee=s.annee, coord_id=coord.id))
 
 
-# ── seance_supprimer ──────────────────────────────────────────────────────────
 @app.route('/seances/supprimer/<int:id>', methods=['POST'])
 @login_required
 def seance_supprimer(id):
@@ -619,7 +614,6 @@ def seance_supprimer(id):
     return redirect(url_for('heures', mois=mois, annee=annee, coord_id=coord_id))
 
 
-# ── seances_ajouter_multiple ──────────────────────────────────────────────────
 @app.route('/seances/ajouter_multiple', methods=['POST'])
 @login_required
 def seances_ajouter_multiple():
@@ -668,8 +662,8 @@ def seances_ajouter_multiple():
         nb_eleves_str = data.get('nb_eleves', '').strip()
         nb_eleves = int(nb_eleves_str) if nb_eleves_str.isdigit() else None
 
-        nb_eleves_total_str = data.get('nb_eleves_total', '').strip()          # ← NOUVEAU
-        nb_eleves_total = int(nb_eleves_total_str) if nb_eleves_total_str.isdigit() else None  # ← NOUVEAU
+        nb_eleves_total_str = data.get('nb_eleves_total', '').strip()
+        nb_eleves_total = int(nb_eleves_total_str) if nb_eleves_total_str.isdigit() else None
 
         dar_id_str = data.get('dar_id', '').strip()
         dar_id = int(dar_id_str) if dar_id_str.isdigit() else None
@@ -707,7 +701,7 @@ def seances_ajouter_multiple():
             prof=prof_nom_legacy,
             professeur_id=professeur_id,
             nb_eleves=nb_eleves,
-            nb_eleves_total=nb_eleves_total,   # ← NOUVEAU
+            nb_eleves_total=nb_eleves_total,
             dar_id=dar_id,
             remarque=remarque,
         )
@@ -727,7 +721,7 @@ def seances_ajouter_multiple():
     return redirect(url_for('calendrier_coordinateurs'))
 
 
-# ─── Routes legacy (compatibilité — redirigent vers les routes unifiées) ──────
+# ─── Routes legacy ────────────────────────────────────────────────────────────
 
 @app.route('/heures/ajouter', methods=['POST'])
 @login_required
@@ -856,7 +850,6 @@ def update_avatar():
     avatar_dir = os.path.join(app.root_path, 'static', 'avatars')
     os.makedirs(avatar_dir, exist_ok=True)
 
-    # Remove old avatar
     if current_user.avatar:
         old_path = os.path.join(avatar_dir, current_user.avatar)
         if os.path.exists(old_path):
@@ -865,12 +858,10 @@ def update_avatar():
             except OSError:
                 pass
 
-    # Generate secure filename
     ext = file.filename.rsplit('.', 1)[1].lower()
     filename = f"user_{uuid.uuid4().hex}_{uuid.uuid4().hex[:8]}.{ext}"
     filepath = os.path.join(avatar_dir, filename)
 
-    # Ensure path is within allowed directory (prevent path traversal)
     real_path = os.path.realpath(filepath)
     real_dir = os.path.realpath(avatar_dir)
     if not real_path.startswith(real_dir):
@@ -1377,7 +1368,7 @@ def stats_coordinateurs():
     )
 
 
-# ── calendrier_coordinateurs ───────────────────────────────────────────────────
+# ─── Calendrier Coordinateurs ─────────────────────────────────────────────────
 @app.route('/calendrier_coordinateurs')
 @login_required
 def calendrier_coordinateurs():
@@ -1510,7 +1501,7 @@ def update_social():
     return redirect(url_for('parametres'))
 
 
-# ─── Gestion Professeurs (admin) ──────────────────────────────────────────────
+# ─── Gestion Professeurs ──────────────────────────────────────────────────────
 @app.route('/gerer_professeurs')
 @login_required
 @admin_required
@@ -1664,7 +1655,6 @@ def suivi_partenariat():
             'niveaux_uniq':  sorted({s.niveau for s in seances_d if s.niveau}),
         })
 
-    # ── blocs par niveau ── avec total_eleves_total ─────────────────────────
     par_niveau = defaultdict(list)
     for s in seances_raw:
         key = s.niveau or '— Non défini —'
@@ -1672,7 +1662,6 @@ def suivi_partenariat():
 
     blocs_niveau = []
     for niv, seances_n in sorted(par_niveau.items()):
-        # Pour effectif total : on prend la valeur max non-nulle trouvée dans les séances du niveau
         valeurs_total = [s.nb_eleves_total for s in seances_n if s.nb_eleves_total]
         effectif_total = max(valeurs_total) if valeurs_total else None
 
@@ -1684,7 +1673,7 @@ def suivi_partenariat():
             'nb_rattrapage':   sum(1 for s in seances_n if s.statut == 'rattrapage'),
             'total_heures':    sum(s.nb_heures for s in seances_n if s.statut == 'passee'),
             'total_eleves':    sum(s.nb_eleves for s in seances_n if s.nb_eleves and s.statut != 'annulee'),
-            'effectif_total':  effectif_total,   # ← NOUVEAU
+            'effectif_total':  effectif_total,
         })
 
     total_passees    = sum(1 for s in all_seances if s.statut == 'passee')
@@ -1723,7 +1712,6 @@ def suivi_partenariat():
 
 @app.before_request
 def update_last_seen():
-    """Met à jour last_seen à chaque requête (throttle : 1 commit / 60s max)."""
     if current_user.is_authenticated:
         now = datetime.now()
         if (
@@ -1733,7 +1721,6 @@ def update_last_seen():
             current_user.last_seen = now
             db.session.commit()
 
-# ── 3. Colle ces deux routes n'importe où dans routes.py ─────────────────────
 
 @app.route('/api/statut_responsables')
 @login_required
@@ -1758,3 +1745,428 @@ def api_statut_user(user_id):
         }),
         mimetype='application/json'
     )
+
+
+# ─── Helper : seance_b2c → dict ───────────────────────────────────────────────
+def seance_b2c_to_dict(s):
+    return {
+        'id':             s.id,
+        'date':           s.date.isoformat() if s.date else '',
+        'heure':          s.heure or '',
+        'statut':         s.statut or '',
+        'matiere':        s.matiere or '',
+        'niveau':         s.niveau or '',
+        'prof':           s.prof_nom or '',
+        'professeur_id':  s.professeur_id or '',
+        'responsable_id': s.responsable_id,
+        'nb_heures':      s.nb_heures or 0,
+        'nb_eleves':      s.nb_eleves or 0,
+        'nb_eleves_total':s.nb_eleves_total or 0,
+        'remarque':       s.remarque or '',
+        'note':           s.note or '',
+    }
+
+
+# ─── Suivi B2C ────────────────────────────────────────────────────────────────
+@app.route('/suivi_b2c')
+@login_required
+def suivi_b2c():
+    now   = datetime.now()
+    mois  = safe_int(request.args.get('mois',  now.month),  min_val=1, max_val=12) or now.month
+    annee = safe_int(request.args.get('annee', now.year),   min_val=2000, max_val=2100) or now.year
+
+    filtre_niveau  = request.args.get('filtre_niveau',  '').strip()
+    filtre_statut  = request.args.get('filtre_statut',  '').strip()
+    filtre_matiere = request.args.get('filtre_matiere', '').strip()
+    filtre_resp    = request.args.get('filtre_resp',    '').strip()
+
+    mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin',
+                 'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
+
+    if current_user.is_admin:
+        all_resp = Responsable.query.all()
+        responsables = [r for r in all_resp if r.user and r.user.role == 'responsable']
+    else:
+        resp = current_user.responsable
+        responsables = [resp] if resp else []
+
+    resp_ids = [r.id for r in responsables]
+
+    professeurs = Professeur.query.filter_by(actif=True).order_by(Professeur.nom).all()
+
+    all_seances = SeanceB2C.query.filter(
+        SeanceB2C.mois == mois,
+        SeanceB2C.annee == annee,
+        SeanceB2C.responsable_id.in_(resp_ids)
+    ).order_by(SeanceB2C.date.desc()).all()
+
+    q = SeanceB2C.query.filter(
+        SeanceB2C.mois == mois,
+        SeanceB2C.annee == annee,
+        SeanceB2C.responsable_id.in_(resp_ids)
+    )
+    if filtre_niveau:
+        q = q.filter(SeanceB2C.niveau == filtre_niveau)
+    if filtre_statut:
+        q = q.filter(SeanceB2C.statut == filtre_statut)
+    if filtre_matiere:
+        q = q.filter(SeanceB2C.matiere == filtre_matiere)
+    if filtre_resp:
+        try:
+            q = q.filter(SeanceB2C.responsable_id == int(filtre_resp))
+        except ValueError:
+            pass
+
+    seances_filtrees = q.order_by(SeanceB2C.date.desc()).all()
+    seances_json = [seance_b2c_to_dict(s) for s in all_seances]
+
+    from collections import defaultdict
+    par_resp = defaultdict(list)
+    for s in seances_filtrees:
+        par_resp[s.responsable_id].append(s)
+
+    blocs_resp = []
+    for resp in responsables:
+        if filtre_resp and str(resp.id) != filtre_resp:
+            continue
+        seances_r = par_resp.get(resp.id, [])
+        valeurs_total = [s.nb_eleves_total for s in seances_r if s.nb_eleves_total]
+        blocs_resp.append({
+            'responsable':   resp,
+            'seances':       seances_r,
+            'nb_passees':    sum(1 for s in seances_r if s.statut == 'passee'),
+            'nb_annulees':   sum(1 for s in seances_r if s.statut == 'annulee'),
+            'nb_rattrapage': sum(1 for s in seances_r if s.statut == 'rattrapage'),
+            'total_heures':  sum(s.nb_heures for s in seances_r if s.statut == 'passee'),
+            'total_eleves':  sum(s.nb_eleves for s in seances_r if s.nb_eleves and s.statut != 'annulee'),
+            'effectif_total': max(valeurs_total) if valeurs_total else None,
+        })
+
+    total_seances         = len(all_seances)
+    total_passees         = sum(1 for s in all_seances if s.statut == 'passee')
+    total_annulees        = sum(1 for s in all_seances if s.statut == 'annulee')
+    total_rattrapage      = sum(1 for s in all_seances if s.statut == 'rattrapage')
+    total_passees_heures  = sum(s.nb_heures for s in all_seances if s.statut == 'passee')
+    total_eleves          = sum(s.nb_eleves for s in all_seances if s.nb_eleves and s.statut != 'annulee')
+
+    return render_template('suivi_b2c.html',
+        blocs_resp=blocs_resp,
+        seances_json=seances_json,
+        responsables=responsables,
+        professeurs=professeurs,
+        mois=mois, annee=annee,
+        mois_noms=mois_noms,
+        annees=list(range(now.year - 2, now.year + 2)),
+        filtre_niveau=filtre_niveau,
+        filtre_statut=filtre_statut,
+        filtre_matiere=filtre_matiere,
+        filtre_resp=filtre_resp,
+        matieres=MATIERES,
+        niveaux=NIVEAUX,
+        statuts=STATUTS_SEANCE,
+        total_seances=total_seances,
+        total_passees=total_passees,
+        total_annulees=total_annulees,
+        total_rattrapage=total_rattrapage,
+        total_passees_heures=total_passees_heures,
+        total_eleves=total_eleves,
+    )
+
+
+# ─── Ajouter séance B2C ───────────────────────────────────────────────────────
+@app.route('/suivi_b2c/ajouter', methods=['POST'])
+@login_required
+@password_required
+def suivi_b2c_ajouter():
+    try:
+        resp_id = safe_int(request.form.get('responsable_id'))
+        if not resp_id:
+            abort(400)
+
+        if not current_user.is_admin:
+            if not current_user.responsable or current_user.responsable.id != resp_id:
+                abort(403)
+
+        resp = Responsable.query.get_or_404(resp_id)
+
+        date_str = request.form.get('date', '').strip()
+        if not date_str:
+            flash('Date requise.', 'error')
+            return redirect_back()
+
+        date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+        if date_obj.year < 2000 or date_obj.year > 2100:
+            flash('Date invalide.', 'error')
+            return redirect_back()
+
+        nb_heures = safe_float(request.form.get('nb_heures'), min_val=0.5, max_val=12)
+        if nb_heures is None:
+            flash('Heures invalides (0.5 - 12).', 'error')
+            return redirect_back()
+
+        professeur_id = parse_professeur_id(request.form)
+        if professeur_id:
+            p = Professeur.query.get(professeur_id)
+            if not p:
+                professeur_id = None
+
+        s = SeanceB2C(
+            responsable_id  = resp_id,
+            date            = date_obj,
+            mois            = date_obj.month,
+            annee           = date_obj.year,
+            nb_heures       = nb_heures,
+            statut          = normalise_statut(request.form.get('statut', '')),
+            heure           = sanitize_text(request.form.get('heure', ''), max_length=5),
+            matiere         = sanitize_text(request.form.get('matiere', ''), max_length=100),
+            niveau          = sanitize_text(request.form.get('niveau', ''), max_length=100),
+            nb_eleves       = safe_int(request.form.get('nb_eleves'), min_val=0, max_val=10000),
+            nb_eleves_total = safe_int(request.form.get('nb_eleves_total'), min_val=0, max_val=10000),
+            note            = sanitize_text(request.form.get('note', ''), max_length=300),
+            remarque        = sanitize_text(request.form.get('remarque', ''), max_length=500),
+            professeur_id   = professeur_id,
+        )
+        db.session.add(s)
+        db.session.commit()
+        flash(f'Séance B2C ajoutée pour {resp.prenom} {resp.nom}!', 'success')
+
+    except ValueError as e:
+        flash(f'Données invalides: {str(e)}', 'error')
+        return redirect_back()
+
+    redirect_url = request.form.get('redirect_url', '').strip()
+    if redirect_url:
+        return redirect(redirect_url)
+    return redirect(url_for('suivi_b2c', mois=date_obj.month, annee=date_obj.year))
+
+
+# ─── Modifier séance B2C ──────────────────────────────────────────────────────
+@app.route('/suivi_b2c/modifier/<int:id>', methods=['POST'])
+@login_required
+def suivi_b2c_modifier(id):
+    s = SeanceB2C.query.get_or_404(id)
+
+    if not current_user.is_admin:
+        if not current_user.responsable or s.responsable_id != current_user.responsable.id:
+            abort(403)
+
+    date_obj     = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
+    s.date       = date_obj
+    s.mois       = date_obj.month
+    s.annee      = date_obj.year
+    s.nb_heures  = safe_float(request.form.get('nb_heures'), min_val=0.5, max_val=12) or s.nb_heures
+    s.statut     = normalise_statut(request.form.get('statut', ''))
+    s.heure      = request.form.get('heure', '').strip() or None
+    s.matiere    = request.form.get('matiere', '').strip() or None
+    s.niveau     = request.form.get('niveau', '').strip() or None
+    s.note       = sanitize_text(request.form.get('note', ''), max_length=300)
+    s.remarque   = request.form.get('remarque', '').strip() or None
+
+    nb_el = request.form.get('nb_eleves', '').strip()
+    s.nb_eleves = int(nb_el) if nb_el.isdigit() else None
+
+    nb_el_t = request.form.get('nb_eleves_total', '').strip()
+    s.nb_eleves_total = int(nb_el_t) if nb_el_t.isdigit() else None
+
+    s.professeur_id = parse_professeur_id(request.form)
+    if s.professeur_id:
+        p = Professeur.query.get(s.professeur_id)
+        if not p:
+            s.professeur_id = None
+
+    db.session.commit()
+    flash('Séance B2C modifiée!', 'success')
+
+    redirect_url = request.form.get('redirect_url', '').strip()
+    if redirect_url:
+        return redirect(redirect_url)
+    return redirect(url_for('suivi_b2c', mois=s.mois, annee=s.annee))
+
+
+# ─── Supprimer séance B2C ─────────────────────────────────────────────────────
+@app.route('/suivi_b2c/supprimer/<int:id>', methods=['POST'])
+@login_required
+def suivi_b2c_supprimer(id):
+    s = SeanceB2C.query.get_or_404(id)
+
+    if not current_user.is_admin:
+        if not current_user.responsable or s.responsable_id != current_user.responsable.id:
+            abort(403)
+
+    mois, annee = s.mois, s.annee
+    db.session.delete(s)
+    db.session.commit()
+    flash('Séance B2C supprimée!', 'success')
+
+    redirect_url = request.form.get('redirect_url', '').strip()
+    if redirect_url:
+        return redirect(redirect_url)
+    return redirect(url_for('suivi_b2c', mois=mois, annee=annee))
+
+# Ajouter ces routes dans routes.py
+ 
+@app.route('/calendrier_b2c')
+@login_required
+def calendrier_b2c():
+    from collections import defaultdict
+ 
+    now   = datetime.now()
+    mois  = safe_int(request.args.get('mois',  now.month),  min_val=1, max_val=12) or now.month
+    annee = safe_int(request.args.get('annee', now.year),   min_val=2000, max_val=2100) or now.year
+ 
+    mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin',
+                 'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
+ 
+    if current_user.is_admin:
+        all_resp = Responsable.query.all()
+        responsables = [r for r in all_resp if r.user and r.user.role == 'responsable']
+    else:
+        resp = current_user.responsable
+        responsables = [resp] if resp else []
+ 
+    resp_ids = [r.id for r in responsables]
+ 
+    professeurs = Professeur.query.filter_by(actif=True).order_by(Professeur.nom).all()
+ 
+    # Charger toutes les séances B2C du mois pour tous les responsables
+    all_seances = SeanceB2C.query.filter(
+        SeanceB2C.mois == mois,
+        SeanceB2C.annee == annee,
+        SeanceB2C.responsable_id.in_(resp_ids)
+    ).order_by(SeanceB2C.date).all()
+ 
+    # Grouper par responsable
+    par_resp = defaultdict(list)
+    for s in all_seances:
+        par_resp[s.responsable_id].append(s)
+ 
+    blocs = []
+    for resp in responsables:
+        seances_r = par_resp.get(resp.id, [])
+        mats = sorted({s.matiere for s in seances_r if s.matiere})
+        nivs = sorted({s.niveau  for s in seances_r if s.niveau})
+        blocs.append({
+            'responsable':   resp,
+            'seances':       seances_r,
+            'nb_seances':    len(seances_r),
+            'nb_passees':    sum(1 for s in seances_r if s.statut == 'passee'),
+            'nb_annulees':   sum(1 for s in seances_r if s.statut == 'annulee'),
+            'nb_rattrapage': sum(1 for s in seances_r if s.statut == 'rattrapage'),
+            'total_heures':  sum(s.nb_heures for s in seances_r if s.statut == 'passee'),
+            'total_eleves':  sum(s.nb_eleves for s in seances_r if s.nb_eleves and s.statut != 'annulee'),
+            'matieres_uniq': mats,
+            'niveaux_uniq':  nivs,
+        })
+ 
+    return render_template('calendrier_b2c.html',
+        blocs=blocs,
+        all_responsables=responsables,
+        professeurs=professeurs,
+        mois=mois, annee=annee,
+        mois_noms=mois_noms,
+        annees=list(range(now.year - 2, now.year + 2)),
+        matieres=MATIERES,
+        niveaux=NIVEAUX,
+        statuts=STATUTS_SEANCE,
+    )
+ 
+ 
+@app.route('/calendrier_b2c/ajouter_multiple', methods=['POST'])
+@login_required
+@password_required
+def calendrier_b2c_ajouter_multiple():
+    resp_id      = safe_int(request.form.get('responsable_id'))
+    redirect_url = request.form.get('redirect_url', '').strip()
+ 
+    if not resp_id:
+        flash('Responsable manquant.', 'error')
+        return redirect(redirect_url or url_for('calendrier_b2c'))
+ 
+    if not current_user.is_admin:
+        if not current_user.responsable or current_user.responsable.id != resp_id:
+            abort(403)
+ 
+    resp = Responsable.query.get_or_404(resp_id)
+ 
+    sessions = {}
+    for key, value in request.form.items():
+        if key.startswith('seances['):
+            try:
+                idx   = key.split('[')[1].split(']')[0]
+                field = key.split('[')[2].split(']')[0]
+                if idx not in sessions:
+                    sessions[idx] = {}
+                sessions[idx][field] = value
+            except (IndexError, ValueError):
+                continue
+ 
+    added  = 0
+    errors = []
+ 
+    for idx, data in sessions.items():
+        date_str  = data.get('date',      '').strip()
+        nb_heures = data.get('nb_heures', '').strip()
+        matiere   = data.get('matiere',   '').strip() or None
+        niveau    = data.get('niveau',    '').strip() or None
+        note      = data.get('note',      '').strip() or None
+        heure     = data.get('heure',     '').strip() or None
+        remarque  = data.get('remarque',  '').strip() or None
+        statut    = normalise_statut(data.get('statut', ''))
+ 
+        prof_id_str   = data.get('professeur_id', '').strip()
+        professeur_id = int(prof_id_str) if prof_id_str.isdigit() else None
+ 
+        nb_eleves_str = data.get('nb_eleves', '').strip()
+        nb_eleves = int(nb_eleves_str) if nb_eleves_str.isdigit() else None
+ 
+        nb_eleves_total_str = data.get('nb_eleves_total', '').strip()
+        nb_eleves_total = int(nb_eleves_total_str) if nb_eleves_total_str.isdigit() else None
+ 
+        if not date_str or not nb_heures:
+            errors.append(f'Séance {idx}: date ou heures manquantes.')
+            continue
+ 
+        try:
+            date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+            nb_h     = float(nb_heures)
+            if nb_h <= 0:
+                raise ValueError('Heures must be positive')
+        except ValueError as e:
+            errors.append(f'Séance {idx}: valeur invalide ({e}).')
+            continue
+ 
+        if professeur_id:
+            p = Professeur.query.get(professeur_id)
+            if not p:
+                professeur_id = None
+ 
+        s = SeanceB2C(
+            responsable_id  = resp_id,
+            date            = date_obj,
+            mois            = date_obj.month,
+            annee           = date_obj.year,
+            nb_heures       = nb_h,
+            matiere         = matiere,
+            niveau          = niveau,
+            note            = note,
+            statut          = statut,
+            heure           = heure,
+            professeur_id   = professeur_id,
+            nb_eleves       = nb_eleves,
+            nb_eleves_total = nb_eleves_total,
+            remarque        = remarque,
+        )
+        db.session.add(s)
+        added += 1
+ 
+    if added > 0:
+        db.session.commit()
+        label = 'séance B2C' if added == 1 else 'séances B2C'
+        flash(f'✅ {added} {label} ajoutée{"s" if added > 1 else ""} pour {resp.prenom} {resp.nom}!', 'success')
+ 
+    for err in errors:
+        flash(err, 'error')
+ 
+    if redirect_url:
+        return redirect(redirect_url)
+    return redirect(url_for('calendrier_b2c'))

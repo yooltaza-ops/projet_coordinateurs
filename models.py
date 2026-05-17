@@ -333,3 +333,40 @@ class Professeur(db.Model):
 
     def total_heures(self):
         return sum(s.nb_heures for s in self.seances)
+
+
+# ─── À AJOUTER DANS models.py ────────────────────────────────────────────────
+# Copie ce bloc dans models.py, après la classe Seance
+
+class SeanceB2C(db.Model):
+    __tablename__ = 'seance_b2c'
+    id              = db.Column(db.Integer, primary_key=True)
+    responsable_id  = db.Column(db.Integer, db.ForeignKey('responsable.id'), nullable=False)
+    date            = db.Column(db.Date,    nullable=False)
+    mois            = db.Column(db.Integer, nullable=False)
+    annee           = db.Column(db.Integer, nullable=False)
+    nb_heures       = db.Column(db.Float,   nullable=False, default=0)
+    statut          = db.Column(db.String(20),  nullable=True, default=None)
+    heure           = db.Column(db.String(5),   nullable=True)
+    matiere         = db.Column(db.String(100), nullable=True)
+    niveau          = db.Column(db.String(100), nullable=True)
+    nb_eleves       = db.Column(db.Integer,     nullable=True)
+    nb_eleves_total = db.Column(db.Integer,     nullable=True)
+    note            = db.Column(db.String(300), nullable=True)
+    remarque        = db.Column(db.String(500), nullable=True)
+    created_at      = db.Column(db.DateTime,    default=datetime.utcnow)
+
+    professeur_id = db.Column(db.Integer, db.ForeignKey('professeur.id'), nullable=True)
+    professeur    = db.relationship('Professeur', foreign_keys=[professeur_id])
+
+    responsable   = db.relationship('Responsable', foreign_keys=[responsable_id],
+                                    backref=db.backref('seances_b2c', lazy=True))
+
+    @property
+    def prof_nom(self):
+        return self.professeur.nom if self.professeur else None
+
+    @property
+    def statut_label(self):
+        mapping = {'passee': 'Passée', 'annulee': 'Annulée', 'rattrapage': 'Rattrapage'}
+        return mapping.get(self.statut, '—')

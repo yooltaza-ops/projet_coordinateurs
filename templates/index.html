@@ -123,8 +123,6 @@
 </div>
 {% endif %}
 
-
-
 <main class="main-content">
 
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -139,48 +137,70 @@
 
     <!-- STATS -->
     <div class="stats-row">
-            <div class="stat-card blue">
-                <div class="stat-number">{{ nb_responsables }}</div>
-                <div class="stat-label">{% if current_user.is_admin %}👤 Responsables{% else %}👥 Coordinateurs{% endif %}</div>
-            </div>
-            {% if current_user.is_admin %}
-            <div class="stat-card orange">
-                <div class="stat-number orange">{{ nb_admins }}</div>
-                <div class="stat-label">👑 Admins</div>
-            </div>
-            {% endif %}
-            <div class="stat-card orange">
-                <div class="stat-number">{{ data | sum(attribute='nb_coordinateurs') }}</div>
-                <div class="stat-label">👨 Coordinateurs</div>
-            </div>
-            <div class="stat-card pink">
-                <div class="stat-number">{{ data | sum(attribute='nb_coordinatrices') }}</div>
-                <div class="stat-label">👩 Coordinatrices</div>
-            </div>
-            <div class="stat-card green">
-                <div class="stat-number">{{ dours|length }}</div>
-                <div class="stat-label">🏠 Dours</div>
-            </div>
-            <div class="stat-card" style="border-color:#2a5298;">
-                <div class="stat-number" style="color:#2a5298;">{{ total_seances_mois + total_annulees_mois + total_rattrapage_mois }}</div>
-                <div class="stat-label">📅 Total séances — {{ mois_nom_actuel }}</div>
-            </div>
-            <div class="stat-card purple">
-                <div class="stat-number purple">{{ total_seances_mois }}</div>
-                <div class="stat-label">✅ Séances passées — {{ mois_nom_actuel }}</div>
-            </div>
-            <div class="stat-card teal">
-                <div class="stat-number teal">{{ "%.1f"|format(total_heures_mois) }}h</div>
-                <div class="stat-label">⏱️ Heures passées — {{ mois_nom_actuel }}</div>
-            </div>
-            <div class="stat-card" style="border-color:#dc2626;">
-                <div class="stat-number" style="color:#dc2626;">{{ total_annulees_mois }}</div>
-                <div class="stat-label">❌ Annulées — {{ mois_nom_actuel }}</div>
-            </div>
-            <div class="stat-card" style="border-color:#d97706;">
-                <div class="stat-number" style="color:#d97706;">{{ total_rattrapage_mois }}</div>
-                <div class="stat-label">🔄 Rattrapages — {{ mois_nom_actuel }}</div>
-            </div>
+        <div class="stat-card blue">
+            <div class="stat-number">{{ nb_responsables }}</div>
+            <div class="stat-label">{% if current_user.is_admin %}👤 Responsables{% else %}👥 Coordinateurs{% endif %}</div>
+        </div>
+        {% if current_user.is_admin %}
+        <div class="stat-card orange">
+            <div class="stat-number orange">{{ nb_admins }}</div>
+            <div class="stat-label">👑 Admins</div>
+        </div>
+        {% endif %}
+        <div class="stat-card orange">
+            <div class="stat-number">{{ data | sum(attribute='nb_coordinateurs') }}</div>
+            <div class="stat-label">👨 Coordinateurs</div>
+        </div>
+        <div class="stat-card pink">
+            <div class="stat-number">{{ data | sum(attribute='nb_coordinatrices') }}</div>
+            <div class="stat-label">👩 Coordinatrices</div>
+        </div>
+        <div class="stat-card green">
+            <div class="stat-number">{{ dours|length }}</div>
+            <div class="stat-label">🏠 Dours</div>
+        </div>
+        <div class="stat-card" style="border-color:#2a5298;">
+            <div class="stat-number" style="color:#2a5298;">{{ total_seances_mois + total_annulees_mois + total_rattrapage_mois }}</div>
+            <div class="stat-label">📅 Total séances — {{ mois_nom_actuel }}</div>
+        </div>
+        <div class="stat-card purple">
+            <div class="stat-number purple">{{ total_seances_mois }}</div>
+            <div class="stat-label">✅ Séances passées — {{ mois_nom_actuel }}</div>
+        </div>
+        <div class="stat-card teal">
+            <div class="stat-number teal">{{ "%.1f"|format(total_heures_mois) }}h</div>
+            <div class="stat-label">⏱️ Heures passées — {{ mois_nom_actuel }}</div>
+        </div>
+        <div class="stat-card" style="border-color:#dc2626;">
+            <div class="stat-number" style="color:#dc2626;">{{ total_annulees_mois }}</div>
+            <div class="stat-label">❌ Annulées — {{ mois_nom_actuel }}</div>
+        </div>
+        <div class="stat-card" style="border-color:#d97706;">
+            <div class="stat-number" style="color:#d97706;">{{ total_rattrapage_mois }}</div>
+            <div class="stat-label">🔄 Rattrapages — {{ mois_nom_actuel }}</div>
+        </div>
+
+        <!-- ══ B2C STATS ══ -->
+        <div class="stat-card" style="border-color:#0ea5e9;">
+            <div class="stat-number" style="color:#0ea5e9;">{{ total_b2c_mois }}</div>
+            <div class="stat-label">🏢 Total séances B2C — {{ mois_nom_actuel }}</div>
+        </div>
+        <div class="stat-card" style="border-color:#16a34a;">
+            <div class="stat-number" style="color:#16a34a;">{{ total_b2c_passees }}</div>
+            <div class="stat-label">✅ Séances B2C passées — {{ mois_nom_actuel }}</div>
+        </div>
+        <div class="stat-card" style="border-color:#dc2626;">
+            <div class="stat-number" style="color:#dc2626;">{{ total_b2c_annulees }}</div>
+            <div class="stat-label">❌ B2C annulées — {{ mois_nom_actuel }}</div>
+        </div>
+        <div class="stat-card" style="border-color:#d97706;">
+            <div class="stat-number" style="color:#d97706;">{{ total_b2c_rattrapages }}</div>
+            <div class="stat-label">🔄 B2C rattrapages — {{ mois_nom_actuel }}</div>
+        </div>
+        <div class="stat-card" style="border-color:#0284c7;">
+            <div class="stat-number" style="color:#0284c7;">{{ "%.1f"|format(total_b2c_heures) }}h</div>
+            <div class="stat-label">⏱️ Heures B2C — {{ mois_nom_actuel }}</div>
+        </div>
     </div>
 
     <!-- GÉRER ADMINS -->
@@ -286,15 +306,20 @@
                 <a href="{{ url_for('gerer_coordinateurs') }}" class="action-card">
                     <div class="action-icon">👥</div><div class="action-title">Gérer Coordinateurs</div><div class="action-desc">Voir, modifier, supprimer</div>
                 </a>
-                <a href="{{ url_for('heures') }}" class="action-card" >
+                <a href="{{ url_for('heures') }}" class="action-card">
                     <div class="action-icon">⏱️</div>
-                    <div class="action-title" >Séances & Heures</div>
+                    <div class="action-title">Séances & Heures</div>
                     <div class="action-desc">Gérer les séances par coordinateur</div>
                 </a>
-                <a href="{{ url_for('suivi_partenariat') }}" class="action-card" >
+                <a href="{{ url_for('suivi_partenariat') }}" class="action-card">
                     <div class="action-icon">📊</div>
-                    <div class="action-title" >Suivi Partenariat</div>
+                    <div class="action-title">Suivi Partenariat</div>
                     <div class="action-desc">Gérer les séances par coordinateur</div>
+                </a>
+                <a href="{{ url_for('suivi_b2c') }}" class="action-card" style="border-color:#bae6fd;">
+                    <div class="action-icon">🏢</div>
+                    <div class="action-title" style="color:#0369a1;">Suivi B2C</div>
+                    <div class="action-desc">Gérer les séances B2C par responsable</div>
                 </a>
                 <a href="{{ url_for('calendrier_coordinateurs') }}" class="action-card">
                     <div class="action-icon">📅</div>
@@ -321,7 +346,7 @@
         </div>
     </div>
 
-    <!-- RECAP SÉANCES -->
+    <!-- RECAP SÉANCES COORDINATEURS -->
     <div class="card">
         <div class="card-header" style="background:linear-gradient(135deg,#9b59b6,#8e44ad);padding:14px 22px;">
             <h3 style="color:white;">📚 Récap Séances — {{ mois_nom_actuel }} {{ annee_actuel }}</h3>
@@ -400,8 +425,100 @@
         </div>
         {% else %}
         <div style="padding:30px;text-align:center;color:#bbb;font-size:13px;">
-            📭 Aucune séance enregistrée pour  {{ mois_nom_actuel }} —
+            📭 Aucune séance enregistrée pour {{ mois_nom_actuel }} —
             <a href="{{ url_for('heures') }}" style="color:#9b59b6;font-weight:600;">Ajoutez des séances</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ══ RECAP SÉANCES B2C ══ -->
+    <div class="card">
+        <div class="card-header" style="background:linear-gradient(135deg,#0369a1,#0ea5e9);padding:14px 22px;">
+            <h3 style="color:white;">🏢 Récap Séances B2C — {{ mois_nom_actuel }} {{ annee_actuel }}</h3>
+        </div>
+        {% if b2c_seances_mois %}
+        <div style="overflow-x:auto;">
+            <table class="recap-seances-table">
+                <thead>
+                    <tr>
+                        <th>Responsable</th>
+                        <th class="center">Total séances</th>
+                        <th class="center">✅ Passées</th>
+                        <th class="center">❌ Annulées</th>
+                        <th class="center">🔄 Rattrapages</th>
+                        <th class="center">Heures</th>
+                        <th class="center">Moy/séance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set grand_b2c = namespace(seances=0, passees=0, annulees=0, rattrapages=0, heures=0.0) %}
+                    {% for r in responsables %}
+                        {% set r_seances = [] %}
+                        {% for s in b2c_seances_mois %}
+                            {% if s.responsable_id == r.id %}
+                                {% set _ = r_seances.append(s) %}
+                            {% endif %}
+                        {% endfor %}
+                        {% if r_seances | length > 0 %}
+                            {% set nb_s = r_seances | length %}
+                            {% set nb_p = r_seances | selectattr('statut', 'equalto', 'passee') | list | length %}
+                            {% set nb_a = r_seances | selectattr('statut', 'equalto', 'annulee') | list | length %}
+                            {% set nb_r = r_seances | selectattr('statut', 'equalto', 'rattrapage') | list | length %}
+                            {% set nb_h = namespace(val=0.0) %}
+                            {% for s in r_seances %}
+                                {% if s.statut == 'passee' %}
+                                    {% set nb_h.val = nb_h.val + s.nb_heures %}
+                                {% endif %}
+                            {% endfor %}
+                            {% set grand_b2c.seances     = grand_b2c.seances     + nb_s %}
+                            {% set grand_b2c.passees     = grand_b2c.passees     + nb_p %}
+                            {% set grand_b2c.annulees    = grand_b2c.annulees    + nb_a %}
+                            {% set grand_b2c.rattrapages = grand_b2c.rattrapages + nb_r %}
+                            {% set grand_b2c.heures      = grand_b2c.heures      + nb_h.val %}
+                            <tr>
+                                <td>
+                                    <div style="display:flex;align-items:center;gap:10px;">
+                                        <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#0369a1,#0ea5e9);color:white;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;">
+                                            {{ (r.prenom[0] + r.nom[0]) | upper }}
+                                        </div>
+                                        <div style="font-weight:700;color:#1a3a6b;font-size:13px;">{{ r.prenom }} {{ r.nom }}</div>
+                                    </div>
+                                </td>
+                                <td style="text-align:center;"><span style="font-weight:700;color:#0369a1;font-size:15px;">{{ nb_s }}</span></td>
+                                <td style="text-align:center;">
+                                    {% if nb_p > 0 %}<span style="font-weight:700;color:#16a34a;font-size:14px;">{{ nb_p }}</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}
+                                </td>
+                                <td style="text-align:center;">
+                                    {% if nb_a > 0 %}<span style="font-weight:700;color:#dc2626;font-size:14px;">{{ nb_a }}</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}
+                                </td>
+                                <td style="text-align:center;">
+                                    {% if nb_r > 0 %}<span style="font-weight:700;color:#d97706;font-size:14px;">{{ nb_r }}</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}
+                                </td>
+                                <td style="text-align:center;"><span style="font-weight:700;color:#0369a1;font-size:15px;">{{ "%.1f"|format(nb_h.val) }}h</span></td>
+                                <td style="text-align:center;">
+                                    {% if nb_s > 0 %}<span style="color:#888;font-size:12px;">{{ "%.1f"|format(nb_h.val / nb_s) }}h</span>{% else %}<span style="color:#ddd;">—</span>{% endif %}
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                    <tr style="background:#f0f9ff;font-weight:700;">
+                        <td style="color:#0369a1;font-size:13px;">🔢 Total B2C</td>
+                        <td style="text-align:center;color:#0369a1;font-size:15px;">{{ grand_b2c.seances }}</td>
+                        <td style="text-align:center;color:#16a34a;font-size:14px;">{{ grand_b2c.passees if grand_b2c.passees > 0 else '—' }}</td>
+                        <td style="text-align:center;color:#dc2626;font-size:14px;">{{ grand_b2c.annulees if grand_b2c.annulees > 0 else '—' }}</td>
+                        <td style="text-align:center;color:#d97706;font-size:14px;">{{ grand_b2c.rattrapages if grand_b2c.rattrapages > 0 else '—' }}</td>
+                        <td style="text-align:center;color:#0369a1;font-size:15px;">{{ "%.1f"|format(grand_b2c.heures) }}h</td>
+                        <td style="text-align:center;color:#888;font-size:12px;">
+                            {% if grand_b2c.seances > 0 %}{{ "%.1f"|format(grand_b2c.heures / grand_b2c.seances) }}h{% else %}—{% endif %}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="padding:30px;text-align:center;color:#bbb;font-size:13px;">
+            📭 Aucune séance B2C pour {{ mois_nom_actuel }} —
+            <a href="{{ url_for('suivi_b2c') }}" style="color:#0ea5e9;font-weight:600;">Voir Suivi B2C</a>
         </div>
         {% endif %}
     </div>
@@ -417,7 +534,6 @@
             {% for item in data %}
             <div class="acc-block" id="acc-{{ item.responsable.id }}">
 
-                <!-- ── ROW RESPONSABLE (header cliquable) ── -->
                 <div class="acc-header" onclick="toggleAcc({{ item.responsable.id }})">
                     <div class="acc-header-left">
                         <div class="acc-avatar">{{ (item.responsable.prenom or '?')[0].upper() }}</div>
@@ -441,13 +557,9 @@
                     </div>
                 </div>
 
-                <!-- ── COORDINATEURS (body caché par défaut) ── -->
                 <div class="acc-body" id="body-{{ item.responsable.id }}">
                     {% for coord in item.responsable.coordinateurs %}
-                    {%- set dours_json -%}[{% for d in coord.dours %}{"id":{{ d.id }},"nom":"{{ d.nom | e }}","type":"{{ d.type }}"}{% if not loop.last %},{% endif %}{% endfor %}]{%- endset -%}
-
                     <div class="acc-coord-row">
-                        <!-- Info coord -->
                         <div class="acc-coord-info">
                             <div class="acc-coord-avatar" style="background:{% if coord.genre == 'M' %}#1a3a6b{% else %}#e91e8c{% endif %};">
                                 {{ (coord.prenom or '?')[0].upper() }}
@@ -471,7 +583,6 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- Actions -->
                         <div class="acc-coord-actions">
                             <button class="acc-btn-edit"
                                 onclick="openModifier({{ coord.id }}, '{{ coord.nom | e }}', '{{ coord.prenom | e }}', '{{ coord.genre }}', {{ coord.responsable_id }}, [{{ coord.dours|map(attribute='id')|join(',') }}])">
