@@ -50,6 +50,7 @@
             </div>
             <div class="param-card-body">
                 <form method="POST" action="{{ url_for('update_profile') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <label>Nom</label>
                     <input type="text" name="nom" value="{{ current_user.nom or '' }}" placeholder="Votre nom">
                     <label>Prénom</label>
@@ -69,6 +70,7 @@
             </div>
             <div class="param-card-body">
                 <form method="POST" action="{{ url_for('update_password') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <label>Mot de passe actuel</label>
                     <input type="password" name="current_password" placeholder="••••••••" required>
                     <label>Nouveau mot de passe</label>
@@ -98,6 +100,7 @@
                     <div style="font-size:11px; color:#888; font-weight:500;">Photo actuelle</div>
                 </div>
                 <form method="POST" action="{{ url_for('update_avatar') }}" enctype="multipart/form-data" style="flex:1; min-width:220px;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <label>Choisir une nouvelle image</label>
                     <input type="file" name="avatar" accept="image/*" style="padding:8px; background:#f8fafc; cursor:pointer; border:2px solid #e8edf5; border-radius:10px; margin-bottom:10px;">
                     <div style="font-size:11px; color:#aaa; margin-bottom:14px;">Formats acceptés: JPG, PNG, GIF, WEBP — max 2MB</div>
@@ -114,6 +117,7 @@
             </div>
             <div class="param-card-body">
                 <form method="POST" action="{{ url_for('update_social') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="social-grid">
                         <div>
                             <label>Facebook</label>

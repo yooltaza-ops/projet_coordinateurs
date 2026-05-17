@@ -52,6 +52,7 @@
         {% endwith %}
 
         <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <label>Nom de la dar</label>
             <input type="text" name="nom_dar" placeholder="Ex: Dar Al Amal" required>
 

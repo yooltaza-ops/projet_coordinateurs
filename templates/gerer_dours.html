@@ -51,6 +51,7 @@
             </div>
             <div class="card-body">
                 <form method="POST" action="{{ url_for('gerer_dours') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <label>Nom de la dour</label>
                     <input type="text" name="nom" placeholder="Ex: Targant" required>
                     <label>Type</label>

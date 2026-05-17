@@ -28,6 +28,7 @@
     <div class="card">
         <h2>✏️ Modifier Coordinateur</h2>
         <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <label>Nom</label>
             <input type="text" name="nom" value="{{ coordinateur.nom }}" required>
 

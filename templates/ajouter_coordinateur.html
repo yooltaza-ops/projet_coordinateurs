@@ -40,7 +40,7 @@
     <div class="page-title">➕ Ajouter un Coordinateur</div>
 
     <form method="POST" action="{{ url_for('ajouter_coordinateur') }}">
-
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="two-col" style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
             <div class="fg">
                 <label>Nom</label>

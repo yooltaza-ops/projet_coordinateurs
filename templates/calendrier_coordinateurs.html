@@ -437,6 +437,7 @@ body { font-family: 'DM Sans', sans-serif; }
             <button class="modal-close" onclick="closeAdd()">✕</button>
         </div>
         <form method="POST" action="{{ url_for('ajouter_seances_multiple') }}" id="multi-form" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="coordinateur_id" id="hci">
             <input type="hidden" name="redirect_url"    id="hru">
             <div class="modal-body">
@@ -464,6 +465,7 @@ body { font-family: 'DM Sans', sans-serif; }
             <button class="modal-close" onclick="closeEdit()">✕</button>
         </div>
         <form method="POST" id="edit-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="modal-body">
 
                 <div class="sp-section-label">🕐 Date & Durée</div>
@@ -590,6 +592,7 @@ body { font-family: 'DM Sans', sans-serif; }
         <div class="modal-footer">
             <button type="button" class="btn-cancel" onclick="closeDel()">Annuler</button>
             <form method="POST" id="del-form" style="margin:0">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="redirect_url" id="del-redirect">
                 <button type="submit" style="padding:9px 22px;background:var(--red);color:white;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">
                     🗑️ Confirmer la suppression

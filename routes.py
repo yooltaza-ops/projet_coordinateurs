@@ -1,17 +1,28 @@
-from flask import render_template, request, redirect, url_for, flash, abort, Response
+from flask import render_template, request, redirect, url_for, flash, abort, Response, session
 from flask_login import login_user, logout_user, login_required, current_user
+from extensions import limiter
 from app import app
-from models import db, Responsable, Coordinateur, Dour, User, Seance, Professeur, MATIERES, NIVEAUX, STATUTS_SEANCE
+from models import (
+    db, Responsable, Coordinateur, Dour, User, Seance, Professeur,
+    MATIERES, NIVEAUX, STATUTS_SEANCE, sanitize_text, validate_email
+)
 from functools import wraps
-import os, uuid
-from datetime import datetime, date
+import os
+import uuid
+import json
+from datetime import datetime, date, timedelta
 from werkzeug.utils import secure_filename
-
 
 def redirect_back(fallback='index'):
     ref = request.referrer
     if ref:
-        return redirect(ref)
+        # Validate referrer to prevent open redirect
+        from urllib.parse import urlparse
+        parsed = urlparse(ref)
+        if parsed.netloc == '' or parsed.netloc == request.host:
+        # also validate scheme
+            if parsed.scheme in ('', 'http', 'https'):
+                return redirect(ref)
     return redirect(url_for(fallback))
 
 def admin_required(f):
@@ -22,26 +33,97 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated
 
+def password_required(f):
+    """Decorator to check if user must change password"""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if current_user.is_authenticated and current_user.must_change_password:
+            flash('Vous devez changer votre mot de passe avant de continuer.', 'warning')
+            return redirect(url_for('change_password'))
+        return f(*args, **kwargs)
+    return decorated
+
+
 ALLOWED_EXT = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXT
+
+def validate_image_file(file):
+    """Validate uploaded image file"""
+    if not file or file.filename == '':
+        return False, "Aucun fichier sélectionné"
+    if not allowed_file(file.filename):
+        return False, "Format non supporté"
+    
+    file.seek(0)
+    header = file.read(8)
+    file.seek(0)
+    
+    # Magic numbers pour les formats d'image
+    magic_numbers = {
+        b'\x89PNG': 'png',
+        b'\xff\xd8\xff': 'jpeg',
+        b'GIF87a': 'gif',
+        b'GIF89a': 'gif',
+        b'RIFF': 'webp',  # webp = RIFF....WEBP
+    }
+    
+    valid = False
+    for magic, fmt in magic_numbers.items():
+        if header.startswith(magic):
+            if fmt == 'webp' and b'WEBP' in header[:12]:
+                valid = True
+            elif fmt != 'webp':
+                valid = True
+            break
+    
+    if not valid:
+        return False, "Fichier image invalide"
+    return True, None
+
+# ── Input Sanitization ───────────────────────────────────────────────────────
+
+def safe_int(value, default=None, min_val=None, max_val=None):
+    """Safely parse integer with bounds checking"""
+    try:
+        val = int(value)
+        if min_val is not None and val < min_val:
+            return default
+        if max_val is not None and val > max_val:
+            return default
+        return val
+    except (ValueError, TypeError):
+        return default
+
+def safe_float(value, default=None, min_val=0, max_val=24):
+    """Safely parse float with bounds checking"""
+    try:
+        val = float(value)
+        if min_val is not None and val < min_val:
+            return default
+        if max_val is not None and val > max_val:
+            return default
+        return val
+    except (ValueError, TypeError):
+        return default
+
 
 # ── Helper: normalise statut ──────────────────────────────────────────────────
 def normalise_statut(val):
     mapping = {
-        'Passée':     'passee',
-        'Annulée':    'annulee',
-        'Rattrapage': 'rattrapage',
-        'passee':     'passee',
-        'annulee':    'annulee',
-        'rattrapage': 'rattrapage',
+        'Passée': 'passee', 'Annulée': 'annulee', 'Rattrapage': 'rattrapage',
+        'passee': 'passee', 'annulee': 'annulee', 'rattrapage': 'rattrapage',
     }
     return mapping.get((val or '').strip(), None)
 
 # ── Helper: parse professeur_id from form ─────────────────────────────────────
 def parse_professeur_id(form):
     val = form.get('professeur_id', '').strip()
-    return int(val) if val.isdigit() else None
+    return safe_int(val)
+
+
+
 
 # ── Helper: seance → dict (pour JSON) ────────────────────────────────────────
 def seance_to_dict(s):
@@ -66,25 +148,88 @@ def seance_to_dict(s):
 
 # ─── Auth ─────────────────────────────────────────────────────────────────────
 @app.route('/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")  # Brute force protection
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
+
     error = None
     if request.method == 'POST':
-        email = request.form['email'].strip().lower()
-        pwd   = request.form['password']
-        user  = User.query.filter_by(email=email).first()
-        if user and user.check_password(pwd):
-            login_user(user)
-            return redirect(url_for('index'))
-        error = 'Identifiants incorrects.'
+        email = request.form.get('email', '').strip().lower()
+        pwd = request.form.get('password', '')
+
+        # Basic validation
+        if not email or not pwd:
+            error = 'Email et mot de passe requis.'
+            return render_template('login.html', error=error)
+
+        if not validate_email(email):
+            error = 'Email invalide.'
+            return render_template('login.html', error=error)
+
+        user = User.query.filter_by(email=email).first()
+
+        if user:
+            # Check if account is locked
+            if user.is_locked():
+                error = 'Compte temporairement verrouillé. Réessayez plus tard.'
+                return render_template('login.html', error=error)
+
+            if user.check_password(pwd):
+                # Reset failed attempts
+                user.login_attempts = 0
+                db.session.commit()
+
+                login_user(user)
+
+                # Force password change for default password
+                if user.must_change_password:
+                    flash('Vous devez changer votre mot de passe par défaut.', 'warning')
+                    return redirect(url_for('change_password'))
+
+                return redirect(url_for('index'))
+            else:
+                # Increment failed attempts
+                user.login_attempts += 1
+                if user.login_attempts >= 5:
+                    user.locked_until = datetime.now() + timedelta(minutes=30)
+                    error = 'Trop de tentatives. Compte verrouillé 30 minutes.'
+                else:
+                    remaining = 5 - user.login_attempts
+                    error = f'Identifiants incorrects. {remaining} tentatives restantes.'
+                db.session.commit()
+        else:
+            # Don't reveal if email exists
+            error = 'Identifiants incorrects.'
+
     return render_template('login.html', error=error)
 
+@app.route('/change_password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    """Forced password change page"""
+    if request.method == 'POST':
+        new_pwd = request.form.get('new_password', '')
+        confirm_pwd = request.form.get('confirm_password', '')
+        if new_pwd != confirm_pwd:
+            flash('Les mots de passe ne correspondent pas.', 'error')
+            return redirect(url_for('change_password'))
+        try:
+            current_user.set_password(new_pwd)
+            current_user.must_change_password = False
+            db.session.commit()
+            flash('Mot de passe changé avec succès!', 'success')
+            return redirect(url_for('index'))
+        except ValueError as e:
+            flash(str(e), 'error')
+            return redirect(url_for('change_password'))
+    return render_template('change_password.html')
 
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
+    flash('Déconnexion réussie.', 'info')
     return redirect(url_for('login'))
 
 
@@ -93,10 +238,10 @@ def logout():
 @login_required
 def index():
     now   = datetime.now()
-    mois  = now.month
-    annee = now.year
+    mois = safe_int(request.args.get('mois', now.month), min_val=1, max_val=12) or now.month
+    annee = safe_int(request.args.get('annee', now.year), min_val=2000, max_val=2100) or now.year
     mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin',
-                 'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
+                'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
 
     dours = Dour.query.all()
 
@@ -182,19 +327,19 @@ def index():
         responsables_select = [resp] if resp else []
 
     return render_template('index.html',
-                           data=data,
-                           responsables=responsables_select,
-                           dours=dours,
-                           total_heures_mois=total_heures_mois,
-                           total_seances_mois=total_seances_mois,
-                           total_annulees_mois=total_annulees_mois,
-                           total_rattrapage_mois=total_rattrapage_mois,
-                           mois_nom_actuel=mois_noms[mois],
-                           annee_actuel=annee,
-                           recap_seances=recap_seances,
-                           admins=admins,
-                           nb_admins=nb_admins,
-                           nb_responsables=nb_responsables)
+                        data=data,
+                        responsables=responsables_select,
+                        dours=dours,
+                        total_heures_mois=total_heures_mois,
+                        total_seances_mois=total_seances_mois,
+                        total_annulees_mois=total_annulees_mois,
+                        total_rattrapage_mois=total_rattrapage_mois,
+                        mois_nom_actuel=mois_noms[mois],
+                        annee_actuel=annee,
+                        recap_seances=recap_seances,
+                        admins=admins,
+                        nb_admins=nb_admins,
+                        nb_responsables=nb_responsables)
 
 
 # ─── Pages dédiées ────────────────────────────────────────────────────────────
@@ -239,8 +384,8 @@ def gerer_coordinateurs():
         responsables = [resp] if resp else []
         coordinateurs = resp.coordinateurs if resp else []
     return render_template('gerer_coordinateurs.html',
-                           coordinateurs=coordinateurs,
-                           responsables=responsables, dours=dours)
+                        coordinateurs=coordinateurs,
+                        responsables=responsables, dours=dours)
 
 
 # ─── Heures / Séances ─────────────────────────────────────────────────────────
@@ -260,7 +405,7 @@ def heures():
         coordinateurs = sorted(resp.coordinateurs, key=lambda c: c.nom) if resp else []
 
     mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin',
-                 'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
+                'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
 
     if current_user.is_admin:
         all_seances_mois = Seance.query.filter_by(mois=mois, annee=annee).all()
@@ -314,65 +459,95 @@ def heures():
 # ── seance_ajouter ────────────────────────────────────────────────────────────
 @app.route('/seances/ajouter', methods=['POST'])
 @login_required
+@password_required
 def seance_ajouter():
-    coord_id      = int(request.form['coordinateur_id'])
-    date_str      = request.form['date']
-    nb_heures     = float(request.form['nb_heures'])
-    note          = request.form.get('note',     '').strip() or None
-    matiere       = request.form.get('matiere',  '').strip() or None
-    niveau        = request.form.get('niveau',   '').strip() or None
-    heure         = request.form.get('heure',    '').strip() or None
-    remarque      = request.form.get('remarque', '').strip() or None
-    statut        = normalise_statut(request.form.get('statut', '')) or None
-    professeur_id = parse_professeur_id(request.form)
-    redirect_url  = request.form.get('redirect_url', '').strip()
+    try:
+        coord_id = safe_int(request.form.get('coordinateur_id'))
+        if not coord_id:
+            abort(400)
 
-    nb_eleves_str = request.form.get('nb_eleves', '').strip()
-    nb_eleves = int(nb_eleves_str) if nb_eleves_str.isdigit() else None
+        date_str = request.form.get('date', '').strip()
+        if not date_str:
+            flash('Date requise.', 'error')
+            return redirect_back()
 
-    nb_eleves_total_str = request.form.get('nb_eleves_total', '').strip()       # ← NOUVEAU
-    nb_eleves_total = int(nb_eleves_total_str) if nb_eleves_total_str.isdigit() else None  # ← NOUVEAU
+        date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
 
-    dar_id_str = request.form.get('dar_id', '').strip()
-    dar_id = int(dar_id_str) if dar_id_str.isdigit() else None
+        # Validate date range
+        if date_obj.year < 2000 or date_obj.year > 2100:
+            flash('Date invalide.', 'error')
+            return redirect_back()
 
-    coord = Coordinateur.query.get_or_404(coord_id)
-    if not current_user.is_admin:
-        if not current_user.responsable or coord.responsable_id != current_user.responsable.id:
-            abort(403)
+        nb_heures = safe_float(request.form.get('nb_heures'), min_val=0.5, max_val=12)
+        if nb_heures is None:
+            flash('Heures invalides (0.5 - 12).', 'error')
+            return redirect_back()
 
-    date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
-    prof_nom_legacy = None
-    if professeur_id:
-        p = Professeur.query.get(professeur_id)
-        if p:
-            prof_nom_legacy = p.nom
+        # Sanitize text inputs
+        note = sanitize_text(request.form.get('note', ''), max_length=300)
+        matiere = sanitize_text(request.form.get('matiere', ''), max_length=100)
+        niveau = sanitize_text(request.form.get('niveau', ''), max_length=100)
+        heure = sanitize_text(request.form.get('heure', ''), max_length=5)
+        remarque = sanitize_text(request.form.get('remarque', ''), max_length=500)
+        statut = normalise_statut(request.form.get('statut', ''))
+        professeur_id = parse_professeur_id(request.form)
 
-    s = Seance(
-        coordinateur_id=coord_id,
-        date=date_obj,
-        mois=date_obj.month,
-        annee=date_obj.year,
-        nb_heures=nb_heures,
-        note=note,
-        matiere=matiere,
-        niveau=niveau,
-        statut=statut,
-        heure=heure,
-        prof=prof_nom_legacy,
-        professeur_id=professeur_id,
-        nb_eleves=nb_eleves,
-        nb_eleves_total=nb_eleves_total,     # ← NOUVEAU
-        dar_id=dar_id,
-        remarque=remarque,
-    )
-    db.session.add(s)
-    db.session.commit()
-    flash(f'Séance ajoutée pour {coord.prenom} {coord.nom}!', 'success')
+        nb_eleves = safe_int(request.form.get('nb_eleves'), min_val=0, max_val=1000)
+        nb_eleves_total = safe_int(request.form.get('nb_eleves_total'), min_val=0, max_val=1000)
+        dar_id = safe_int(request.form.get('dar_id'))
 
+        # Authorization check
+        coord = Coordinateur.query.get_or_404(coord_id)
+        if not current_user.is_admin:
+            if not current_user.responsable or coord.responsable_id != current_user.responsable.id:
+                abort(403)
+
+        # Validate professeur
+        prof_nom_legacy = None
+        if professeur_id:
+            p = Professeur.query.get(professeur_id)
+            if p:
+                prof_nom_legacy = p.nom
+            else:
+                professeur_id = None
+
+        # Validate dar
+        if dar_id:
+            d = Dour.query.get(dar_id)
+            if not d:
+                dar_id = None
+
+        s = Seance(
+            coordinateur_id=coord_id,
+            date=date_obj,
+            mois=date_obj.month,
+            annee=date_obj.year,
+            nb_heures=nb_heures,
+            note=note,
+            matiere=matiere,
+            niveau=niveau,
+            statut=statut,
+            heure=heure,
+            prof=prof_nom_legacy,
+            professeur_id=professeur_id,
+            nb_eleves=nb_eleves,
+            nb_eleves_total=nb_eleves_total,
+            dar_id=dar_id,
+            remarque=remarque,
+        )
+        db.session.add(s)
+        db.session.commit()
+        flash(f'Séance ajoutée pour {coord.prenom} {coord.nom}!', 'success')
+
+    except ValueError as e:
+        flash(f'Données invalides: {str(e)}', 'error')
+        return redirect_back()
+
+    redirect_url = request.form.get('redirect_url', '').strip()
     if redirect_url:
         return redirect(redirect_url)
     return redirect(url_for('heures', mois=date_obj.month, annee=date_obj.year, coord_id=coord_id))
+
 
 
 # ── seance_modifier ───────────────────────────────────────────────────────────
@@ -390,8 +565,10 @@ def seance_modifier(id):
     s.date        = date_obj
     s.mois        = date_obj.month
     s.annee       = date_obj.year
-    s.nb_heures   = float(request.form['nb_heures'])
-    s.note        = request.form.get('note',     '').strip() or None
+    s.nb_heures = safe_float(request.form.get('nb_heures'), min_val=0.5, max_val=12)
+    if s.nb_heures is None:
+        flash('Heures invalides.', 'error')
+    s.note = sanitize_text(request.form.get('note', ''), max_length=300)
     s.matiere     = request.form.get('matiere',  '').strip() or None
     s.niveau      = request.form.get('niveau',   '').strip() or None
     s.heure       = request.form.get('heure',    '').strip() or None
@@ -619,62 +796,88 @@ def parametres():
 
 @app.route('/update_profile', methods=['POST'])
 @login_required
+@password_required
 def update_profile():
-    nom    = request.form.get('nom', '').strip()
-    prenom = request.form.get('prenom', '').strip()
-    email  = request.form.get('email', '').strip().lower()
+    nom = sanitize_text(request.form.get('nom', ''), max_length=100)
+    prenom = sanitize_text(request.form.get('prenom', ''), max_length=100)
+    email = request.form.get('email', '').strip().lower()
+
+    if not validate_email(email):
+        flash('Email invalide.', 'error')
+        return redirect(url_for('parametres'))
+
     existing = User.query.filter_by(email=email).first()
     if existing and existing.id != current_user.id:
         flash('Cet email est déjà utilisé.', 'error')
-        return redirect(url_for('index'))
-    current_user.nom    = nom
+        return redirect(url_for('parametres'))
+
+    current_user.nom = nom
     current_user.prenom = prenom
-    current_user.email  = email
+    current_user.email = email
     db.session.commit()
     flash('Informations mises à jour avec succès!', 'success')
     return redirect(url_for('index'))
 
-
 @app.route('/update_password', methods=['POST'])
 @login_required
+@password_required
 def update_password():
     current_pwd = request.form.get('current_password', '')
-    new_pwd     = request.form.get('new_password', '')
+    new_pwd = request.form.get('new_password', '')
     confirm_pwd = request.form.get('confirm_password', '')
+
     if not current_user.check_password(current_pwd):
         flash('Mot de passe actuel incorrect.', 'error')
-        return redirect(url_for('index'))
+        return redirect(url_for('parametres'))
+
     if new_pwd != confirm_pwd:
         flash('Les mots de passe ne correspondent pas.', 'error')
-        return redirect(url_for('index'))
-    if len(new_pwd) < 6:
-        flash('Le mot de passe doit contenir au moins 6 caractères.', 'error')
-        return redirect(url_for('index'))
-    current_user.set_password(new_pwd)
-    db.session.commit()
-    flash('Mot de passe changé avec succès!', 'success')
-    return redirect(url_for('index'))
+        return redirect(url_for('parametres'))
 
+    try:
+        current_user.set_password(new_pwd)
+        db.session.commit()
+        flash('Mot de passe changé avec succès!', 'success')
+    except ValueError as e:
+        flash(str(e), 'error')
+
+    return redirect(url_for('index'))
 
 @app.route('/update_avatar', methods=['POST'])
 @login_required
+@password_required
 def update_avatar():
     file = request.files.get('avatar')
-    if not file or file.filename == '':
-        flash('Aucun fichier sélectionné.', 'error')
-        return redirect(url_for('index'))
-    if not allowed_file(file.filename):
-        flash('Format non supporté.', 'error')
-        return redirect(url_for('index'))
+    is_valid, error_msg = validate_image_file(file)
+    if not is_valid:
+        flash(error_msg, 'error')
+        return redirect(url_for('parametres'))
+
     avatar_dir = os.path.join(app.root_path, 'static', 'avatars')
     os.makedirs(avatar_dir, exist_ok=True)
+
+    # Remove old avatar
     if current_user.avatar:
         old_path = os.path.join(avatar_dir, current_user.avatar)
         if os.path.exists(old_path):
-            os.remove(old_path)
+            try:
+                os.remove(old_path)
+            except OSError:
+                pass
+
+    # Generate secure filename
     ext = file.filename.rsplit('.', 1)[1].lower()
-    filename = f"user_{uuid.uuid4().hex[:8]}.{ext}"
-    file.save(os.path.join(avatar_dir, filename))
+    filename = f"user_{uuid.uuid4().hex}_{uuid.uuid4().hex[:8]}.{ext}"
+    filepath = os.path.join(avatar_dir, filename)
+
+    # Ensure path is within allowed directory (prevent path traversal)
+    real_path = os.path.realpath(filepath)
+    real_dir = os.path.realpath(avatar_dir)
+    if not real_path.startswith(real_dir):
+        flash('Chemin invalide.', 'error')
+        return redirect(url_for('parametres'))
+
+    file.save(filepath)
     current_user.avatar = filename
     db.session.commit()
     flash('Photo de profil mise à jour!', 'success')
@@ -726,14 +929,14 @@ def gerer_responsables():
     all_resp = Responsable.query.order_by(Responsable.nom).all()
     responsables_only = [r for r in all_resp if r.user and r.user.role == 'responsable']
     admins_purs = User.query.filter_by(role='admin').filter(
-                      User.responsable_id == None
-                  ).order_by(User.nom).all()
+                    User.responsable_id == None
+                ).order_by(User.nom).all()
     total_coordinateurs = Coordinateur.query.count()
     return render_template('gerer_responsables.html',
-                           responsables_only=responsables_only,
-                           admins_only=[],
-                           admins_purs=admins_purs,
-                           total_coordinateurs=total_coordinateurs)
+                        responsables_only=responsables_only,
+                        admins_only=[],
+                        admins_purs=admins_purs,
+                        total_coordinateurs=total_coordinateurs)
 
 
 @app.route('/modifier_responsable/<int:id>', methods=['POST'])
@@ -902,7 +1105,7 @@ def ajouter_coordinateur():
             abort(403)
     dour_ids = request.form.getlist('dours')
     c = Coordinateur(nom=request.form['nom'], prenom=request.form['prenom'],
-                     genre=request.form['genre'], responsable_id=resp_id)
+                    genre=request.form['genre'], responsable_id=resp_id)
     for did in dour_ids:
         d = Dour.query.get(int(did))
         if d: c.dours.append(d)
@@ -993,7 +1196,7 @@ def impression_seances():
     filtre_dar     = request.args.get('filtre_dar',     '').strip()
 
     mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin',
-                 'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
+                'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
 
     if current_user.is_admin:
         coordinateurs = Coordinateur.query.order_by(Coordinateur.nom).all()
@@ -1042,7 +1245,7 @@ def impression_seances():
             'nb_seances':     len(seances),
             'nb_heures':      nb_h,
             'initiales':      (coord.prenom[0] + coord.nom[0]).upper()
-                              if coord.prenom and coord.nom else '?',
+                            if coord.prenom and coord.nom else '?',
             'matieres_uniq':  mats,
             'niveaux_uniq':   nivs,
             'nb_passees':     sum(1 for s in seances if s.statut == 'passee'),
@@ -1106,7 +1309,7 @@ def stats_coordinateurs():
     annee = request.args.get('annee', now.year,   type=int)
 
     mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin',
-                 'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
+                'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
 
     if current_user.is_admin:
         coordinateurs = Coordinateur.query.order_by(Coordinateur.nom).all()
@@ -1189,7 +1392,7 @@ def calendrier_coordinateurs():
     filtre_dar     = request.args.get('filtre_dar',     '').strip()
 
     mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin',
-                 'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
+                'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
 
     dours_objs = Dour.query.order_by(Dour.nom).all()
     dours = dours_objs
@@ -1529,37 +1732,29 @@ def update_last_seen():
         ):
             current_user.last_seen = now
             db.session.commit()
- 
- 
+
 # ── 3. Colle ces deux routes n'importe où dans routes.py ─────────────────────
- 
+
 @app.route('/api/statut_responsables')
 @login_required
 @admin_required
+@limiter.limit("30 per minute")
 def api_statut_responsables():
-    """
-    Retourne JSON {user_id: bool} — qui est en ligne (actif < 5 min).
-    Appelé en AJAX depuis gerer_responsables.html toutes les 30s.
-    """
-    from models import User
     users = User.query.all()
-    data  = {str(u.id): u.is_online for u in users}
+    data = {str(u.id): u.is_online for u in users}
     return Response(json.dumps(data), mimetype='application/json')
- 
- 
+
 @app.route('/api/statut_user/<int:user_id>')
 @login_required
 @admin_required
+@limiter.limit("30 per minute")
 def api_statut_user(user_id):
-    """Statut détaillé d'un seul user (optionnel, pour debug)."""
-    from models import User
     u = User.query.get_or_404(user_id)
     return Response(
         json.dumps({
-            'online':       u.is_online,
-            'last_seen':    u.last_seen.isoformat() if u.last_seen else None,
+            'online': u.is_online,
+            'last_seen': u.last_seen.isoformat() if u.last_seen else None,
             'last_seen_fr': u.last_seen_display,
         }),
         mimetype='application/json'
     )
- 

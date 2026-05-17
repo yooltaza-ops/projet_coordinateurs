@@ -132,6 +132,7 @@
     </div>
     <div class="panel-body">
         <form method="POST" id="form-modifier">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <label>Nom</label><input type="text" name="nom" id="mod-nom" required>
             <label>Prénom</label><input type="text" name="prenom" id="mod-prenom" required>
             <label>Genre</label>

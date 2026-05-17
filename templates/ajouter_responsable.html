@@ -51,6 +51,7 @@
     <div class="page-title">👤 Ajouter un Responsable</div>
 
     <form method="POST" action="{{ url_for('ajouter_responsable') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
             <div class="fg">
                 <label>Nom</label>

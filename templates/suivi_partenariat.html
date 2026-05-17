@@ -834,6 +834,7 @@
     <div class="sp-del-footer">
       <button class="btn-del-cancel" type="button" onclick="closeDelModal()">Annuler</button>
       <form id="spDelForm" method="POST" style="display:inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="redirect_url" id="spDelRedirect">
         <button type="submit" class="btn-del-confirm">🗑️ Supprimer</button>
       </form>
@@ -859,6 +860,7 @@
     </div>
 
     <form id="spForm" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="redirect_url" id="spRedirectUrl" value="{{ request.url }}">
       <input type="hidden" name="dar_id" id="spDarHidden">
 

@@ -2,9 +2,15 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
+import bleach
+import re
 
 
 db = SQLAlchemy()
+
+# ── Allowed HTML tags for sanitization ─────────────────────────────────────
+ALLOWED_TAGS = ['b', 'i', 'u', 'em', 'strong', 'p', 'br']
+ALLOWED_ATTRIBUTES = {}
 
 # ── Tables d'association ────────────────────────────────────────────────────
 coordinateur_dour = db.Table('coordinateur_dour',
@@ -103,13 +109,30 @@ PROFESSEURS_LISTE = [
     "Ahmed Soussi", "Abdelaali Tifaout",
 ]
 
+# ── Helper: Sanitize text input ────────────────────────────────────────────
+def sanitize_text(text, max_length=500):
+    """Sanitize user input to prevent XSS"""
+    if not text:
+        return None
+    text = str(text).strip()
+    if len(text) > max_length:
+        text = text[:max_length]
+    # Remove potentially dangerous characters but keep basic formatting
+    text = bleach.clean(text, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES, strip=True)
+    return text
+
+def validate_email(email):
+    """Basic email validation"""
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return re.match(pattern, email) is not None
+
 
 # ── Models ──────────────────────────────────────────────────────────────────
 
 class User(db.Model, UserMixin):
     __tablename__ = 'user'
     id             = db.Column(db.Integer, primary_key=True)
-    email          = db.Column(db.String(150), unique=True, nullable=False)
+    email          = db.Column(db.String(150), unique=True, nullable=False, index=True)
     password       = db.Column(db.String(256), nullable=False)
     role           = db.Column(db.Enum('admin', 'responsable'), nullable=False, default='responsable')
     nom            = db.Column(db.String(100), nullable=True)
@@ -122,14 +145,34 @@ class User(db.Model, UserMixin):
     linkedin       = db.Column(db.String(300), nullable=True)
     website        = db.Column(db.String(300), nullable=True)
 
-    # ── NOUVEAU : dernière activité ──────────────────────────────────────
+    # Security fields
     last_seen      = db.Column(db.DateTime, nullable=True)
+    must_change_password = db.Column(db.Boolean, default=False)
+    login_attempts = db.Column(db.Integer, default=0)
+    locked_until   = db.Column(db.DateTime, nullable=True)
+    password_changed_at = db.Column(db.DateTime, nullable=True)
 
     def set_password(self, pwd):
+        if len(pwd) < 8:
+            raise ValueError("Password must be at least 8 characters")
+        if not re.search(r'[A-Z]', pwd):
+            raise ValueError("Password must contain uppercase letter")
+        if not re.search(r'[a-z]', pwd):
+            raise ValueError("Password must contain lowercase letter")
+        if not re.search(r'\d', pwd):
+            raise ValueError("Password must contain digit")
         self.password = generate_password_hash(pwd)
+        self.password_changed_at = datetime.now()
+        self.login_attempts = 0
+        self.locked_until = None
 
     def check_password(self, pwd):
         return check_password_hash(self.password, pwd)
+
+    def is_locked(self):
+        if self.locked_until and self.locked_until > datetime.now():
+            return True
+        return False
 
     @property
     def is_admin(self):
@@ -142,7 +185,6 @@ class User(db.Model, UserMixin):
             return False
         return (datetime.now() - self.last_seen).total_seconds() < 300
 
-    # ── NOUVEAU : texte lisible de la dernière connexion ──────────────────
     @property
     def last_seen_display(self):
         if not self.last_seen:
@@ -166,7 +208,7 @@ class Responsable(db.Model):
     id            = db.Column(db.Integer, primary_key=True)
     nom           = db.Column(db.String(100), nullable=False)
     prenom        = db.Column(db.String(100), nullable=False)
-    email         = db.Column(db.String(150))
+    email         = db.Column(db.String(150), index=True)
     coordinateurs = db.relationship('Coordinateur', backref='responsable', lazy=True,
                                     cascade='all, delete-orphan')
 
@@ -177,14 +219,14 @@ class Responsable(db.Model):
         return sum(1 for c in self.coordinateurs if c.genre == 'F')
 
 
+
 class Dour(db.Model):
     __tablename__ = 'dour'
     id   = db.Column(db.Integer, primary_key=True)
     nom  = db.Column(db.String(100), nullable=False)
     type = db.Column(db.Enum('talib', 'taliba', 'fatat'), nullable=False)
-
     professeurs = db.relationship('Professeur', secondary=professeur_dour,
-                                  back_populates='dours', lazy=True)
+                                back_populates='dours', lazy=True)
 
 
 class Coordinateur(db.Model):
@@ -196,7 +238,7 @@ class Coordinateur(db.Model):
     responsable_id = db.Column(db.Integer, db.ForeignKey('responsable.id'))
     dours          = db.relationship('Dour', secondary=coordinateur_dour, lazy=True)
     seances        = db.relationship('Seance', backref='coordinateur', lazy=True,
-                                     cascade='all, delete-orphan')
+                                    cascade='all, delete-orphan')
 
     def seances_mois(self, mois, annee):
         return sorted(
@@ -242,33 +284,23 @@ class Seance(db.Model):
     @property
     def statut_label(self):
         mapping = {
-            'passee':     'Passée',
-            'annulee':    'Annulée',
-            'rattrapage': 'Rattrapage',
-            'Passée':     'Passée',
-            'Annulée':    'Annulée',
-            'Rattrapage': 'Rattrapage',
+            'passee': 'Passée', 'annulee': 'Annulée', 'rattrapage': 'Rattrapage',
+            'Passée': 'Passée', 'Annulée': 'Annulée', 'Rattrapage': 'Rattrapage',
         }
         return mapping.get(self.statut, '—')
 
     @property
     def statut_normalise(self):
         mapping = {
-            'passee':     'passee',
-            'annulee':    'annulee',
-            'rattrapage': 'rattrapage',
-            'Passée':     'passee',
-            'Annulée':    'annulee',
-            'Rattrapage': 'rattrapage',
+            'passee': 'passee', 'annulee': 'annulee', 'rattrapage': 'rattrapage',
+            'Passée': 'passee', 'Annulée': 'annulee', 'Rattrapage': 'rattrapage',
         }
         return mapping.get(self.statut, '')
 
     @property
     def statut_color(self):
         mapping = {
-            'passee':     'success',
-            'annulee':    'danger',
-            'rattrapage': 'warning',
+            'passee': 'success', 'annulee': 'danger', 'rattrapage': 'warning',
         }
         return mapping.get(self.statut_normalise, 'secondary')
 
@@ -286,10 +318,9 @@ class Professeur(db.Model):
     actif = db.Column(db.Boolean, default=True, nullable=False)
 
     dours   = db.relationship('Dour', secondary=professeur_dour,
-                               back_populates='professeurs', lazy=True)
-
+                            back_populates='professeurs', lazy=True)
     seances = db.relationship('Seance', foreign_keys='Seance.professeur_id',
-                               back_populates='professeur', lazy=True)
+                            back_populates='professeur', lazy=True)
 
     def __repr__(self):
         return f'<Professeur {self.nom}>'
