@@ -1288,7 +1288,7 @@ def impression_seances():
 # ─── Erreurs ──────────────────────────────────────────────────────────────────
 @app.errorhandler(403)
 def forbidden(e):
-    return render_template('403.html'), 403
+    return render_template('errors/403.html'), 403
 
 
 # ─── Stats Coordinateurs ──────────────────────────────────────────────────────

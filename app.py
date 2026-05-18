@@ -1,6 +1,6 @@
 from flask import Flask, request, g, render_template
 from flask_login import LoginManager, current_user
-from flask_talisman import Talisman  # <-- Add this line
+from flask_talisman import Talisman  
 from extensions import csrf, limiter
 from models import db, User
 from config import Config
@@ -84,11 +84,11 @@ def before_request():
 @app.errorhandler(403)
 def forbidden(e):
     logger.warning(f"403 Forbidden: {request.remote_addr} - {request.path}")
-    return render_template('403.html'), 403
+    return render_template('errors/403.html'), 403
 
 @app.errorhandler(404)
 def not_found(e):
-    return render_template('404.html'), 404
+    return render_template('errors/404.html'), 404
 
 @app.errorhandler(429)
 def ratelimit_handler(e):
@@ -99,7 +99,7 @@ def ratelimit_handler(e):
 def internal_error(e):
     logger.error(f"500 Error: {str(e)}")
     db.session.rollback()
-    return render_template('500.html'), 500
+    return render_template('errors/500.html'), 500
 
 
 # ── Database Initialization ────────────────────────────────────────────────
