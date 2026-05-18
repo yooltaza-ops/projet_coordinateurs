@@ -23,6 +23,7 @@
     padding: 13px 16px;
     background: #f8fafc;
     cursor: pointer;
+    -webkit-user-select: none;
     user-select: none;
     transition: background 0.18s;
     gap: 10px;
