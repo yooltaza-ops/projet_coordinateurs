@@ -171,14 +171,14 @@
             <a href="{{ url_for('heures') }}" class="nav-item {% if request.endpoint == 'heures' %}active{% endif %}">
                 <span class="nav-icon">⏱️</span><span class="nav-label">Séances</span>
             </a>
+            {% endif %}
             <a href="{{ url_for('calendrier_coordinateurs') }}" class="nav-item {% if request.endpoint == 'calendrier_coordinateurs' %}active{% endif %}">
                 <span class="nav-icon">📅</span><span class="nav-label">Calendrier</span>
             </a>
-            {% endif %}
+            {% if current_user.is_admin %}
             <a href="{{ url_for('calendrier_b2c') }}" class="nav-item {% if request.endpoint == 'calendrier_b2c' %}active{% endif %}">
                 <span class="nav-icon">📅</span><span class="nav-label">Calendrier B2C</span>
             </a>
-            {% if current_user.is_admin %}
             <a href="{{ url_for('stats_coordinateurs') }}" class="nav-item {% if request.endpoint == 'stats_coordinateurs' %}active{% endif %}">
                 <span class="nav-icon">📈</span><span class="nav-label">Stats Coordinateurs</span>
             </a>
