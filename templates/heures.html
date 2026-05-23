@@ -5,198 +5,6 @@
 
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/heures.css') }}">
-<script src="{{ url_for('static', filename='js/heures.js') }}" defer></script>
-
-<style>
-/* ── Suivi partenariat extras ── */
-.sp-modal-overlay {
-    display:none; position:fixed; inset:0;
-    background:rgba(26,58,107,0.55); z-index:1050;
-    align-items:flex-start; justify-content:center;
-    backdrop-filter:blur(4px); padding:16px; overflow-y:auto;
-}
-.sp-modal-overlay.show { display:flex; }
-.sp-modal-box {
-    background:white; border-radius:20px; width:100%; max-width:640px;
-    box-shadow:0 28px 80px rgba(26,58,107,0.22);
-    border:1px solid #e2e8f0;
-    animation:spModalIn .28s cubic-bezier(0.34,1.56,0.64,1);
-    margin:auto; overflow:hidden;
-}
-@keyframes spModalIn {
-    from { opacity:0; transform:scale(0.91) translateY(20px); }
-    to   { opacity:1; transform:scale(1) translateY(0); }
-}
-.sp-mhead {
-    background:linear-gradient(135deg,#1a3a6b,#2a5298);
-    padding:18px 22px; display:flex; align-items:center;
-    justify-content:space-between; position:relative; overflow:hidden;
-}
-.sp-mhead::after {
-    content:''; position:absolute; top:-30px; right:-30px;
-    width:110px; height:110px; border-radius:50%;
-    background:rgba(255,255,255,.06);
-}
-.sp-mhead-left { display:flex; align-items:center; gap:10px; z-index:1; }
-.sp-mhead-icon {
-    width:38px; height:38px; border-radius:9px;
-    background:rgba(255,255,255,.15);
-    display:flex; align-items:center; justify-content:center; font-size:16px;
-}
-.sp-mhead h4 { font-size:15px; font-weight:700; color:#fff; margin:0; }
-.sp-mhead p  { font-size:11px; color:rgba(255,255,255,.7); margin:2px 0 0; }
-.sp-mhead-close {
-    width:30px; height:30px; border-radius:50%; border:none; cursor:pointer;
-    background:rgba(255,255,255,.15); color:#fff; z-index:1;
-    display:flex; align-items:center; justify-content:center; font-size:15px;
-    flex-shrink:0;
-}
-.sp-mbody { padding:18px 22px; max-height:75vh; overflow-y:auto; }
-.sp-mfooter {
-    display:flex; gap:10px; justify-content:flex-end;
-    padding:14px 22px 18px; border-top:1px solid #e2e8f0; background:#f8fafc;
-}
-
-/* Section label */
-.sp-slabel {
-    display:flex; align-items:center; gap:7px;
-    font-size:11px; font-weight:700; color:#8898aa;
-    text-transform:uppercase; letter-spacing:.07em;
-    margin:18px 0 10px;
-}
-.sp-slabel:first-child { margin-top:0; }
-.sp-slabel::after { content:''; flex:1; height:1px; background:linear-gradient(to right,#e2e8f0,transparent); }
-
-/* Grid */
-.sp-g2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-.sp-g3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
-@media(max-width:520px){ .sp-g2,.sp-g3 { grid-template-columns:1fr; } }
-
-/* Field group */
-.sp-fg { display:flex; flex-direction:column; gap:5px; }
-.sp-fg.full { grid-column:1/-1; }
-.sp-fg label { font-size:11px; font-weight:700; color:#4a5568; text-transform:uppercase; letter-spacing:.04em; }
-.sp-fg input,
-.sp-fg select,
-.sp-fg textarea {
-    border:1.5px solid #d1d9e6; border-radius:9px;
-    padding:9px 12px; font-size:13px; font-family:inherit;
-    color:#1a202c; background:#fff; outline:none;
-    transition:border .18s, box-shadow .18s;
-}
-.sp-fg select {
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7a99' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-    background-repeat:no-repeat; background-position:right 11px center;
-    padding-right:32px; cursor:pointer;
-    -webkit-appearance:none; appearance:none;
-}
-.sp-fg textarea { resize:vertical; min-height:68px; }
-.sp-fg input:focus,.sp-fg select:focus,.sp-fg textarea:focus {
-    border-color:#f5a623;
-    box-shadow:0 0 0 3px rgba(245,166,35,.13);
-}
-
-/* Dar locked style */
-.sp-fg select:disabled {
-    background-color:#f4f7fb;
-    cursor:not-allowed;
-    opacity:0.75;
-}
-
-/* Statut pills */
-.sp-statut-group { display:flex; gap:7px; flex-wrap:wrap; }
-.sp-statut-pill {
-    display:flex; align-items:center; gap:6px;
-    padding:7px 14px; border-radius:9px;
-    border:1.5px solid #d1d9e6; background:#fafbfd;
-    cursor:pointer; font-size:12px; font-weight:600; color:#6b7a99;
-    transition:all .15s; user-select:none;
-}
-.sp-statut-pill input[type=radio] { display:none; }
-.sp-statut-pill .sdot {
-    width:8px; height:8px; border-radius:50%;
-    background:currentColor; opacity:.35; flex-shrink:0;
-}
-.sp-statut-pill.s-passee:has(input:checked)    { background:#edfdf4; border-color:#4ade80; color:#166534; box-shadow:0 0 0 3px rgba(74,222,128,.12); }
-.sp-statut-pill.s-annulee:has(input:checked)   { background:#fff0f0; border-color:#f87171; color:#991b1b; box-shadow:0 0 0 3px rgba(248,113,113,.12); }
-.sp-statut-pill.s-rattrapage:has(input:checked){ background:#fffbeb; border-color:#fbbf24; color:#92400e; box-shadow:0 0 0 3px rgba(251,191,36,.12); }
-.sp-statut-pill:has(input:checked) .sdot { opacity:1; }
-
-/* Number stepper */
-.sp-num-wrap {
-    display:inline-flex; align-items:center;
-    border:1.5px solid #d1d9e6; border-radius:9px;
-    background:#fff; overflow:hidden; max-width:150px; width:100%;
-    transition:border .15s;
-}
-.sp-num-wrap:focus-within { border-color:#f5a623; box-shadow:0 0 0 3px rgba(245,166,35,.13); }
-.sp-num-btn {
-    width:36px; min-width:36px; height:40px; border:none;
-    background:#f4f7fb; cursor:pointer; font-size:18px;
-    color:#4a5568; display:flex; align-items:center; justify-content:center;
-    flex-shrink:0;
-}
-.sp-num-btn:first-child { border-right:1.5px solid #e2e8f0; }
-.sp-num-btn:last-child  { border-left: 1.5px solid #e2e8f0; }
-.sp-num-btn:hover { background:#e8edf5; color:#1a3a6b; }
-.sp-num-input {
-    border:none; background:transparent; text-align:center;
-    font-size:15px; font-weight:700; color:#1a202c;
-    flex:1; outline:none; font-family:inherit; padding:0; min-width:0;
-}
-
-/* Prof search */
-.sp-prof-wrap { position:relative; }
-.sp-prof-input {
-    width:100%; border:1.5px solid #d1d9e6; border-radius:9px;
-    padding:9px 12px 9px 34px; font-size:13px; font-family:inherit;
-    color:#1a202c; background:#fff; outline:none; transition:border .18s;
-}
-.sp-prof-input:focus { border-color:#f5a623; box-shadow:0 0 0 3px rgba(245,166,35,.13); border-radius:9px 9px 0 0; }
-.sp-prof-icon { position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:14px; opacity:.45; pointer-events:none; }
-.sp-prof-drop {
-    display:none; position:absolute; top:100%; left:0; right:0; z-index:200;
-    background:white; border:1.5px solid #f5a623; border-top:1px solid #f0e8d4;
-    border-radius:0 0 9px 9px; max-height:180px; overflow-y:auto;
-    box-shadow:0 8px 24px rgba(26,58,107,.12);
-}
-.sp-prof-drop.open { display:block; }
-.sp-prof-opt {
-    padding:9px 12px; font-size:12px; cursor:pointer; color:#2d3748;
-    border-bottom:1px solid #f4f7fb; transition:background .1s;
-}
-.sp-prof-opt:last-child { border-bottom:none; }
-.sp-prof-opt:hover { background:#fdf8f0; color:#1a3a6b; }
-.sp-prof-opt.selected { background:#fffbeb; font-weight:600; color:#92400e; }
-
-/* Buttons */
-.sp-btn-cancel {
-    background:#fff; color:#64748b; border:1.5px solid #e2e8f0; border-radius:22px;
-    padding:9px 18px; font-weight:600; cursor:pointer; font-size:13px; font-family:inherit;
-}
-.sp-btn-save {
-    background:#f5a623; color:white; border:none; border-radius:22px;
-    padding:9px 24px; font-weight:700; cursor:pointer; font-size:13px; font-family:inherit;
-    display:flex; align-items:center; gap:6px; transition:all .2s;
-}
-.sp-btn-save:hover { background:#e09415; transform:translateY(-1px); box-shadow:0 4px 14px rgba(245,166,35,.35); }
-
-/* Badge statut in table */
-.sp-badge {
-    display:inline-block; padding:2px 8px;
-    border-radius:20px; font-size:10px; font-weight:700;
-}
-.sp-badge.passee    { background:#dcfce7; color:#15803d; }
-.sp-badge.annulee   { background:#fee2e2; color:#b91c1c; }
-.sp-badge.rattrapage{ background:#fef3c7; color:#92400e; }
-
-/* Dar locked badge */
-.sp-dar-locked-badge {
-    display:inline-flex; align-items:center; gap:5px;
-    font-size:11px; color:#64748b; margin-top:3px;
-}
-.sp-dar-locked-badge span { font-size:10px; }
-</style>
 
 <div class="main-content">
 
@@ -241,7 +49,7 @@
 
     <form id="sp-form" method="POST">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <input type="hidden" name="redirect_url" id="spRedirectUrl">
+        <input type="hidden" name="redirect_url" id="spRedirectUrl">
 
       <div class="sp-mbody">
 
@@ -291,7 +99,6 @@
         <div class="sp-g2">
           <div class="sp-fg">
             <label>🏠 Dar Talib</label>
-            {# hidden input pour envoyer la valeur même quand disabled #}
             <input type="hidden" name="dar_id" id="spDarHidden">
             <select id="spDar">
               <option value="">— Aucune —</option>
@@ -456,7 +263,7 @@
         {% endfor %}
         <div style="font-size:22px;font-weight:800;color:#f5a623;line-height:1.1;">{{ "%.1f"|format(ns_h_passees.val) }}h</div>
         <div style="font-size:11px;color:#8898aa;font-weight:600;margin-top:2px;">Heures passées</div>
-                </div>
+        </div>
     </div>
 
     <div style="display:flex;align-items:center;gap:12px;background:white;border-radius:14px;padding:16px 20px;flex:1;min-width:130px;box-shadow:0 2px 8px rgba(26,58,107,.07);border:1px solid #e8edf5;">
@@ -662,14 +469,16 @@
 </div>
 </div>
 
-{# ── Données JS ── #}
+{# ══ Données JS injectées par Jinja — doivent rester dans le template ══ #}
 <script>
-/* ══ Liste des profs avec ID et nom ══ */
+/* Données dynamiques (générées par Flask/Jinja) */
+var SP_ADD_URL = "{{ url_for('ajouter_seance') }}";
+var SP_TODAY   = "{{ today }}";
+
 var SP_PROFS = [
   {% for p in profs_list %}{ id: {{ p.id }}, nom: {{ p.nom | tojson }} }{% if not loop.last %},{% endif %}{% endfor %}
 ];
 
-/* ══ Séances du coordinateur sélectionné ══ */
 var SP_SEANCES = {};
 {% for s in seances_coord %}
 SP_SEANCES[{{ s.id }}] = {
@@ -691,7 +500,6 @@ SP_SEANCES[{{ s.id }}] = {
 };
 {% endfor %}
 
-/* ══ Dours par coordinateur ══ */
 var SP_COORD_DOURS = {
   {% for coord in coordinateurs %}
   {{ coord.id }}: [
@@ -699,203 +507,10 @@ var SP_COORD_DOURS = {
   ]{% if not loop.last %},{% endif %}
   {% endfor %}
 };
-
-/* ══ Lock Dar Talib selon coordinateur ══ */
-function spLockDar(coordId) {
-    var darSelect  = document.getElementById('spDar');
-    var darHidden  = document.getElementById('spDarHidden');
-    var darBadge   = document.getElementById('spDarLockedBadge');
-    var dours      = SP_COORD_DOURS[coordId] || [];
-
-    /* Reconstruire les options */
-    darSelect.innerHTML = '';
-
-    if (dours.length === 0) {
-        /* Aucun dar → vide + verrouillé */
-        var opt = document.createElement('option');
-        opt.value = '';
-        opt.textContent = '— Aucune —';
-        darSelect.appendChild(opt);
-        darHidden.value      = '';
-        darSelect.disabled   = true;
-        darBadge.style.display = 'none';
-        return;
-    }
-
-    if (dours.length === 1) {
-        /* Un seul dar → pré-sélectionné + verrouillé */
-        var opt = document.createElement('option');
-        opt.value       = dours[0].id;
-        opt.textContent = dours[0].nom;
-        opt.selected    = true;
-        darSelect.appendChild(opt);
-        darHidden.value        = String(dours[0].id);
-        darSelect.disabled     = true;
-        darBadge.style.display = 'flex';
-    } else {
-        /* Plusieurs dars → dropdown limité aux dars du coord */
-        var emptyOpt = document.createElement('option');
-        emptyOpt.value       = '';
-        emptyOpt.textContent = '— Aucune —';
-        darSelect.appendChild(emptyOpt);
-
-        dours.forEach(function(d) {
-            var opt = document.createElement('option');
-            opt.value       = d.id;
-            opt.textContent = d.nom;
-            darSelect.appendChild(opt);
-        });
-
-        darHidden.value        = '';
-        darSelect.disabled     = false;
-        darBadge.style.display = 'none';
-
-        /* Sync hidden à chaque changement */
-        darSelect.onchange = function() {
-            darHidden.value = darSelect.value;
-        };
-    }
-}
-
-/* ══ Stepper heures ══ */
-function spChgH(d) {
-    var el = document.getElementById('spHeures');
-    var v  = parseFloat(el.value) || 2;
-    v = Math.min(12, Math.max(0.5, v + d));
-    el.value = (v % 1 === 0) ? v : v.toFixed(1);
-}
-
-/* ══ Statut pills ══ */
-function spSetStatut(val) {
-    document.querySelectorAll('input[name="statut"]').forEach(function(r) {
-        r.checked = (r.value === val);
-    });
-}
-
-/* ══ Prof search dropdown ══ */
-var spProfSearch = document.getElementById('spProfSearch');
-var spProfDrop   = document.getElementById('spProfDrop');
-var spProfHidden = document.getElementById('spProfHidden');
-
-function spRenderProfs(filter) {
-    var lower = (filter || '').toLowerCase();
-    var list  = SP_PROFS.filter(function(p) { return p.nom.toLowerCase().includes(lower); });
-    spProfDrop.innerHTML = '';
-
-    /* option vide */
-    var empty = document.createElement('div');
-    empty.className     = 'sp-prof-opt';
-    empty.textContent   = '— Aucun prof —';
-    empty.dataset.value = '';
-    empty.dataset.nom   = '';
-    spProfDrop.appendChild(empty);
-
-    list.forEach(function(p) {
-        var opt = document.createElement('div');
-        opt.className     = 'sp-prof-opt' + (String(p.id) === spProfHidden.value ? ' selected' : '');
-        opt.textContent   = p.nom;
-        opt.dataset.value = String(p.id);
-        opt.dataset.nom   = p.nom;
-        spProfDrop.appendChild(opt);
-    });
-
-    spProfDrop.querySelectorAll('.sp-prof-opt').forEach(function(opt) {
-        opt.addEventListener('mousedown', function(e) {
-            e.preventDefault();
-            spProfHidden.value = opt.dataset.value;
-            spProfSearch.value = opt.dataset.nom || '';
-            spProfDrop.classList.remove('open');
-        });
-    });
-}
-
-spProfSearch.addEventListener('focus', function() {
-    spRenderProfs(spProfSearch.value);
-    spProfDrop.classList.add('open');
-});
-spProfSearch.addEventListener('input', function() {
-    spRenderProfs(spProfSearch.value);
-    spProfDrop.classList.add('open');
-    spProfHidden.value = '';
-});
-spProfSearch.addEventListener('blur', function() {
-    setTimeout(function() { spProfDrop.classList.remove('open'); }, 150);
-});
-
-/* ══ Modal open/close ══ */
-var spModal = document.getElementById('sp-modal');
-
-function spOpenAdd(coordId, defaultDate) {
-    document.getElementById('spModalTitle').textContent = 'Ajouter une séance';
-    document.getElementById('spModalSub').textContent   = 'Séances de travail';
-    document.getElementById('sp-form').action           = "{{ url_for('ajouter_seance') }}";
-    document.getElementById('spSubmitBtn').textContent  = '💾 Ajouter';
-    document.getElementById('sp-form').reset();
-    spProfHidden.value = '';
-    spProfSearch.value = '';
-    document.getElementById('spCoordId').value  = coordId;
-    document.getElementById('spDate').value     = defaultDate || new Date().toISOString().slice(0, 10);
-    document.getElementById('spHeures').value   = '2';
-    document.getElementById('spRedirectUrl').value = window.location.href;
-    // spSetStatut('passee');
-
-    /* ── Lock Dar selon le coordinateur ── */
-    spLockDar(coordId);
-
-    spModal.classList.add('show');
-}
-
-function spOpenEdit(id) {
-    var s = SP_SEANCES[id];
-    if (!s) { console.warn('Séance introuvable:', id); return; }
-
-    document.getElementById('spModalTitle').textContent = 'Modifier la séance';
-    document.getElementById('spModalSub').textContent   = 'Séances de travail';
-    document.getElementById('sp-form').action           = '/heures/modifier/' + id;
-    document.getElementById('spSubmitBtn').textContent  = '💾 Enregistrer';
-
-    document.getElementById('spCoordId').value     = s.coordinateur_id;
-    document.getElementById('spDate').value        = s.date;
-    document.getElementById('spHeure').value       = s.heure;
-    document.getElementById('spHeures').value      = s.nb_heures;
-    document.getElementById('spMatiere').value     = s.matiere;
-    document.getElementById('spNiveau').value      = s.niveau;
-    document.getElementById('spEleves').value      = s.nb_eleves || '';
-    document.getElementById('spElevesTotal').value = s.nb_eleves_total || '';
-    document.getElementById('spNote').value        = s.note;
-    document.getElementById('spRemarque').value    = s.remarque;
-    document.getElementById('spRedirectUrl').value = window.location.href;
-
-    spProfHidden.value = s.professeur_id ? String(s.professeur_id) : '';
-    spProfSearch.value = s.prof || '';
-
-    if (s.statut) spSetStatut(s.statut);
-
-    /* ── Lock Dar selon le coordinateur ── */
-    spLockDar(s.coordinateur_id);
-
-    /* Après lock, forcer la valeur sauvegardée de la séance */
-    var darSelect = document.getElementById('spDar');
-    var darHidden = document.getElementById('spDarHidden');
-    if (s.dar_id) {
-        darSelect.value = String(s.dar_id);
-        darHidden.value = String(s.dar_id);
-    }
-
-    spModal.classList.add('show');
-}
-
-function spCloseModal() {
-    spModal.classList.remove('show');
-    /* Reset dar */
-    var darSelect = document.getElementById('spDar');
-    darSelect.disabled = false;
-    document.getElementById('spDarLockedBadge').style.display = 'none';
-}
-
-spModal.addEventListener('click', function(e) { if (e.target === spModal) spCloseModal(); });
-document.addEventListener('keydown', function(e) { if (e.key === 'Escape') spCloseModal(); });
 </script>
+
+{# Script statique séparé — chargé après les données Jinja #}
+<script src="{{ url_for('static', filename='js/heures.js') }}"></script>
 
 {% endblock %}
 

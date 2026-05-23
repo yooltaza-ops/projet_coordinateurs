@@ -3,390 +3,507 @@
 
 {% block extra_css %}
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
 
   :root {
-    --sp-passee:    #27ae60;
-    --sp-annulee:   #e74c3c;
-    --sp-rattrapage:#f5a623;
-    --sp-blue:      #1a3a6b;
-    --sp-blue2:     #2a5298;
-    --sp-orange:    #f5a623;
-    --sp-orange-dk: #e09415;
-    --sp-surface:   #f0f4f8;
-    --sp-border:    #e2e8f0;
-    --sp-text:      #1a3a6b;
-    --sp-muted:     #6b7a99;
-    --sp-radius:    12px;
-  }
-  body, input, select, textarea, button { font-family: 'DM Sans', sans-serif; }
-
-  .sp-header {
-    background: linear-gradient(135deg, #1a3a6b 0%, #2a5298 60%, #1a3a6b 100%);
-    color: #fff; border-radius: 16px; padding: 28px 32px;
-    margin-bottom: 24px; position: relative; overflow: hidden;
-  }
-  .sp-header::before {
-    content:''; position:absolute; top:-40px; right:-40px;
-    width:200px; height:200px; background:rgba(255,255,255,.06); border-radius:50%;
-  }
-  .sp-header h2 { font-size:22px; font-weight:700; margin:0 0 4px; }
-  .sp-header p  { margin:0; opacity:.8; font-size:13px; }
-
-  .sp-kpi-row { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:22px; }
-  .sp-kpi {
-    flex:1; min-width:130px; background:white;
-    border:1.5px solid var(--sp-border); border-radius:14px;
-    padding:16px 20px; display:flex; align-items:center; gap:12px;
-    box-shadow:0 4px 15px rgba(0,0,0,0.07);
-  }
-  .sp-kpi-icon {
-    width:42px; height:42px; border-radius:10px;
-    display:flex; align-items:center; justify-content:center;
-    font-size:18px; flex-shrink:0;
-  }
-  .sp-kpi-icon.blue   { background:#e8edf5; color:#1a3a6b; }
-  .sp-kpi-icon.green  { background:#d4edda; color:#27ae60; }
-  .sp-kpi-icon.red    { background:#fdecea; color:#e74c3c; }
-  .sp-kpi-icon.amber  { background:#fff8ee; color:#f5a623; }
-  .sp-kpi-icon.purple { background:#f3e8ff; color:#7c3aed; }
-  .sp-kpi-val { font-size:26px; font-weight:800; line-height:1; color:var(--sp-text); }
-  .sp-kpi-lbl { font-size:11px; color:var(--sp-muted); margin-top:2px; font-weight:500; }
-
-  .sp-filters {
-    background:white; border:1.5px solid var(--sp-border); border-radius:14px;
-    padding:16px 20px; margin-bottom:22px;
-    display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;
-  }
-  .sp-filters .form-group { display:flex; flex-direction:column; gap:5px; }
-  .sp-filters label { font-size:11px; font-weight:700; color:var(--sp-muted); text-transform:uppercase; letter-spacing:.05em; }
-  .sp-filters select {
-    border:2px solid var(--sp-border); border-radius:10px;
-    padding:7px 11px; font-size:13px; font-family:'DM Sans',sans-serif;
-    background:var(--sp-surface); color:var(--sp-text); min-width:140px; outline:none;
+    --b2c-navy:     #0c1e3e;
+    --b2c-blue:     #1d3f8a;
+    --b2c-blue2:    #3b82f6;
+    --b2c-teal:     #0e7490;
+    --b2c-gold:     #e8920a;
+    --b2c-gold-lt:  #fbbf24;
+    --b2c-gold-dk:  #c47c08;
+    --b2c-green:    #047857;
+    --b2c-red:      #be123c;
+    --b2c-amber:    #b45309;
+    --b2c-surface:  #f0f4f8;
+    --b2c-surface2: #e8edf5;
+    --b2c-border:   #dde3ed;
+    --b2c-text:     #0c1e3e;
+    --b2c-muted:    #5e6e8a;
+    --b2c-radius:   14px;
+    --b2c-shadow:   0 2px 12px rgba(12,30,62,.08), 0 1px 3px rgba(12,30,62,.05);
+    --b2c-shadow-md:0 8px 28px rgba(12,30,62,.12);
   }
 
-  .btn-filter {
-    background:#f5a623; color:white; border:none; border-radius:25px;
-    padding:9px 20px; font-size:13px; font-weight:600; cursor:pointer;
-    font-family:'DM Sans',sans-serif; transition:all .2s; align-self:flex-end;
+  *, *::before, *::after { box-sizing: border-box; }
+  body, input, select, textarea, button { font-family: 'Sora', sans-serif; }
+
+  /* ── HEADER ── */
+  .b2c-header {
+    background: linear-gradient(140deg, #0c1e3e 0%, #1d3f8a 45%, #0e7490 100%);
+    border-radius: 20px; padding: 30px 36px; margin-bottom: 24px;
+    position: relative; overflow: hidden; color: #fff;
+    box-shadow: 0 12px 40px rgba(12,30,62,.22);
   }
-  .btn-filter:hover { background:#e09415; transform:translateY(-1px); }
-  .btn-clear {
-    background:transparent; color:var(--sp-muted);
-    border:1.5px solid var(--sp-border); border-radius:25px;
-    padding:9px 16px; font-size:13px; font-weight:600; cursor:pointer;
-    font-family:'DM Sans',sans-serif; align-self:flex-end; text-decoration:none;
+  .b2c-header::before {
+    content: ''; position: absolute; top: -80px; right: -80px;
+    width: 300px; height: 300px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,.07) 0%, transparent 70%);
+  }
+  .b2c-header::after {
+    content: ''; position: absolute; bottom: -50px; left: 25%;
+    width: 200px; height: 200px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(232,146,10,.12) 0%, transparent 70%);
+  }
+  .b2c-header-inner { position: relative; z-index: 1; }
+  .b2c-header h2 { font-size: 24px; font-weight: 800; margin: 0 0 5px; letter-spacing: -.5px; text-shadow: 0 1px 3px rgba(0,0,0,.2); }
+  .b2c-header p  { margin: 0; opacity: .7; font-size: 13px; font-weight: 500; letter-spacing: .01em; }
+  .b2c-header-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(232,146,10,.18); border: 1px solid rgba(232,146,10,.35);
+    color: #fcd34d; border-radius: 20px; padding: 5px 14px;
+    font-size: 11px; font-weight: 700; margin-top: 12px; letter-spacing: .06em;
+    backdrop-filter: blur(4px);
   }
 
-  /* ── Tabs ── */
-  .sp-tabs {
-    display:flex; gap:8px; margin-bottom:0;
-    border-bottom:1.5px solid var(--sp-border);
+  /* ── KPI ROW ── */
+  .b2c-kpi-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 22px; }
+  .b2c-kpi {
+    flex: 1; min-width: 130px; background: #fff;
+    border: 1.5px solid var(--b2c-border); border-radius: var(--b2c-radius);
+    padding: 18px 20px; display: flex; align-items: center; gap: 14px;
+    box-shadow: var(--b2c-shadow); transition: transform .15s, box-shadow .15s;
   }
-  .sp-tab {
-    padding:10px 20px; font-size:13px; font-weight:600; color:var(--sp-muted);
-    cursor:pointer; border:none; background:none;
-    border-bottom:2px solid transparent; margin-bottom:-2px;
-    transition:all .15s; font-family:'DM Sans',sans-serif;
+  .b2c-kpi:hover { transform: translateY(-2px); box-shadow: var(--b2c-shadow-md); }
+  .b2c-kpi-icon { width: 46px; height: 46px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 21px; }
+  .bki-navy  { background: linear-gradient(135deg, #e8eef7, #d4dff0); }
+  .bki-green { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
+  .bki-red   { background: linear-gradient(135deg, #fee2e2, #fecaca); }
+  .bki-amber { background: linear-gradient(135deg, #fef3c7, #fde68a); }
+  .bki-teal  { background: linear-gradient(135deg, #cffafe, #a5f3fc); }
+  .b2c-kpi-val { font-size: 27px; font-weight: 800; line-height: 1; color: var(--b2c-navy); letter-spacing: -.5px; }
+  .b2c-kpi-lbl { font-size: 10.5px; color: var(--b2c-muted); margin-top: 3px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+
+  /* ── FILTERS ── */
+  .b2c-filters {
+    background: #fff; border: 1.5px solid var(--b2c-border); border-radius: var(--b2c-radius);
+    padding: 18px 22px; margin-bottom: 22px;
+    display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;
+    box-shadow: var(--b2c-shadow);
   }
-  .sp-tab.active { color:#1a3a6b; border-bottom-color:#f5a623; }
-  .sp-tab:hover  { color:#1a3a6b; }
-
-  .btn-new-seance {
-    display:inline-flex; align-items:center; gap:6px;
-    background:#f5a623; color:white; border:none; border-radius:25px;
-    padding:9px 20px; font-size:13px; font-weight:600; cursor:pointer;
-    font-family:'DM Sans',sans-serif; transition:all .2s;
+  .b2c-filters .fg { display: flex; flex-direction: column; gap: 5px; }
+  .b2c-filters label { font-size: 10px; font-weight: 700; color: var(--b2c-muted); text-transform: uppercase; letter-spacing: .08em; }
+  .b2c-filters select {
+    border: 2px solid var(--b2c-border); border-radius: 10px;
+    padding: 8px 32px 8px 12px; font-size: 13px; font-family: inherit;
+    background: var(--b2c-surface);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235e6e8a' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center;
+    appearance: none; -webkit-appearance: none;
+    color: var(--b2c-text); min-width: 140px; outline: none; cursor: pointer;
+    transition: border .2s, box-shadow .2s;
   }
-  .btn-new-seance:hover { background:#e09415; transform:translateY(-1px); box-shadow:0 4px 12px rgba(245,166,35,0.35); }
-
-  /* ── Resp card ── */
-  .sp-resp-card {
-    background:white; border:1.5px solid var(--sp-border); border-radius:14px;
-    margin-bottom:20px; overflow:hidden; box-shadow:0 4px 15px rgba(0,0,0,0.07);
+  .b2c-filters select:focus { border-color: var(--b2c-gold); box-shadow: 0 0 0 3px rgba(232,146,10,.12); background-color: #fff; }
+  .btn-bfilter {
+    background: #e8920a !important; background-image: none !important;
+    color: #ffffff !important; -webkit-text-fill-color: #ffffff !important;
+    border: none !important; border-radius: 25px !important;
+    padding: 9px 22px !important; font-size: 13px !important; font-weight: 700 !important;
+    cursor: pointer !important; font-family: inherit !important; transition: all .2s !important;
+    align-self: flex-end; box-shadow: 0 4px 14px rgba(232,146,10,.3) !important;
+    text-shadow: 0 1px 2px rgba(0,0,0,.2) !important;
+    appearance: none !important; -webkit-appearance: none !important;
+    opacity: 1 !important; display: inline-flex !important; align-items: center !important;
   }
-  .sp-resp-header {
-    display:flex; align-items:center; gap:14px;
-    padding:14px 20px; background:var(--sp-surface);
-    border-bottom:1.5px solid var(--sp-border); cursor:pointer; transition:background .15s;
+  .btn-bfilter:hover { background: #c47c08 !important; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(232,146,10,.42) !important; }
+  .btn-bclear {
+    background: transparent; color: var(--b2c-muted);
+    border: 1.5px solid var(--b2c-border); border-radius: 25px;
+    padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: inherit; align-self: flex-end; text-decoration: none; transition: all .2s;
   }
-  .sp-resp-header:hover { background:#e8edf5; }
-  .sp-resp-avatar {
-    width:44px; height:44px; border-radius:50%;
-    background:linear-gradient(135deg,#1a3a6b,#2a5298);
-    color:white; display:flex; align-items:center; justify-content:center;
-    font-size:16px; font-weight:800; flex-shrink:0;
+  .btn-bclear:hover { background: var(--b2c-surface); color: var(--b2c-navy); }
+
+  /* ── TABS ── */
+  .b2c-tabs-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .b2c-tabs { display: flex; gap: 4px; background: var(--b2c-surface); border-radius: 12px; padding: 4px; }
+  .b2c-tab {
+    padding: 8px 18px; font-size: 12.5px; font-weight: 700; border: none;
+    background: transparent; border-radius: 9px; cursor: pointer; color: var(--b2c-muted);
+    font-family: inherit; transition: all .18s;
   }
-  .sp-resp-name { font-weight:700; font-size:15px; color:var(--sp-text); }
-  .sp-resp-sub  { font-size:11px; color:var(--sp-muted); margin-top:2px; }
-  .sp-resp-pills { margin-left:auto; display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+  .b2c-tab.active { background: #fff; color: var(--b2c-navy); box-shadow: 0 2px 8px rgba(15,37,68,.12); }
 
-  /* ── Niveau card ── */
-  .sp-niveau-card {
-    background:white; border:1.5px solid var(--sp-border);
-    border-left:4px solid #f5a623; border-radius:14px;
-    margin-bottom:16px; overflow:hidden;
-    box-shadow:0 4px 15px rgba(0,0,0,0.07);
+  /* ── BTN NEW ── */
+  .btn-b2c-new {
+    display: inline-flex !important; align-items: center !important; gap: 6px !important;
+    background: #e8920a !important; background-image: none !important;
+    color: #ffffff !important; -webkit-text-fill-color: #ffffff !important;
+    border: 2px solid #c47c08 !important; border-radius: 25px !important;
+    padding: 9px 20px !important; font-size: 13px !important; font-weight: 700 !important;
+    cursor: pointer !important; font-family: inherit !important; transition: all .2s !important;
+    text-decoration: none !important; text-shadow: 0 1px 2px rgba(0,0,0,.25) !important;
+    appearance: none !important; -webkit-appearance: none !important; opacity: 1 !important;
   }
-  .sp-niveau-header {
-    display:flex; align-items:center; gap:12px;
-    padding:12px 20px; cursor:pointer; transition:background .15s;
+  .btn-b2c-new:hover { background: #c47c08 !important; color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(245,166,35,0.35) !important; }
+
+  /* ── RESP CARD ── */
+  .b2c-resp-card {
+    background: #fff; border: 1.5px solid var(--b2c-border);
+    border-radius: 16px; margin-bottom: 20px; overflow: hidden;
+    box-shadow: var(--b2c-shadow);
   }
-  .sp-niveau-header:hover { background:var(--sp-surface); }
-  .sp-niveau-name { font-weight:700; font-size:14px; color:var(--sp-text); }
-  .sp-niveau-pills { margin-left:auto; display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
-  .sp-niveau-body { padding:0 20px 16px; }
-
-  .sp-effectif-badge {
-    display:inline-flex; align-items:center; gap:5px;
-    background:#e0f2fe; color:#0369a1;
-    border:1.5px solid #bae6fd; border-radius:20px;
-    padding:3px 10px; font-size:11px; font-weight:700;
+  .b2c-resp-header {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 20px; background: var(--b2c-surface);
+    border-bottom: 1.5px solid var(--b2c-border); cursor: pointer; transition: background .15s;
   }
-  .sp-effectif-badge .ef-label { font-size:10px; color:#0284c7; opacity:.8; }
-
-  .sp-pill {
-    display:inline-flex; align-items:center; gap:4px;
-    padding:3px 9px; border-radius:20px; font-size:11px; font-weight:700;
+  .b2c-resp-header:hover { background: #e8eef7; }
+  .b2c-resp-avatar {
+    width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
+    background: linear-gradient(135deg, #0f2544, #1e40af);
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 800;
   }
-  .sp-pill.passee    { background:#d4edda; color:#155724; }
-  .sp-pill.annulee   { background:#fdecea; color:#721c24; }
-  .sp-pill.rattrapage{ background:#fff8ee; color:#856404; }
-  .sp-pill.heures    { background:#e8edf5; color:#1a3a6b; }
-  .sp-pill.eleves    { background:#f3e8ff; color:#6d28d9; }
-  .sp-pill.total     { background:#e0f2fe; color:#0369a1; }
+  .b2c-resp-name { font-weight: 800; font-size: 14px; color: var(--b2c-navy); }
+  .b2c-resp-sub  { font-size: 11px; color: var(--b2c-muted); margin-top: 1px; font-weight: 500; }
+  .b2c-pills     { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .b2c-pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .bp-pass  { background: #d1fae5; color: #065f46; }
+  .bp-ann   { background: #fee2e2; color: #7f1d1d; }
+  .bp-ratt  { background: #fef3c7; color: #78350f; }
+  .bp-hrs   { background: #dbeafe; color: #1e3a8a; }
+  .bp-elv   { background: #f3e8ff; color: #5b21b6; }
 
-  .sp-resp-body { padding:16px 20px; }
-
-  .sp-table { width:100%; border-collapse:collapse; font-size:13px; }
-  .sp-table th {
-    text-align:left; padding:10px 12px;
-    font-size:11px; font-weight:700; text-transform:uppercase;
-    letter-spacing:.05em; color:var(--sp-muted);
-    border-bottom:2px solid var(--sp-border); background:var(--sp-surface);
+  /* ── TABLE ── */
+  .b2c-resp-body { padding: 0; }
+  .b2c-table-wrap { overflow-x: auto; }
+  .b2c-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .b2c-table th {
+    text-align: left; padding: 10px 12px;
+    font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .05em; color: var(--b2c-muted);
+    border-bottom: 2px solid var(--b2c-border); background: var(--b2c-surface);
+    white-space: nowrap;
   }
-  .sp-table td {
-    padding:10px 12px; border-bottom:1px solid var(--sp-border);
-    color:var(--sp-text); vertical-align:middle;
+  .b2c-table td { padding: 8px 10px; border-bottom: 1px solid var(--b2c-border); color: var(--b2c-text); vertical-align: middle; }
+  .b2c-table tr:last-child td { border-bottom: none; }
+  .b2c-table tr:hover td { background: #f8fafc; }
+
+  /* ── SEG CARD ── */
+  .sc {
+    background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px;
+    padding: 8px 10px; min-width: 90px; display: flex; flex-direction: column; gap: 5px;
   }
-  .sp-table tr:last-child td { border-bottom:none; }
-  .sp-table tr:hover td { background:#f8fafc; }
+  .sc-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .sc-lbl { font-size: 9.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
+  .sc-val { font-size: 15px; font-weight: 800; color: var(--b2c-navy); line-height: 1; }
+  .sc-val.green { color: #059669; }
+  .sc-sep { width: 100%; height: 1px; background: #e2e8f0; }
+  .sc-dar { background: #fffbeb; border-color: #fde68a; margin-bottom: 6px; }
+  .sc-dar:last-child { margin-bottom: 0; }
+  .sc-dar .sc-lbl { color: #b45309; }
+  .sc-dar .sc-val { color: #92400e; }
+  .sc-dar .sc-val.green { color: #059669; }
+  .sc-dar .sc-sep { background: #fde68a; }
+  .sc-dar-name { font-size: 10px; font-weight: 700; color: #92400e; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-  .badge-statut { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
-  .badge-passee    { background:#d4edda; color:#155724; }
-  .badge-annulee   { background:#fdecea; color:#721c24; }
-  .badge-rattrapage{ background:#fff8ee; color:#856404; }
+  /* Badge statut */
+  .bst { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .bst-pass { background: #d1fae5; color: #065f46; }
+  .bst-ann  { background: #fee2e2; color: #7f1d1d; }
+  .bst-ratt { background: #fef3c7; color: #78350f; }
 
-  .btn-action { padding:4px 10px; border-radius:8px; border:none; cursor:pointer; font-size:12px; font-weight:600; font-family:'DM Sans',sans-serif; transition:all .15s; }
-  .btn-edit   { background:#fff8ee; color:#f5a623; border:1.5px solid #fce8c3; }
-  .btn-edit:hover { background:#f5a623; color:white; }
-  .btn-delete { background:#fdecea; color:#e74c3c; border:1.5px solid #fad0cc; }
-  .btn-delete:hover { background:#e74c3c; color:white; }
+  .btn-ba { padding: 4px 10px; border-radius: 8px; border: none; cursor: pointer; font-size: 12px; font-weight: 700; font-family: inherit; transition: all .15s; }
+  .btn-ba:hover { transform: translateY(-1px); }
+  .btn-be { background: #fef3c7; color: #d97706; border: 1.5px solid #fde68a; }
+  .btn-be:hover { background: var(--b2c-gold); color: #fff !important; -webkit-text-fill-color: #fff; }
+  .btn-bd { background: #fee2e2; color: #dc2626; border: 1.5px solid #fecaca; }
+  .btn-bd:hover { background: var(--b2c-red); color: #fff !important; -webkit-text-fill-color: #fff; }
 
-  .btn-add-seance {
-    display:inline-flex; align-items:center; gap:6px;
-    background:#f0fdf4; color:#27ae60;
-    border:1.5px dashed #86efac; border-radius:10px;
-    padding:7px 16px; font-size:12px; font-weight:600;
-    cursor:pointer; font-family:'DM Sans',sans-serif;
-    text-decoration:none; margin-top:12px; transition:all .15s;
+  /* ── BTN ADD B2C ── */
+  .btn-add-b2c {
+    display: inline-flex !important; align-items: center !important; gap: 6px !important;
+    background: #ecfdf5 !important; background-image: none !important;
+    color: #047857 !important; -webkit-text-fill-color: #047857 !important;
+    border: 2px solid #6ee7b7 !important; border-radius: 10px !important;
+    padding: 8px 16px !important; font-size: 12px !important; font-weight: 700 !important;
+    cursor: pointer !important; font-family: inherit !important;
+    margin: 12px 20px 16px !important; transition: all .15s !important;
+    appearance: none !important; -webkit-appearance: none !important; opacity: 1 !important;
   }
-  .btn-add-seance:hover { background:#d4edda; border-style:solid; }
+  .btn-add-b2c:hover { background: #d1fae5 !important; border-color: #059669 !important; color: #065f46 !important; -webkit-text-fill-color: #065f46 !important; }
 
-  .toggle-icon { transition:transform .2s; color:var(--sp-muted); }
+  /* ── RECAP PROFS ── */
+  .b2c-prof-section { background: #fff; border: 1.5px solid var(--b2c-border); border-radius: 16px; margin-bottom: 20px; overflow: hidden; box-shadow: var(--b2c-shadow); }
+  .b2c-prof-header { display: flex; align-items: center; gap: 10px; padding: 14px 20px; background: linear-gradient(135deg, #0f2544 0%, #1e40af 100%); color: #fff; }
+  .b2c-prof-header h3 { font-size: 14px; font-weight: 800; margin: 0; }
+  .b2c-prof-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; padding: 18px 20px; }
+  .b2c-prof-card { background: var(--b2c-surface); border: 1.5px solid var(--b2c-border); border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; transition: all .15s; }
+  .b2c-prof-card:hover { border-color: var(--b2c-gold); box-shadow: 0 4px 12px rgba(245,158,11,.12); }
+  .bpc-avatar { width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0; background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 800; }
+  .bpc-name  { font-size: 13px; font-weight: 700; color: var(--b2c-navy); }
+  .bpc-resp  { font-size: 11px; color: var(--b2c-muted); margin-top: 1px; font-weight: 500; }
+  .bpc-hrs   { margin-left: auto; background: #dbeafe; color: #1e3a8a; border-radius: 10px; padding: 5px 12px; font-size: 14px; font-weight: 800; flex-shrink: 0; }
 
-  .sp-empty { text-align:center; padding:48px 16px; color:var(--sp-muted); }
-  .sp-empty .ei { font-size:40px; margin-bottom:12px; opacity:.4; }
+  /* ── EMPTY ── */
+  .b2c-empty { text-align: center; padding: 52px 16px; color: var(--b2c-muted); }
+  .b2c-empty .ei { font-size: 44px; margin-bottom: 12px; opacity: .35; }
 
-  .sp-alert { padding:13px 18px; border-radius:10px; margin-bottom:18px; font-size:13px; display:flex; align-items:center; gap:10px; }
-  .sp-alert.success { background:#27ae60; color:white; }
-  .sp-alert.error   { background:#e74c3c; color:white; }
+  /* ── ALERT ── */
+  .b2c-alert { padding: 13px 18px; border-radius: 10px; margin-bottom: 18px; font-size: 13px; display: flex; align-items: center; gap: 10px; font-weight: 600; }
+  .b2c-alert.success { background: #059669; color: #fff; }
+  .b2c-alert.error   { background: #dc2626; color: #fff; }
 
-  /* ════ MODAL AJOUTER / MODIFIER ════ */
-  .sp-modal-backdrop {
-    display:none; position:fixed; inset:0;
-    background:rgba(26,58,107,0.55); z-index:1050;
-    align-items:flex-start; justify-content:center;
-    backdrop-filter:blur(4px);
-    padding:16px; overflow-y:auto;
+  /* ══ MODAL ══ */
+  .b2c-modal-backdrop {
+    display: none; position: fixed; inset: 0; z-index: 1050;
+    background: rgba(15,37,68,.6); backdrop-filter: blur(4px);
+    align-items: flex-start; justify-content: center;
+    padding: 16px; overflow-y: auto;
   }
-  .sp-modal-backdrop.show { display:flex; }
-  .sp-modal {
-    background:white; border-radius:20px; width:100%; max-width:620px;
-    box-shadow:0 28px 80px rgba(26,58,107,0.22);
-    border:1px solid var(--sp-border);
-    animation:modalIn .28s cubic-bezier(0.34,1.56,0.64,1);
-    margin:auto; overflow:hidden;
+  .b2c-modal-backdrop.show { display: flex; }
+  .b2c-modal {
+    background: #fff; border-radius: 22px; width: 100%; max-width: 680px;
+    box-shadow: 0 32px 90px rgba(15,37,68,.25); border: 1px solid var(--b2c-border);
+    animation: bmodalIn .28s cubic-bezier(0.34,1.56,0.64,1); margin: auto; overflow: hidden;
   }
-  @keyframes modalIn {
-    from { opacity:0; transform:scale(0.91) translateY(20px); }
-    to   { opacity:1; transform:scale(1) translateY(0); }
+  @keyframes bmodalIn { from { opacity:0; transform:scale(0.9) translateY(24px); } to { opacity:1; transform:scale(1) translateY(0); } }
+  .b2c-modal-head {
+    background: linear-gradient(135deg, #0f2544 0%, #1e40af 60%, #0891b2 100%);
+    padding: 20px 24px; display: flex; align-items: center; justify-content: space-between;
+    position: relative; overflow: hidden;
   }
-  .sp-modal-head {
-    background:linear-gradient(135deg,#1a3a6b 0%,#2a5298 100%);
-    padding:20px 24px; display:flex; align-items:center; justify-content:space-between;
-    position:relative; overflow:hidden;
+  .b2c-modal-head::after { content: ''; position: absolute; top: -30px; right: -30px; width: 130px; height: 130px; border-radius: 50%; background: rgba(255,255,255,.05); }
+  .b2c-mh-left { display: flex; align-items: center; gap: 12px; z-index: 1; }
+  .b2c-mh-icon { width: 40px; height: 40px; border-radius: 10px; background: rgba(255,255,255,.15); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .b2c-mh-title { font-size: 16px; font-weight: 800; color: #fff; margin: 0; }
+  .b2c-mh-sub   { font-size: 12px; color: rgba(255,255,255,.65); margin: 2px 0 0; }
+  .b2c-mclose { width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer; background: rgba(255,255,255,.15); color: #fff; z-index: 1; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; transition: background .2s; }
+  .b2c-mclose:hover { background: rgba(255,255,255,.28); }
+  .b2c-modal-body { padding: 20px 24px; max-height: 74vh; overflow-y: auto; }
+
+  .b2c-slabel { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: .08em; margin: 20px 0 12px; }
+  .b2c-slabel:first-child { margin-top: 0; }
+  .b2c-slabel::after { content: ''; flex: 1; height: 1px; background: linear-gradient(to right, #e2e8f0, transparent); }
+
+  /* ── SEGMENTS TABLE ── */
+  .seg-unified-table { width: 100%; border-collapse: collapse; }
+  .seg-unified-table th {
+    text-align: left; padding: 6px 10px 10px 4px;
+    font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .05em; color: var(--b2c-muted);
+    border-bottom: 2px solid var(--b2c-border);
   }
-  .sp-modal-head::after { content:''; position:absolute; top:-30px; right:-30px; width:120px; height:120px; border-radius:50%; background:rgba(255,255,255,.06); }
-  .sp-modal-head-left { display:flex; align-items:center; gap:12px; z-index:1; }
-  .sp-modal-head-icon { width:40px; height:40px; border-radius:10px; background:rgba(255,255,255,.15); display:flex; align-items:center; justify-content:center; font-size:18px; }
-  .sp-modal-head h4 { font-size:16px; font-weight:700; color:#fff; margin:0; }
-  .sp-modal-head p  { font-size:12px; color:rgba(255,255,255,.7); margin:2px 0 0; }
-  .sp-modal-close { width:32px; height:32px; border-radius:50%; border:none; cursor:pointer; background:rgba(255,255,255,.15); color:#fff; z-index:1; display:flex; align-items:center; justify-content:center; font-size:16px; transition:background .2s; flex-shrink:0; }
-  .sp-modal-close:hover { background:rgba(255,255,255,.28); }
-  .sp-modal-body { padding:20px 24px; max-height:72vh; overflow-y:auto; }
+  .seg-unified-table th:not(:first-child) { text-align: left; padding-left: 10px; }
+  .seg-unified-table td { padding: 6px 10px 6px 4px; border-bottom: 1px solid var(--b2c-border); vertical-align: top; }
+  .seg-unified-table tr:last-child td { border-bottom: none; }
+  .seg-unified-table td:not(:first-child) { padding-left: 10px; }
+  .seg-lbl { font-size: 13px; font-weight: 700; color: var(--b2c-navy); padding-top: 10px; display: block; white-space: nowrap; }
+  .seg-unified-table .b2c-fg input { margin: 0; }
 
-  .sp-section-label {
-    display:flex; align-items:center; gap:8px;
-    font-size:11.5px; font-weight:700; color:#8898aa;
-    text-transform:uppercase; letter-spacing:.08em;
-    margin:20px 0 12px;
+  /* ── Dar sub-rows dans le modal ── */
+  .dar-sub-row { background: #fffbeb; }
+  .dar-sub-row td { border-bottom: 1px solid #fde68a !important; padding-top: 4px !important; padding-bottom: 4px !important; }
+  .dar-sub-row:last-child td { border-bottom: 1px solid var(--b2c-border) !important; }
+  .dar-sub-name { font-size: 11px; font-weight: 700; color: #92400e; padding-left: 20px !important; white-space: nowrap; }
+
+  /* ── DAR MULTI-SELECT ── */
+  .dar-ms-wrap { position: relative; }
+  .dar-ms-box {
+    min-height: 44px; border: 1.5px solid #d1d9e6; border-radius: 10px;
+    background: #fff; padding: 6px 38px 6px 8px; cursor: text;
+    display: flex; flex-wrap: wrap; gap: 5px; align-items: center;
+    transition: border-color .18s, box-shadow .18s;
   }
-  .sp-section-label:first-child { margin-top:0; }
-  .sp-section-label::after { content:''; flex:1; height:1px; background:linear-gradient(to right,#e2e8f0,transparent); }
-
-  .sp-form-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-  .sp-form-grid-1 { display:grid; grid-template-columns:1fr; gap:12px; }
-  .sp-fg { display:flex; flex-direction:column; gap:6px; }
-  .sp-fg label { font-size:12px; font-weight:600; color:#4a5568; display:flex; align-items:center; gap:4px; }
-  .sp-fg label .req { color:#f5a623; font-size:14px; line-height:1; }
-  .sp-fg input, .sp-fg select, .sp-fg textarea {
-    appearance:none; -webkit-appearance:none; width:100%; outline:none;
-    font-family:'DM Sans',sans-serif; font-size:13.5px; color:#1a202c; background:#fff;
-    border:1.5px solid #d1d9e6; border-radius:10px; padding:11px 14px;
-    transition:border-color .18s,box-shadow .18s; box-sizing:border-box;
+  .dar-ms-box.focused { border-color: var(--b2c-gold); box-shadow: 0 0 0 3px rgba(245,158,11,.14); border-radius: 10px 10px 0 0; }
+  .dar-ms-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: #fffbeb; border: 1.5px solid #fde68a;
+    color: #92400e; border-radius: 20px; padding: 3px 10px 3px 8px;
+    font-size: 12px; font-weight: 700; white-space: nowrap;
+    animation: tagIn .15s ease;
   }
-  .sp-fg select {
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7a99' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-    background-repeat:no-repeat; background-position:right 13px center; padding-right:36px; cursor:pointer;
+  @keyframes tagIn { from { opacity:0; transform:scale(0.85); } to { opacity:1; transform:scale(1); } }
+  .dar-ms-tag-x {
+    width: 16px; height: 16px; border-radius: 50%; border: none;
+    background: #fde68a; color: #92400e; cursor: pointer;
+    font-size: 11px; display: flex; align-items: center; justify-content: center;
+    font-weight: 900; padding: 0; line-height: 1; transition: background .15s; flex-shrink: 0;
   }
-  .sp-fg textarea { resize:vertical; min-height:80px; line-height:1.6; }
-  .sp-fg input:focus, .sp-fg select:focus, .sp-fg textarea:focus {
-    border-color:#f5a623; background:#fff;
-    box-shadow:0 0 0 3.5px rgba(245,166,35,.14),0 1px 3px rgba(26,58,107,.06);
+  .dar-ms-tag-x:hover { background: #d97706; color: #fff; }
+  .dar-ms-input {
+    border: none; outline: none; background: transparent;
+    font-family: inherit; font-size: 13px; color: #1a202c;
+    min-width: 120px; flex: 1; padding: 2px 4px;
   }
-  .sp-fg input::placeholder, .sp-fg textarea::placeholder { color:#b0bac9; font-size:13px; }
-
-  .sp-input-icon { position:relative; }
-  .sp-input-icon .ico { position:absolute; left:12px; top:50%; transform:translateY(-50%); font-size:16px; pointer-events:none; opacity:.55; }
-  .sp-input-icon input { padding-left:36px; }
-
-  .sp-statut-group { display:flex; gap:8px; flex-wrap:wrap; }
-  .sp-statut-pill {
-    display:flex; align-items:center; gap:7px; padding:8px 16px; border-radius:10px;
-    border:1.5px solid #d1d9e6; background:#fafbfd; cursor:pointer;
-    font-size:13px; font-weight:600; color:#6b7a99; transition:all .18s; user-select:none;
+  .dar-ms-input::placeholder { color: #b0bac9; }
+  .dar-ms-arrow { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; color: #94a3b8; font-size: 12px; }
+  .dar-ms-drop {
+    display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 300;
+    background: #fff; border: 1.5px solid var(--b2c-gold); border-top: 1px solid #fde68a;
+    border-radius: 0 0 10px 10px; max-height: 210px; overflow-y: auto;
+    box-shadow: 0 8px 24px rgba(15,37,68,.12);
   }
-  .sp-statut-pill input[type=radio] { display:none; }
-  .sp-statut-pill .sdot { width:9px; height:9px; border-radius:50%; background:currentColor; opacity:.35; transition:all .18s; flex-shrink:0; }
-  .sp-statut-pill.s-passee:has(input:checked)    { background:#edfdf4; border-color:#4ade80; color:#166534; box-shadow:0 0 0 3px rgba(74,222,128,.12); }
-  .sp-statut-pill.s-annulee:has(input:checked)   { background:#fff0f0; border-color:#f87171; color:#991b1b; box-shadow:0 0 0 3px rgba(248,113,113,.12); }
-  .sp-statut-pill.s-rattrapage:has(input:checked) { background:#fffbeb; border-color:#fbbf24; color:#92400e; box-shadow:0 0 0 3px rgba(251,191,36,.12); }
-  .sp-statut-pill:has(input:checked) .sdot { opacity:1; }
-
-  .sp-num-wrap {
-    display:inline-flex; align-items:center; border:1.5px solid #d1d9e6; border-radius:10px;
-    background:#fff; overflow:hidden; max-width:160px; transition:border-color .18s;
+  .dar-ms-drop.open { display: block; }
+  .dar-ms-opt {
+    padding: 9px 13px; font-size: 13px; cursor: pointer; color: #2d3748;
+    display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid #fef9e7; transition: background .12s;
   }
-  .sp-num-wrap:focus-within { border-color:#f5a623; box-shadow:0 0 0 3.5px rgba(245,166,35,.14); }
-  .sp-num-btn { width:40px; min-width:40px; height:42px; border:none; background:#f4f7fb; cursor:pointer; font-size:20px; color:#4a5568; display:flex; align-items:center; justify-content:center; transition:background .15s; flex-shrink:0; }
-  .sp-num-btn:first-child { border-right:1.5px solid #e2e8f0; }
-  .sp-num-btn:last-child  { border-left:1.5px solid #e2e8f0; }
-  .sp-num-btn:hover { background:#e8edf5; color:#1a3a6b; }
-  .sp-num-input { border:none; background:transparent; text-align:center; font-size:16px; font-weight:700; color:#1a202c; flex:1; outline:none; font-family:'DM Sans',sans-serif; padding:0; min-width:0; }
+  .dar-ms-opt:last-child { border-bottom: none; }
+  .dar-ms-opt:hover { background: #fefce8; }
+  .dar-ms-opt.selected { background: #fffbeb; font-weight: 700; color: #78350f; }
+  .dar-ms-opt.selected::after { content: '✓'; margin-left: auto; color: #d97706; font-weight: 800; }
+  .dar-ms-empty { padding: 12px 13px; font-size: 13px; color: #94a3b8; font-style: italic; text-align: center; }
+  .dar-ms-count { font-size: 11px; color: #b45309; background: #fef3c7; border-radius: 20px; padding: 2px 8px; font-weight: 700; }
 
-  /* Prof search */
-  .prof-search-wrapper { position:relative; }
-  .prof-search-input { width:100%; outline:none; box-sizing:border-box; font-family:'DM Sans',sans-serif; font-size:13.5px; color:#1a202c; background:#fff; border:1.5px solid #d1d9e6; border-radius:10px; padding:11px 14px 11px 38px; transition:border-color .18s; }
-  .prof-search-input:focus { border-color:#f5a623; box-shadow:0 0 0 3.5px rgba(245,166,35,.14); border-radius:10px 10px 0 0; }
-  .prof-search-icon { position:absolute; left:12px; top:50%; transform:translateY(-50%); font-size:16px; pointer-events:none; opacity:.45; }
-  .prof-dropdown { display:none; position:absolute; top:100%; left:0; right:0; z-index:200; background:white; border:1.5px solid #f5a623; border-top:1px solid #f0e8d4; border-radius:0 0 10px 10px; max-height:210px; overflow-y:auto; box-shadow:0 8px 24px rgba(26,58,107,.12); }
-  .prof-dropdown.open { display:block; }
-  .prof-option { padding:10px 14px; font-size:13px; cursor:pointer; color:#2d3748; transition:background .12px; border-bottom:1px solid #f4f7fb; }
-  .prof-option:last-child { border-bottom:none; }
-  .prof-option:hover { background:#fdf8f0; color:#1a3a6b; }
-  .prof-option.selected { background:#fffbeb; font-weight:600; }
+  .b2c-fg2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .b2c-fg3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .b2c-fg  { display: flex; flex-direction: column; gap: 6px; }
+  .b2c-fg label { font-size: 12px; font-weight: 700; color: #4a5568; display: flex; align-items: center; gap: 4px; }
+  .b2c-fg label .req { color: var(--b2c-gold); font-size: 14px; }
+  .b2c-fg input, .b2c-fg select, .b2c-fg textarea {
+    appearance: none; -webkit-appearance: none; width: 100%; outline: none;
+    font-family: inherit; font-size: 13.5px; color: #1a202c; background: #fff;
+    border: 1.5px solid #d1d9e6; border-radius: 10px; padding: 10px 13px;
+    transition: border-color .18s, box-shadow .18s; box-sizing: border-box;
+  }
+  .b2c-fg select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center; padding-right: 34px; cursor: pointer;
+  }
+  .b2c-fg textarea { resize: vertical; min-height: 72px; line-height: 1.6; }
+  .b2c-fg input:focus, .b2c-fg select:focus, .b2c-fg textarea:focus { border-color: var(--b2c-gold); box-shadow: 0 0 0 3px rgba(245,158,11,.14); }
+  .b2c-fg input::placeholder, .b2c-fg textarea::placeholder { color: #b0bac9; font-size: 12.5px; }
 
-  /* Modal footer */
-  .sp-modal-footer { display:flex; gap:10px; justify-content:flex-end; padding:16px 24px 20px; border-top:1px solid var(--sp-border); background:var(--sp-surface); }
-  .btn-cancel-modal { background:#fff; color:var(--sp-muted); border:1.5px solid var(--sp-border); border-radius:25px; padding:10px 20px; font-weight:600; cursor:pointer; font-size:13px; font-family:'DM Sans',sans-serif; transition:all .2s; }
-  .btn-submit { background:#f5a623; color:white; border:none; border-radius:25px; padding:10px 28px; font-weight:700; cursor:pointer; font-size:13px; font-family:'DM Sans',sans-serif; display:flex; align-items:center; gap:7px; transition:all .2s; }
-  .btn-submit:hover { background:#e09415; transform:translateY(-1px); box-shadow:0 6px 16px rgba(245,166,35,.4); }
+  .b2c-num-wrap { display: inline-flex; align-items: center; border: 1.5px solid #d1d9e6; border-radius: 10px; background: #fff; overflow: hidden; width: 100%; transition: border-color .18s, box-shadow .18s; }
+  .b2c-num-wrap:focus-within { border-color: var(--b2c-gold); box-shadow: 0 0 0 3px rgba(245,158,11,.14); }
+  .b2c-num-btn { width: 40px; min-width: 40px; height: 40px; border: none; background: var(--b2c-surface); cursor: pointer; font-size: 20px; color: #4a5568; display: flex; align-items: center; justify-content: center; transition: background .15s; flex-shrink: 0; }
+  .b2c-num-btn:first-child { border-right: 1.5px solid #e2e8f0; }
+  .b2c-num-btn:last-child  { border-left:  1.5px solid #e2e8f0; }
+  .b2c-num-btn:hover { background: #e8eef7; color: var(--b2c-navy); }
+  .b2c-num-input { border: none; background: transparent; text-align: center; font-size: 16px; font-weight: 800; color: #1a202c; flex: 1; outline: none; font-family: inherit; padding: 0; min-width: 0; }
 
-  /* Delete modal */
-  .sp-del-backdrop { display:none; position:fixed; inset:0; z-index:1100; background:rgba(26,58,107,0.5); backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:16px; }
-  .sp-del-backdrop.show { display:flex; }
-  .sp-del-modal { background:#fff; border-radius:20px; width:100%; max-width:400px; overflow:hidden; box-shadow:0 28px 80px rgba(26,58,107,0.22); border:1px solid var(--sp-border); animation:modalIn .26s cubic-bezier(0.34,1.56,0.64,1); }
-  .sp-del-head { background:linear-gradient(135deg,#c0392b 0%,#e74c3c 100%); padding:20px 24px; display:flex; align-items:center; gap:12px; }
-  .sp-del-head-icon { width:40px; height:40px; border-radius:10px; background:rgba(255,255,255,.18); display:flex; align-items:center; justify-content:center; font-size:20px; }
-  .sp-del-head h4 { font-size:16px; font-weight:700; color:#fff; margin:0; }
-  .sp-del-head p  { font-size:12px; color:rgba(255,255,255,.75); margin:2px 0 0; }
-  .sp-del-body { padding:22px 24px; display:flex; align-items:flex-start; gap:14px; }
-  .sp-del-body-icon { width:44px; height:44px; border-radius:12px; background:#fdecea; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; margin-top:2px; }
-  .sp-del-body p { font-size:14px; color:#374151; line-height:1.6; margin:0; }
-  .sp-del-footer { display:flex; gap:10px; justify-content:flex-end; padding:14px 24px 20px; border-top:1px solid var(--sp-border); background:var(--sp-surface); }
-  .btn-del-cancel { background:#fff; color:var(--sp-muted); border:1.5px solid var(--sp-border); border-radius:25px; padding:10px 20px; font-weight:600; cursor:pointer; font-size:13px; font-family:'DM Sans',sans-serif; }
-  .btn-del-confirm { background:#e74c3c; color:white; border:none; border-radius:25px; padding:10px 24px; font-weight:700; cursor:pointer; font-size:13px; font-family:'DM Sans',sans-serif; display:flex; align-items:center; gap:7px; transition:all .2s; }
-  .btn-del-confirm:hover { background:#c0392b; }
+  .b2c-statut-grp { display: flex; gap: 8px; flex-wrap: wrap; }
+  .b2c-spl { display: flex; align-items: center; gap: 7px; padding: 8px 15px; border-radius: 10px; border: 1.5px solid #d1d9e6; background: #fafbfd; cursor: pointer; font-size: 13px; font-weight: 700; color: #6b7a99; transition: all .18s; user-select: none; }
+  .b2c-spl input[type=radio] { display: none; }
+  .b2c-spl .sdot { width: 9px; height: 9px; border-radius: 50%; background: currentColor; opacity: .35; transition: all .18s; flex-shrink: 0; }
+  .b2c-spl.sp-pass:has(input:checked)  { background: #ecfdf5; border-color: #6ee7b7; color: #065f46; box-shadow: 0 0 0 3px rgba(110,231,183,.12); }
+  .b2c-spl.sp-ann:has(input:checked)   { background: #fff0f0; border-color: #fca5a5; color: #7f1d1d; box-shadow: 0 0 0 3px rgba(252,165,165,.12); }
+  .b2c-spl.sp-ratt:has(input:checked)  { background: #fffbeb; border-color: #fcd34d; color: #78350f; box-shadow: 0 0 0 3px rgba(252,211,77,.12); }
+  .b2c-spl:has(input:checked) .sdot    { opacity: 1; }
 
-  @media (max-width:600px) {
-    .sp-form-grid-2 { grid-template-columns:1fr; }
-    .sp-kpi { min-width:110px; }
-    .sp-table th:nth-child(n+6), .sp-table td:nth-child(n+6) { display:none; }
+  .bpf-wrap { position: relative; }
+  .bpf-inp { width: 100%; outline: none; box-sizing: border-box; font-family: inherit; font-size: 13.5px; color: #1a202c; background: #fff; border: 1.5px solid #d1d9e6; border-radius: 10px; padding: 10px 13px 10px 37px; transition: border-color .18s, box-shadow .18s; }
+  .bpf-inp::placeholder { color: #b0bac9; font-size: 12.5px; }
+  .bpf-inp:focus { border-color: var(--b2c-gold); box-shadow: 0 0 0 3px rgba(245,158,11,.14); border-radius: 10px 10px 0 0; }
+  .bpf-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 15px; pointer-events: none; opacity: .45; }
+  .bpf-drop { display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 200; background: #fff; border: 1.5px solid var(--b2c-gold); border-top: 1px solid #fde68a; border-radius: 0 0 10px 10px; max-height: 200px; overflow-y: auto; box-shadow: 0 8px 24px rgba(15,37,68,.12); }
+  .bpf-drop.open { display: block; }
+  .bpf-opt { padding: 9px 13px; font-size: 13px; cursor: pointer; color: #2d3748; transition: background .12s; border-bottom: 1px solid #f4f7fb; }
+  .bpf-opt:last-child { border-bottom: none; }
+  .bpf-opt:hover { background: #fefce8; }
+  .bpf-opt.selected { background: #fffbeb; font-weight: 700; color: #78350f; }
+
+  .b2c-modal-footer { display: flex; gap: 10px; justify-content: flex-end; padding: 16px 24px 20px; border-top: 1px solid var(--b2c-border); background: var(--b2c-surface); }
+  .btn-bmcancel { background: #fff; color: var(--b2c-muted); border: 1.5px solid var(--b2c-border); border-radius: 25px; padding: 10px 20px; font-weight: 700; cursor: pointer; font-size: 13px; font-family: inherit; transition: all .2s; }
+  .btn-bmcancel:hover { background: var(--b2c-border); }
+  .btn-bmsubmit {
+    background: #e8920a !important; background-image: none !important;
+    color: #fff !important; -webkit-text-fill-color: #ffffff !important;
+    border: none !important; border-radius: 25px !important;
+    padding: 10px 28px !important; font-weight: 800 !important; cursor: pointer !important;
+    font-size: 13px !important; font-family: inherit !important;
+    display: flex !important; align-items: center !important; gap: 7px !important;
+    transition: all .2s !important; text-shadow: 0 1px 2px rgba(0,0,0,.2) !important;
+    appearance: none !important; -webkit-appearance: none !important; opacity: 1 !important;
+  }
+  .btn-bmsubmit:hover { background: #c47c08 !important; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(245,158,11,.4) !important; }
+
+  /* ── DELETE MODAL ── */
+  .b2c-del-backdrop { display: none; position: fixed; inset: 0; z-index: 1100; background: rgba(15,37,68,.55); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 16px; }
+  .b2c-del-backdrop.show { display: flex; }
+  .b2c-del-modal { background: #fff; border-radius: 20px; width: 100%; max-width: 400px; overflow: hidden; box-shadow: 0 28px 80px rgba(15,37,68,.25); animation: bmodalIn .26s cubic-bezier(0.34,1.56,0.64,1); }
+  .b2c-del-head { background: linear-gradient(135deg, #991b1b, #dc2626); padding: 20px 24px; display: flex; align-items: center; gap: 12px; }
+  .b2c-del-hico { width: 40px; height: 40px; border-radius: 10px; background: rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .b2c-del-head h4 { color: #fff; font-size: 16px; font-weight: 800; margin: 0; }
+  .b2c-del-head p  { color: rgba(255,255,255,.7); font-size: 12px; margin: 2px 0 0; }
+  .b2c-del-body { padding: 22px 24px; display: flex; gap: 14px; }
+  .b2c-del-bico { width: 44px; height: 44px; border-radius: 12px; background: #fee2e2; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .b2c-del-body p { font-size: 14px; color: #374151; line-height: 1.6; margin: 0; }
+  .b2c-del-footer { display: flex; gap: 10px; justify-content: flex-end; padding: 14px 24px 20px; border-top: 1px solid var(--b2c-border); background: var(--b2c-surface); }
+  .btn-dcancel { background: #fff; color: var(--b2c-muted); border: 1.5px solid var(--b2c-border); border-radius: 25px; padding: 10px 20px; font-weight: 700; cursor: pointer; font-size: 13px; font-family: inherit; transition: all .2s; }
+  .btn-dcancel:hover { background: var(--b2c-border); }
+  .btn-dconfirm {
+    background: #be123c !important; background-image: none !important;
+    color: #fff !important; -webkit-text-fill-color: #ffffff !important;
+    border: none !important; border-radius: 25px !important;
+    padding: 10px 24px !important; font-weight: 800 !important; cursor: pointer !important;
+    font-size: 13px !important; font-family: inherit !important;
+    display: flex !important; align-items: center !important; gap: 7px !important;
+    transition: all .2s !important; text-shadow: 0 1px 2px rgba(0,0,0,.2) !important;
+    appearance: none !important; -webkit-appearance: none !important; opacity: 1 !important;
+  }
+  .btn-dconfirm:hover { background: #b91c1c !important; transform: translateY(-1px); box-shadow: 0 6px 16px rgba(220,38,38,.35) !important; }
+
+  .tog-ico { transition: transform .2s; color: var(--b2c-muted); font-size: 12px; }
+
+  @media (max-width: 640px) {
+    .b2c-modal-body { padding: 14px; }
+    .b2c-modal-head, .b2c-modal-footer { padding: 14px; }
+    .b2c-fg2, .b2c-fg3 { grid-template-columns: 1fr; }
+    .b2c-kpi { min-width: 110px; }
+    .b2c-kpi-val { font-size: 20px; }
+    .seg-unified-table th:not(:first-child),
+    .seg-unified-table td:not(:first-child) { display: none; }
   }
 </style>
 {% endblock %}
 
 {% block content %}
-<div style="padding:24px;">
+<div style="padding: 24px;">
 
-  <div class="sp-header">
-    <div style="position:relative;z-index:1">
-      <h2>🏢 Suivi B2C</h2>
-      <p>{{ mois_noms[mois] }} {{ annee }} — Vue par Responsable & Niveau</p>
+  <!-- HEADER -->
+  <div class="b2c-header">
+    <div class="b2c-header-inner">
+      <h2>💼 Suivi B2C</h2>
+      <p>{{ mois_noms[mois] }} {{ annee }} — Suivi des séances par responsable</p>
+      <div class="b2c-header-badge">📊 B2C · FOS · Free · IPSE · Dar Talib</div>
     </div>
   </div>
 
+  <!-- FLASH -->
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% for cat, msg in messages %}
-      <div class="sp-alert {{ 'error' if cat=='error' else 'success' }}">
-        {% if cat=='error' %}⚠️{% else %}✅{% endif %} {{ msg }}
+      <div class="b2c-alert {{ 'error' if cat=='error' else 'success' }}">
+        {{ '⚠️' if cat=='error' else '✅' }} {{ msg }}
       </div>
     {% endfor %}
   {% endwith %}
 
-  {# ── KPIs ── #}
-  <div class="sp-kpi-row">
-    <div class="sp-kpi">
-      <div class="sp-kpi-icon blue">📅</div>
-      <div><div class="sp-kpi-val">{{ total_seances }}</div><div class="sp-kpi-lbl">Total séances</div></div>
+  <!-- KPIs -->
+  <div class="b2c-kpi-row">
+    <div class="b2c-kpi">
+      <div class="b2c-kpi-icon bki-navy">📅</div>
+      <div><div class="b2c-kpi-val">{{ total_seances }}</div><div class="b2c-kpi-lbl">Total séances</div></div>
     </div>
-    <div class="sp-kpi">
-      <div class="sp-kpi-icon blue">⏱️</div>
-      <div><div class="sp-kpi-val">{{ "%.1f"|format(total_passees_heures) }}h</div><div class="sp-kpi-lbl">Heures passées</div></div>
+    <div class="b2c-kpi">
+      <div class="b2c-kpi-icon bki-navy">⏱️</div>
+      <div><div class="b2c-kpi-val">{{ "%.1f"|format(total_heures) }}h</div><div class="b2c-kpi-lbl">Heures passées</div></div>
     </div>
-    <div class="sp-kpi">
-      <div class="sp-kpi-icon green">✅</div>
-      <div><div class="sp-kpi-val">{{ total_passees }}</div><div class="sp-kpi-lbl">Passées</div></div>
+    <div class="b2c-kpi">
+      <div class="b2c-kpi-icon bki-green">✅</div>
+      <div><div class="b2c-kpi-val">{{ total_passees }}</div><div class="b2c-kpi-lbl">Passées</div></div>
     </div>
-    <div class="sp-kpi">
-      <div class="sp-kpi-icon red">❌</div>
-      <div><div class="sp-kpi-val">{{ total_annulees }}</div><div class="sp-kpi-lbl">Annulées</div></div>
+    <div class="b2c-kpi">
+      <div class="b2c-kpi-icon bki-red">❌</div>
+      <div><div class="b2c-kpi-val">{{ total_annulees }}</div><div class="b2c-kpi-lbl">Annulées</div></div>
     </div>
-    <div class="sp-kpi">
-      <div class="sp-kpi-icon amber">🔄</div>
-      <div><div class="sp-kpi-val">{{ total_rattrapage }}</div><div class="sp-kpi-lbl">Rattrapages</div></div>
+    <div class="b2c-kpi">
+      <div class="b2c-kpi-icon bki-amber">🔄</div>
+      <div><div class="b2c-kpi-val">{{ total_rattrapage }}</div><div class="b2c-kpi-lbl">Rattrapages</div></div>
     </div>
-    <div class="sp-kpi">
-      <div class="sp-kpi-icon purple">👥</div>
-      <div><div class="sp-kpi-val">{{ total_eleves or '—' }}</div><div class="sp-kpi-lbl">Élèves présents</div></div>
+    <div class="b2c-kpi">
+      <div class="b2c-kpi-icon bki-teal">👥</div>
+      <div><div class="b2c-kpi-val">{{ total_presents or '—' }}</div><div class="b2c-kpi-lbl">Présents (total)</div></div>
     </div>
   </div>
 
-  {# ── Filtres ── #}
-  <form method="GET" action="{{ url_for('suivi_b2c') }}" class="sp-filters">
-    <div class="form-group">
+  <!-- FILTERS -->
+  <form method="GET" action="{{ url_for('suivi_b2c') }}" class="b2c-filters">
+    <div class="fg">
       <label>Mois</label>
       <select name="mois">
         {% for i in range(1,13) %}
@@ -394,7 +511,7 @@
         {% endfor %}
       </select>
     </div>
-    <div class="form-group">
+    <div class="fg">
       <label>Année</label>
       <select name="annee">
         {% for a in annees %}
@@ -403,7 +520,7 @@
       </select>
     </div>
     {% if current_user.is_admin %}
-    <div class="form-group">
+    <div class="fg">
       <label>Responsable</label>
       <select name="filtre_resp">
         <option value="">Tous</option>
@@ -413,80 +530,80 @@
       </select>
     </div>
     {% endif %}
-    <div class="form-group">
-      <label>Niveau</label>
-      <select name="filtre_niveau">
-        <option value="">Tous niveaux</option>
-        {% for n in niveaux %}
-          <option value="{{ n }}" {{ 'selected' if filtre_niveau==n }}>{{ n }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="form-group">
+    <div class="fg">
       <label>Statut</label>
       <select name="filtre_statut">
-        <option value="">Tous statuts</option>
+        <option value="">Tous</option>
         {% for val, lbl in statuts %}
           <option value="{{ val }}" {{ 'selected' if filtre_statut==val }}>{{ lbl }}</option>
         {% endfor %}
       </select>
     </div>
-    <div class="form-group">
-      <label>Matière</label>
-      <select name="filtre_matiere">
-        <option value="">Toutes matières</option>
-        {% for m in matieres %}
-          <option value="{{ m }}" {{ 'selected' if filtre_matiere==m }}>{{ m }}</option>
+    <div class="fg">
+      <label>Professeur</label>
+      <select name="filtre_prof">
+        <option value="">Tous</option>
+        {% for p in professeurs %}
+          <option value="{{ p.id }}" {{ 'selected' if filtre_prof==p.id|string }}>{{ p.nom }}</option>
         {% endfor %}
       </select>
     </div>
-    <button type="submit" class="btn-filter">🔍 Filtrer</button>
-    <a href="{{ url_for('suivi_b2c') }}" class="btn-clear">↺ Réinitialiser</a>
+    <button type="submit" class="btn-bfilter">🔍 Filtrer</button>
+    <a href="{{ url_for('suivi_b2c') }}" class="btn-bclear">↺ Réinitialiser</a>
   </form>
 
-  {# ── Tabs + Bouton ── #}
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-    <div class="sp-tabs" id="spTabs">
-      <button class="sp-tab active" onclick="switchTab('resp', this)">👤 Par Responsable</button>
-      <button class="sp-tab" onclick="switchTab('niveau', this)">🎓 Par Niveau</button>
+  <!-- TABS + BTN NEW -->
+  <div class="b2c-tabs-bar">
+    <div class="b2c-tabs" id="b2cTabs">
+      <button class="b2c-tab active" onclick="switchB2CTab('seances', this)">📋 Séances</button>
+      <button class="b2c-tab" onclick="switchB2CTab('profs', this)">🎓 Heures Profs</button>
     </div>
-    <button class="btn-new-seance" onclick="openAddModal(null)">➕ Nouvelle séance B2C</button>
+    <button class="btn-b2c-new" onclick="openB2CAddModal()">➕ Nouvelle séance</button>
   </div>
 
-  {# ══ VUE PAR RESPONSABLE ══ #}
-  <div id="view-resp">
+  <!-- ══ VIEW SEANCES ══ -->
+  <div id="view-seances">
     {% if blocs_resp %}
       {% for bloc in blocs_resp %}
-      <div class="sp-resp-card">
-        <div class="sp-resp-header" onclick="toggleCard(this)">
-          <div class="sp-resp-avatar">
-            {{ bloc.responsable.prenom[0]|upper }}{{ bloc.responsable.nom[0]|upper }}
+      <div class="b2c-resp-card">
+        <div class="b2c-resp-header" onclick="toggleB2CCard(this)">
+          <div class="b2c-resp-avatar">
+            {{ (bloc.responsable.prenom[0] + bloc.responsable.nom[0])|upper }}
           </div>
           <div>
-            <div class="sp-resp-name">{{ bloc.responsable.prenom }} {{ bloc.responsable.nom }}</div>
-            <div class="sp-resp-sub">Responsable B2C</div>
+            <div class="b2c-resp-name">{{ bloc.responsable.prenom }} {{ bloc.responsable.nom }}</div>
+            <div class="b2c-resp-sub">{{ bloc.seances|length }} séance{{ 's' if bloc.seances|length != 1 }}</div>
           </div>
-          <div class="sp-resp-pills">
-            {% if bloc.nb_passees > 0 %}<span class="sp-pill passee">✅ {{ bloc.nb_passees }}</span>{% endif %}
-            {% if bloc.nb_annulees > 0 %}<span class="sp-pill annulee">❌ {{ bloc.nb_annulees }}</span>{% endif %}
-            {% if bloc.nb_rattrapage > 0 %}<span class="sp-pill rattrapage">🔄 {{ bloc.nb_rattrapage }}</span>{% endif %}
-            <span class="sp-pill heures">⏱️ {{ "%.1f"|format(bloc.total_heures) }}h</span>
-            {% if bloc.total_eleves %}<span class="sp-pill eleves">👥 {{ bloc.total_eleves }}</span>{% endif %}
-            {% if bloc.effectif_total %}<span class="sp-pill total">🏫 {{ bloc.effectif_total }}</span>{% endif %}
-            <span class="toggle-icon" style="font-size:12px;">▾</span>
+          <div class="b2c-pills">
+            {% if bloc.nb_passees > 0 %}<span class="b2c-pill bp-pass">✅ {{ bloc.nb_passees }}</span>{% endif %}
+            {% if bloc.nb_annulees > 0 %}<span class="b2c-pill bp-ann">❌ {{ bloc.nb_annulees }}</span>{% endif %}
+            {% if bloc.nb_ratt > 0 %}<span class="b2c-pill bp-ratt">🔄 {{ bloc.nb_ratt }}</span>{% endif %}
+            <span class="b2c-pill bp-hrs">⏱️ {{ "%.1f"|format(bloc.total_heures) }}h</span>
+            {% if bloc.total_presents %}<span class="b2c-pill bp-elv">👥 {{ bloc.total_presents }}</span>{% endif %}
+            <span class="tog-ico">▾</span>
           </div>
         </div>
-
-        <div class="sp-resp-body">
+        <div class="b2c-resp-body">
           {% if bloc.seances %}
-          <div style="overflow-x:auto;">
-            <table class="sp-table">
+          <div class="b2c-table-wrap">
+            <table class="b2c-table">
               <thead>
                 <tr>
-                  <th>Date</th><th>Heure</th><th>Matière</th><th>Niveau</th>
-                  <th>Professeur</th>
-                  <th>Présents</th><th>Effectif total</th>
-                  <th>Heures</th><th>Statut</th><th>Remarque</th><th></th>
+                  <th>Date</th>
+                  <th>Heure</th>
+                  <th>Prof</th>
+                  <th>Matière</th>
+                  <th>Niveau</th>
+                  <th>Heures</th>
+                  <th>B2C</th>
+                  <th>FOS</th>
+                  <th>Free</th>
+                  <th>FOS Agri</th>
+                  <th>IPSE</th>
+                  <th>Dar Talib</th>
+                  <th>Statut</th>
+                  <th>Remarque</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -494,26 +611,103 @@
                 <tr>
                   <td><strong>{{ s.date.strftime('%d/%m/%Y') }}</strong></td>
                   <td>{{ s.heure or '—' }}</td>
+                  <td style="font-weight:700;color:var(--b2c-navy);white-space:nowrap;">{{ s.prof_nom or '—' }}</td>
                   <td>
                     {% if s.matiere %}
-                      <span style="background:#e6faf7;color:#0d9488;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">{{ s.matiere }}</span>
+                      <span style="background:#0369a1;color:#ffffff;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">{{ s.matiere }}</span>
                     {% else %}—{% endif %}
                   </td>
-                  <td><span style="font-size:12px;color:#888;">{{ s.niveau or '—' }}</span></td>
-                  <td style="font-weight:600;color:#1a3a6b;">{{ s.prof_nom or '—' }}</td>
-                  <td>{% if s.nb_eleves %}<span class="sp-pill eleves">👥 {{ s.nb_eleves }}</span>{% else %}—{% endif %}</td>
-                  <td>{% if s.nb_eleves_total %}<span class="sp-pill total">🏫 {{ s.nb_eleves_total }}</span>{% else %}—{% endif %}</td>
-                  <td><strong style="color:#1a3a6b;">{{ s.nb_heures }}h</strong></td>
+                  <td style="font-size:12px;color:var(--b2c-muted);">{{ s.niveau or '—' }}</td>
+                  <td><strong style="color:var(--b2c-blue);">{{ s.nb_heures }}h</strong></td>
                   <td>
-                    {% if s.statut == 'passee' %}<span class="badge-statut badge-passee">✅ Passée</span>
-                    {% elif s.statut == 'annulee' %}<span class="badge-statut badge-annulee">❌ Annulée</span>
-                    {% elif s.statut == 'rattrapage' %}<span class="badge-statut badge-rattrapage">🔄 Rattrapage</span>
+                    {% if s.effectif_b2c_presents is not none or s.effectif_b2c_total is not none %}
+                    <div class="sc">
+                      <div class="sc-row"><span class="sc-lbl">Inscrits</span><span class="sc-val">{{ s.effectif_b2c_total if s.effectif_b2c_total is not none else '—' }}</span></div>
+                      <div class="sc-sep"></div>
+                      <div class="sc-row"><span class="sc-lbl">Présents</span><span class="sc-val green">{{ s.effectif_b2c_presents if s.effectif_b2c_presents is not none else '—' }}</span></div>
+                    </div>
+                    {% else %}<span style="color:#cbd5e1;font-size:16px;">—</span>{% endif %}
+                  </td>
+                  <td>
+                    {% if s.effectif_fos_presents is not none or s.effectif_fos_total is not none %}
+                    <div class="sc">
+                      <div class="sc-row"><span class="sc-lbl">Inscrits</span><span class="sc-val">{{ s.effectif_fos_total if s.effectif_fos_total is not none else '—' }}</span></div>
+                      <div class="sc-sep"></div>
+                      <div class="sc-row"><span class="sc-lbl">Présents</span><span class="sc-val green">{{ s.effectif_fos_presents if s.effectif_fos_presents is not none else '—' }}</span></div>
+                    </div>
+                    {% else %}<span style="color:#cbd5e1;font-size:16px;">—</span>{% endif %}
+                  </td>
+                  <td>
+                    {% if s.effectif_free_presents is not none or s.effectif_free_total is not none %}
+                    <div class="sc">
+                      <div class="sc-row"><span class="sc-lbl">Inscrits</span><span class="sc-val">{{ s.effectif_free_total if s.effectif_free_total is not none else '—' }}</span></div>
+                      <div class="sc-sep"></div>
+                      <div class="sc-row"><span class="sc-lbl">Présents</span><span class="sc-val green">{{ s.effectif_free_presents if s.effectif_free_presents is not none else '—' }}</span></div>
+                    </div>
+                    {% else %}<span style="color:#cbd5e1;font-size:16px;">—</span>{% endif %}
+                  </td>
+                  <td>
+                    {% if s.effectif_fos_agri_presents is not none or s.effectif_fos_agri_total is not none %}
+                    <div class="sc">
+                      <div class="sc-row"><span class="sc-lbl">Inscrits</span><span class="sc-val">{{ s.effectif_fos_agri_total if s.effectif_fos_agri_total is not none else '—' }}</span></div>
+                      <div class="sc-sep"></div>
+                      <div class="sc-row"><span class="sc-lbl">Présents</span><span class="sc-val green">{{ s.effectif_fos_agri_presents if s.effectif_fos_agri_presents is not none else '—' }}</span></div>
+                    </div>
+                    {% else %}<span style="color:#cbd5e1;font-size:16px;">—</span>{% endif %}
+                  </td>
+                  <td>
+                    {% if s.effectif_ipse_presents is not none or s.effectif_ipse_total is not none %}
+                    <div class="sc">
+                      <div class="sc-row"><span class="sc-lbl">Inscrits</span><span class="sc-val">{{ s.effectif_ipse_total if s.effectif_ipse_total is not none else '—' }}</span></div>
+                      <div class="sc-sep"></div>
+                      <div class="sc-row"><span class="sc-lbl">Présents</span><span class="sc-val green">{{ s.effectif_ipse_presents if s.effectif_ipse_presents is not none else '—' }}</span></div>
+                    </div>
+                    {% else %}<span style="color:#cbd5e1;font-size:16px;">—</span>{% endif %}
+                  </td>
+                  {# ── Dar Talib — une card par dar avec ses propres effectifs ── #}
+                  <td>
+                    {% if s.dar_effectifs %}
+                      {% for de in s.dar_effectifs %}
+                      <div class="sc sc-dar">
+                        <div class="sc-dar-name">🏠 {{ de.dour.nom }}</div>
+                        <div class="sc-row">
+                          <span class="sc-lbl">Inscrits</span>
+                          <span class="sc-val">{{ de.total if de.total is not none else '—' }}</span>
+                        </div>
+                        <div class="sc-sep"></div>
+                        <div class="sc-row">
+                          <span class="sc-lbl">Présents</span>
+                          <span class="sc-val green">{{ de.presents if de.presents is not none else '—' }}</span>
+                        </div>
+                      </div>
+                      {% endfor %}
+                    {% elif s.dars %}
+                      {# Dars sélectionnées mais sans effectifs enregistrés #}
+                      {% for d in s.dars %}
+                      <div class="sc sc-dar">
+                        <div class="sc-dar-name">🏠 {{ d.nom }}</div>
+                        <div class="sc-row"><span class="sc-lbl">Inscrits</span><span class="sc-val">—</span></div>
+                        <div class="sc-sep"></div>
+                        <div class="sc-row"><span class="sc-lbl">Présents</span><span class="sc-val green">—</span></div>
+                      </div>
+                      {% endfor %}
+                    {% else %}
+                      <span style="color:#cbd5e1;font-size:16px;">—</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if s.statut == 'passee' %}<span class="bst bst-pass">✅ Passée</span>
+                    {% elif s.statut == 'annulee' %}<span class="bst bst-ann">❌ Annulée</span>
+                    {% elif s.statut == 'rattrapage' %}<span class="bst bst-ratt">🔄 Rattrapage</span>
                     {% else %}<span style="color:#94a3b8;font-size:12px;">—</span>{% endif %}
                   </td>
-                  <td style="max-width:160px;font-size:11px;color:#888;font-style:italic;">{{ s.remarque or (s.note or '—') }}</td>
+                  <td style="max-width:140px;font-size:11px;color:var(--b2c-muted);font-style:italic;">
+                    {{ s.remarque or s.note or '—' }}
+                  </td>
                   <td style="white-space:nowrap;">
-                    <button class="btn-action btn-edit" onclick="openEditModal({{ s.id }})">✏️</button>
-                    <button class="btn-action btn-delete" onclick="openDelModal('{{ url_for('suivi_b2c_supprimer', id=s.id) }}', '{{ request.url }}')">🗑️</button>
+                    <button class="btn-ba btn-be" onclick="openB2CEditModal({{ s.id }})">✏️</button>
+                    <button class="btn-ba btn-bd"
+                      onclick="openB2CDelModal('{{ url_for('suivi_b2c_supprimer', id=s.id) }}', '{{ request.url }}')">🗑️</button>
                   </td>
                 </tr>
                 {% endfor %}
@@ -521,164 +715,106 @@
             </table>
           </div>
           {% else %}
-            <p style="color:#bbb;font-size:13px;font-style:italic;margin-bottom:8px;">Aucune séance ce mois.</p>
+            <p style="color:#bbb;font-size:13px;font-style:italic;padding:12px 20px 4px;">Aucune séance pour ce responsable ce mois.</p>
           {% endif %}
-          <button class="btn-add-seance" onclick="openAddModal({{ bloc.responsable.id }})">
+          <button class="btn-add-b2c" onclick="openB2CAddModal({{ bloc.responsable.id }})">
             ➕ Ajouter une séance
           </button>
         </div>
       </div>
       {% endfor %}
     {% else %}
-      <div class="sp-empty">
+      <div class="b2c-empty">
         <div class="ei">📭</div>
-        <p>Aucune séance B2C enregistrée pour ce mois.<br>
-          <button class="btn-new-seance" style="margin-top:12px;" onclick="openAddModal(null)">
-            ➕ Ajouter la première séance
-          </button>
-        </p>
+        <p style="font-size:14px;font-weight:600;">Aucune séance B2C enregistrée pour ce mois.</p>
+        <button class="btn-b2c-new" style="margin-top:14px;" onclick="openB2CAddModal()">➕ Ajouter la première séance</button>
       </div>
     {% endif %}
   </div>
 
-  {# ══ VUE PAR NIVEAU ══ #}
-  <div id="view-niveau" style="display:none">
-    {% if blocs_niveau %}
-      {% for bloc in blocs_niveau %}
-      <div class="sp-niveau-card">
-        <div class="sp-niveau-header" onclick="toggleCard(this)">
-          <span style="font-size:18px;color:#f5a623;">🎓</span>
-          <span class="sp-niveau-name">{{ bloc.niveau }}</span>
-
-          {% if bloc.effectif_total %}
-          <div class="sp-effectif-badge" style="margin-left:10px;">
-            🏫 <strong>{{ bloc.effectif_total }}</strong>
-            <span class="ef-label">inscrits</span>
-          </div>
-          {% endif %}
-
-          <div class="sp-niveau-pills">
-            {% if bloc.nb_passees > 0 %}<span class="sp-pill passee">✅ {{ bloc.nb_passees }}</span>{% endif %}
-            {% if bloc.nb_annulees > 0 %}<span class="sp-pill annulee">❌ {{ bloc.nb_annulees }}</span>{% endif %}
-            {% if bloc.nb_rattrapage > 0 %}<span class="sp-pill rattrapage">🔄 {{ bloc.nb_rattrapage }}</span>{% endif %}
-            <span class="sp-pill heures">⏱️ {{ "%.1f"|format(bloc.total_heures) }}h</span>
-            {% if bloc.total_eleves %}<span class="sp-pill eleves">👥 {{ bloc.total_eleves }}</span>{% endif %}
-            <span class="toggle-icon" style="font-size:12px;">▾</span>
-          </div>
-        </div>
-
-        <div class="sp-niveau-body">
-          <div style="overflow-x:auto;">
-            <table class="sp-table">
-              <thead>
-                <tr>
-                  <th>Date</th><th>Heure</th><th>Responsable</th><th>Matière</th>
-                  <th>Professeur</th>
-                  <th>Présents</th><th>Effectif total</th>
-                  <th>Heures</th><th>Statut</th><th>Remarque</th><th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for s in bloc.seances %}
-                <tr>
-                  <td><strong>{{ s.date.strftime('%d/%m/%Y') }}</strong></td>
-                  <td>{{ s.heure or '—' }}</td>
-                  <td>
-                    {% if s.responsable %}
-                      <span style="background:#e8edf5;color:#1a3a6b;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600;">
-                        {{ s.responsable.prenom }} {{ s.responsable.nom }}
-                      </span>
-                    {% else %}—{% endif %}
-                  </td>
-                  <td>
-                    {% if s.matiere %}
-                      <span style="background:#e6faf7;color:#0d9488;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">{{ s.matiere }}</span>
-                    {% else %}—{% endif %}
-                  </td>
-                  <td style="font-weight:600;color:#1a3a6b;">{{ s.prof_nom or '—' }}</td>
-                  <td>{% if s.nb_eleves %}<span class="sp-pill eleves">👥 {{ s.nb_eleves }}</span>{% else %}—{% endif %}</td>
-                  <td>{% if s.nb_eleves_total %}<span class="sp-pill total">🏫 {{ s.nb_eleves_total }}</span>{% else %}—{% endif %}</td>
-                  <td><strong style="color:#1a3a6b;">{{ s.nb_heures }}h</strong></td>
-                  <td>
-                    {% if s.statut == 'passee' %}<span class="badge-statut badge-passee">✅ Passée</span>
-                    {% elif s.statut == 'annulee' %}<span class="badge-statut badge-annulee">❌ Annulée</span>
-                    {% elif s.statut == 'rattrapage' %}<span class="badge-statut badge-rattrapage">🔄 Rattrapage</span>
-                    {% else %}<span style="color:#94a3b8;font-size:12px;">—</span>{% endif %}
-                  </td>
-                  <td style="max-width:150px;font-size:11px;color:#888;font-style:italic;">{{ s.remarque or (s.note or '—') }}</td>
-                  <td style="white-space:nowrap;">
-                    <button class="btn-action btn-edit" onclick="openEditModal({{ s.id }})">✏️</button>
-                    <button class="btn-action btn-delete" onclick="openDelModal('{{ url_for('suivi_b2c_supprimer', id=s.id) }}', '{{ request.url }}')">🗑️</button>
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
+  <!-- ══ VIEW PROFS ══ -->
+  <div id="view-profs" style="display:none">
+    {% if recap_prof %}
+    <div class="b2c-prof-section">
+      <div class="b2c-prof-header">
+        <span style="font-size:20px;">🎓</span>
+        <h3>Heures effectuées par professeur · {{ mois_noms[mois] }} {{ annee }}</h3>
       </div>
-      {% endfor %}
+      <div class="b2c-prof-grid">
+        {% for item in recap_prof %}
+        <div class="b2c-prof-card">
+          <div class="bpc-avatar">{{ item.professeur.nom[0]|upper }}</div>
+          <div style="min-width:0;">
+            <div class="bpc-name">{{ item.professeur.nom }}</div>
+            <div class="bpc-resp">{{ item.responsable.prenom }} {{ item.responsable.nom }}</div>
+          </div>
+          <div class="bpc-hrs">{{ "%.1f"|format(item.heures) }}h</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
     {% else %}
-      <div class="sp-empty">
-        <div class="ei">📭</div>
-        <p>Aucune séance B2C enregistrée pour ce mois.</p>
+      <div class="b2c-empty">
+        <div class="ei">🎓</div>
+        <p style="font-size:14px;font-weight:600;">Aucune heure de professeur enregistrée pour ce mois.</p>
       </div>
     {% endif %}
   </div>
 
 </div>
 
-{# ══ MODAL SUPPRIMER ══ #}
-<div class="sp-del-backdrop" id="spDelBackdrop">
-  <div class="sp-del-modal">
-    <div class="sp-del-head">
-      <div class="sp-del-head-icon">🗑️</div>
+
+{# ═══════════════ MODAL DELETE ═══════════════ #}
+<div class="b2c-del-backdrop" id="b2cDelBackdrop">
+  <div class="b2c-del-modal">
+    <div class="b2c-del-head">
+      <div class="b2c-del-hico">🗑️</div>
       <div>
         <h4>Supprimer la séance</h4>
         <p>Cette action est irréversible</p>
       </div>
     </div>
-    <div class="sp-del-body">
-      <div class="sp-del-body-icon">⚠️</div>
+    <div class="b2c-del-body">
+      <div class="b2c-del-bico">⚠️</div>
       <p>Êtes-vous sûr de vouloir <strong>supprimer cette séance B2C</strong> ?<br>
          Toutes les données associées seront perdues définitivement.</p>
     </div>
-    <div class="sp-del-footer">
-      <button class="btn-del-cancel" type="button" onclick="closeDelModal()">Annuler</button>
-      <form id="spDelForm" method="POST" style="display:inline">
+    <div class="b2c-del-footer">
+      <button class="btn-dcancel" onclick="closeB2CDelModal()">Annuler</button>
+      <form id="b2cDelForm" method="POST" style="display:inline">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <input type="hidden" name="redirect_url" id="spDelRedirect">
-        <button type="submit" class="btn-del-confirm">🗑️ Supprimer</button>
+        <input type="hidden" name="redirect_url" id="b2cDelRedirect">
+        <button type="submit" class="btn-dconfirm">🗑️ Supprimer</button>
       </form>
     </div>
   </div>
 </div>
 
-{# ══ MODAL AJOUTER / MODIFIER ══ #}
-<div class="sp-modal-backdrop" id="spModalBackdrop">
-  <div class="sp-modal">
-    <div class="sp-modal-head">
-      <div class="sp-modal-head-left">
-        <div class="sp-modal-head-icon">📅</div>
+
+{# ═══════════════ MODAL ADD/EDIT ═══════════════ #}
+<div class="b2c-modal-backdrop" id="b2cModalBackdrop">
+  <div class="b2c-modal">
+    <div class="b2c-modal-head">
+      <div class="b2c-mh-left">
+        <div class="b2c-mh-icon">💼</div>
         <div>
-          <h4 id="spModalTitle">Ajouter une séance B2C</h4>
-          <p>Suivi B2C</p>
+          <p class="b2c-mh-title" id="b2cModalTitle">Ajouter une séance B2C</p>
+          <p class="b2c-mh-sub">Suivi B2C</p>
         </div>
       </div>
-      <button class="sp-modal-close" onclick="closeModal()" type="button">✕</button>
+      <button class="b2c-mclose" onclick="closeB2CModal()" type="button">✕</button>
     </div>
 
-    <form id="spForm" method="POST">
+    <form id="b2cForm" method="POST">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <input type="hidden" name="redirect_url" id="spRedirectUrl" value="{{ request.url }}">
+      <input type="hidden" name="redirect_url" id="b2cRedirectUrl" value="{{ request.url }}">
 
-      <div class="sp-modal-body">
+      <div class="b2c-modal-body">
 
-        {# ── Responsable ── #}
-        <div class="sp-section-label">👤 Responsable</div>
-        <div class="sp-fg">
+        <div class="b2c-slabel">👤 Responsable</div>
+        <div class="b2c-fg">
           <label>Responsable <span class="req">*</span></label>
-          <select name="responsable_id" id="spResp" required>
+          <select name="responsable_id" id="b2cResp" required>
             <option value="">— Choisir —</option>
             {% for r in responsables %}
               <option value="{{ r.id }}">{{ r.prenom }} {{ r.nom }}</option>
@@ -686,122 +822,161 @@
           </select>
         </div>
 
-        {# ── Détails séance ── #}
-        <div class="sp-section-label">🕐 Détails séance</div>
-        <div class="sp-form-grid-2">
-          <div class="sp-fg">
+        <div class="b2c-slabel">🕐 Détails séance</div>
+        <div class="b2c-fg2">
+          <div class="b2c-fg">
             <label>Date <span class="req">*</span></label>
-            <div class="sp-input-icon">
-              <span class="ico">📆</span>
-              <input type="date" name="date" id="spDate" required>
-            </div>
+            <input type="date" name="date" id="b2cDate" required>
           </div>
-          <div class="sp-fg">
+          <div class="b2c-fg">
             <label>Heure</label>
-            <div class="sp-input-icon">
-              <span class="ico">🕐</span>
-              <input type="time" name="heure" id="spHeure">
-            </div>
+            <input type="time" name="heure" id="b2cHeure">
           </div>
         </div>
 
         <div style="margin-top:12px;">
-          <div class="sp-fg">
+          <div class="b2c-fg">
             <label>Durée (heures) <span class="req">*</span></label>
-            <div class="sp-num-wrap">
-              <button class="sp-num-btn" type="button" onclick="changeHrs(-0.5)">−</button>
-              <input class="sp-num-input" type="number" name="nb_heures" id="spHeures"
-                     step="0.5" min="0.5" max="12" value="2" required>
-              <button class="sp-num-btn" type="button" onclick="changeHrs(0.5)">+</button>
+            <div class="b2c-num-wrap">
+              <button class="b2c-num-btn" type="button" onclick="chgB2CHrs(-0.5)">−</button>
+              <input class="b2c-num-input" type="number" name="nb_heures" id="b2cHeures" step="0.5" min="0.5" max="12" value="2" required>
+              <button class="b2c-num-btn" type="button" onclick="chgB2CHrs(0.5)">+</button>
             </div>
           </div>
         </div>
 
         <div style="margin-top:14px;">
-          <div class="sp-fg">
+          <div class="b2c-fg">
             <label>Statut <span class="req">*</span></label>
-            <div class="sp-statut-group">
-              <label class="sp-statut-pill s-passee">
-                <input type="radio" name="statut" value="passee"><span class="sdot"></span> Passée
-              </label>
-              <label class="sp-statut-pill s-annulee">
-                <input type="radio" name="statut" value="annulee"><span class="sdot"></span> Annulée
-              </label>
-              <label class="sp-statut-pill s-rattrapage">
-                <input type="radio" name="statut" value="rattrapage"><span class="sdot"></span> Rattrapage
-              </label>
+            <div class="b2c-statut-grp">
+              <label class="b2c-spl sp-pass"><input type="radio" name="statut" value="passee"><span class="sdot"></span> Passée</label>
+              <label class="b2c-spl sp-ann"><input type="radio" name="statut" value="annulee"><span class="sdot"></span> Annulée</label>
+              <label class="b2c-spl sp-ratt"><input type="radio" name="statut" value="rattrapage"><span class="sdot"></span> Rattrapage</label>
             </div>
           </div>
         </div>
 
-        {# ── Matière & Niveau ── #}
-        <div class="sp-section-label">📚 Matière & Niveau</div>
-        <div class="sp-form-grid-2">
-          <div class="sp-fg">
+        <div class="b2c-slabel">📚 Contenu</div>
+        <div class="b2c-fg2">
+          <div class="b2c-fg">
             <label>Matière</label>
-            <select name="matiere" id="spMatiere">
+            <select name="matiere" id="b2cMatiere">
               <option value="">— Non défini —</option>
               {% for m in matieres %}<option value="{{ m }}">{{ m }}</option>{% endfor %}
             </select>
           </div>
-          <div class="sp-fg">
+          <div class="b2c-fg">
             <label>Niveau</label>
-            <select name="niveau" id="spNiveau">
+            <select name="niveau" id="b2cNiveau">
               <option value="">— Non défini —</option>
               {% for n in niveaux %}<option value="{{ n }}">{{ n }}</option>{% endfor %}
             </select>
           </div>
         </div>
 
-        {# ── Professeur ── #}
-        <div class="sp-section-label">🎓 Professeur</div>
-        <input type="hidden" name="professeur_id" id="spProfHidden">
-        <div class="prof-search-wrapper">
-          <span class="prof-search-icon">🔍</span>
-          <input type="text" id="spProfSearch" class="prof-search-input"
-                 placeholder="Rechercher un professeur…" autocomplete="off">
-          <div class="prof-dropdown" id="spProfDropdown"></div>
+        <div class="b2c-slabel">🎓 Professeur</div>
+        <input type="hidden" name="professeur_id" id="b2cProfHidden">
+        <div class="bpf-wrap">
+          <span class="bpf-icon">🔍</span>
+          <input type="text" id="b2cProfSearch" class="bpf-inp" placeholder="Rechercher un professeur…" autocomplete="off">
+          <div class="bpf-drop" id="b2cProfDrop"></div>
         </div>
 
-        {# ── Présence & Notes ── #}
-        <div class="sp-section-label">📝 Présence & notes</div>
-        <div class="sp-form-grid-2">
-          <div class="sp-fg">
-            <label>👥 Élèves présents</label>
-            <div class="sp-input-icon">
-              <span class="ico">👥</span>
-              <input type="number" name="nb_eleves" id="spEleves" min="0" placeholder="0">
-            </div>
-          </div>
-          <div class="sp-fg">
-            <label>🏫 Effectif total</label>
-            <div class="sp-input-icon">
-              <span class="ico">🏫</span>
-              <input type="number" name="nb_eleves_total" id="spElevesTotal" min="0" placeholder="Ex: 50">
-            </div>
-          </div>
+        <!-- ══ EFFECTIFS PAR SEGMENT ══ -->
+        <div class="b2c-slabel">👥 Effectifs par segment</div>
+
+        <table class="seg-unified-table">
+          <thead>
+            <tr>
+              <th style="width:140px;">Segment</th>
+              <th>Inscrits</th>
+              <th>Présents</th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <!-- B2C Payant -->
+            <tr>
+              <td><span class="seg-lbl">💰 B2C Payant</span></td>
+              <td><div class="b2c-fg"><input type="number" name="effectif_b2c_total" id="b2cBtotal" min="0" placeholder="0"></div></td>
+              <td><div class="b2c-fg"><input type="number" name="effectif_b2c_presents" id="b2cBpres" min="0" placeholder="0"></div></td>
+            </tr>
+
+            <!-- FOS -->
+            <tr>
+              <td><span class="seg-lbl">🏭 FOS</span></td>
+              <td><div class="b2c-fg"><input type="number" name="effectif_fos_total" id="b2cFostotal" min="0" placeholder="0"></div></td>
+              <td><div class="b2c-fg"><input type="number" name="effectif_fos_presents" id="b2cFospres" min="0" placeholder="0"></div></td>
+            </tr>
+
+            <!-- Free -->
+            <tr>
+              <td><span class="seg-lbl">🆓 Free</span></td>
+              <td><div class="b2c-fg"><input type="number" name="effectif_free_total" id="b2cFretotal" min="0" placeholder="0"></div></td>
+              <td><div class="b2c-fg"><input type="number" name="effectif_free_presents" id="b2cFrepres" min="0" placeholder="0"></div></td>
+            </tr>
+
+            <!-- FOS Agricol -->
+            <tr>
+              <td><span class="seg-lbl">🌾 FOS Agricol</span></td>
+              <td><div class="b2c-fg"><input type="number" name="effectif_fos_agri_total" id="b2cFagritotal" min="0" placeholder="0"></div></td>
+              <td><div class="b2c-fg"><input type="number" name="effectif_fos_agri_presents" id="b2cFagripres" min="0" placeholder="0"></div></td>
+            </tr>
+
+            <!-- IPSE -->
+            <tr>
+              <td><span class="seg-lbl">🏛️ IPSE</span></td>
+              <td><div class="b2c-fg"><input type="number" name="effectif_ipse_total" id="b2cIpsetotal" min="0" placeholder="0"></div></td>
+              <td><div class="b2c-fg"><input type="number" name="effectif_ipse_presents" id="b2cIpsepres" min="0" placeholder="0"></div></td>
+            </tr>
+
+            <!-- Dar Talib : sélecteur multi + sous-lignes dynamiques par dar -->
+            <tr>
+              <td colspan="3" style="padding-top:10px;padding-bottom:6px;">
+                <span class="seg-lbl" style="display:block;margin-bottom:6px;">🏠 Dar Talib</span>
+                <div id="darHiddenInputs"></div>
+                <div class="dar-ms-wrap">
+                  <div class="dar-ms-box" id="darMsBox">
+                    <input type="text" class="dar-ms-input" id="darMsInput" placeholder="Rechercher une Dar…" autocomplete="off">
+                  </div>
+                  <span class="dar-ms-arrow">▾</span>
+                  <div class="dar-ms-drop" id="darMsDrop">
+                    {% for d in dours_all %}
+                    <div class="dar-ms-opt" data-id="{{ d.id }}" data-nom="{{ d.nom }}" data-type="{{ d.type }}">
+                      {% if d.type == 'talib' %}🏠 Dar Talib
+                      {% elif d.type == 'taliba' %}🏠 Dar Taliba
+                      {% else %}🏠 Dar Fatat{% endif %}
+                      — {{ d.nom }}
+                    </div>
+                    {% endfor %}
+                  </div>
+                </div>
+                <span id="darSelCount" class="dar-ms-count" style="display:none;margin-top:6px;"></span>
+              </td>
+            </tr>
+
+            <!-- Sous-lignes dynamiques : une ligne par dar sélectionnée -->
+            <!-- Elles sont injectées ici par JS via renderDarSubRows() -->
+            <tr id="darSubRowsPlaceholder" style="display:none;"><td colspan="3"></td></tr>
+
+          </tbody>
+        </table>
+
+        <div class="b2c-slabel">📝 Notes</div>
+        <div class="b2c-fg" style="margin-bottom:10px;">
+          <label>Note interne</label>
+          <input type="text" name="note" id="b2cNote" placeholder="Note courte…">
         </div>
-        <div style="margin-top:12px;">
-          <div class="sp-fg">
-            <label>🏷️ Note interne</label>
-            <div class="sp-input-icon">
-              <span class="ico">🏷️</span>
-              <input type="text" name="note" id="spNote" placeholder="Note courte…">
-            </div>
-          </div>
-        </div>
-        <div style="margin-top:12px;">
-          <div class="sp-fg">
-            <label>💬 Remarque</label>
-            <textarea name="remarque" id="spRemarque" placeholder="Remarques…"></textarea>
-          </div>
+        <div class="b2c-fg">
+          <label>Remarque</label>
+          <textarea name="remarque" id="b2cRemarque" placeholder="Remarques sur le déroulement…"></textarea>
         </div>
 
       </div>
 
-      <div class="sp-modal-footer">
-        <button type="button" class="btn-cancel-modal" onclick="closeModal()">Annuler</button>
-        <button type="submit" class="btn-submit" id="spSubmitBtn">💾 Enregistrer</button>
+      <div class="b2c-modal-footer">
+        <button type="button" class="btn-bmcancel" onclick="closeB2CModal()">Annuler</button>
+        <button type="submit" class="btn-bmsubmit" id="b2cSubmitBtn">💾 Enregistrer</button>
       </div>
     </form>
   </div>
@@ -811,144 +986,360 @@
 
 {% block extra_js %}
 <script>
-var PROFS_DATA = [
-  {% for p in professeurs %}{ id: {{ p.id }}, nom: {{ p.nom|tojson }} }{% if not loop.last %},{% endif %}{% endfor %}
+var B2C_PROFS = [
+  {% for p in professeurs %}{ id: {{ p.id }}, nom: {{ p.nom | tojson }} }{% if not loop.last %},{% endif %}{% endfor %}
 ];
 
-var SEANCES_DATA = {};
+var B2C_SEANCES = {};
 {% for s in seances_json %}
-SEANCES_DATA[{{ s.id }}] = {
-  id:             {{ s.id }},
-  responsable_id: {{ s.responsable_id }},
-  date:           {{ s.date|tojson }},
-  heure:          {{ s.heure|tojson }},
-  nb_heures:      {{ s.nb_heures }},
-  statut:         {{ s.statut|tojson }},
-  matiere:        {{ s.matiere|tojson }},
-  niveau:         {{ s.niveau|tojson }},
-  prof:           {{ s.prof|tojson }},
-  professeur_id:  {{ s.professeur_id if s.professeur_id else 'null' }},
-  nb_eleves:      {{ s.nb_eleves }},
-  nb_eleves_total:{{ s.nb_eleves_total }},
-  note:           {{ s.note|tojson }},
-  remarque:       {{ s.remarque|tojson }},
-};
+B2C_SEANCES[{{ s.id }}] = {{ s | tojson }};
 {% endfor %}
 
-/* ── Tabs ── */
-function switchTab(tab, btn) {
-  document.getElementById('view-resp').style.display   = tab === 'resp'   ? '' : 'none';
-  document.getElementById('view-niveau').style.display = tab === 'niveau' ? '' : 'none';
-  document.querySelectorAll('.sp-tab').forEach(function(t) { t.classList.remove('active'); });
+function switchB2CTab(tab, btn) {
+  document.getElementById('view-seances').style.display = tab === 'seances' ? '' : 'none';
+  document.getElementById('view-profs').style.display   = tab === 'profs'   ? '' : 'none';
+  document.querySelectorAll('.b2c-tab').forEach(function(t) { t.classList.remove('active'); });
   btn.classList.add('active');
 }
 
-/* ── Durée stepper ── */
-function changeHrs(delta) {
-  var el = document.getElementById('spHeures');
+function toggleB2CCard(header) {
+  var body = header.nextElementSibling;
+  var icon = header.querySelector('.tog-ico');
+  if (body.style.display === 'none') {
+    body.style.display = '';
+    if (icon) icon.style.transform = 'rotate(0deg)';
+  } else {
+    body.style.display = 'none';
+    if (icon) icon.style.transform = 'rotate(-90deg)';
+  }
+}
+
+function chgB2CHrs(delta) {
+  var el = document.getElementById('b2cHeures');
   var v  = parseFloat(el.value) || 2;
   v = Math.min(12, Math.max(0.5, v + delta));
   el.value = (v % 1 === 0) ? v : v.toFixed(1);
 }
 
-/* ── Statut ── */
-function setStatut(val) {
-  document.querySelectorAll('input[name="statut"]').forEach(function(r) { r.checked = r.value === val; });
+function setB2CStatut(val) {
+  document.querySelectorAll('#b2cForm input[name="statut"]').forEach(function(r) {
+    r.checked = (r.value === val);
+  });
 }
 
-/* ── Prof search ── */
-var profSearch   = document.getElementById('spProfSearch');
-var profDropdown = document.getElementById('spProfDropdown');
-var profHidden   = document.getElementById('spProfHidden');
+var bpfInp  = document.getElementById('b2cProfSearch');
+var bpfDrop = document.getElementById('b2cProfDrop');
+var bpfHid  = document.getElementById('b2cProfHidden');
 
-function renderProfOptions(filter) {
+function renderB2CProfs(filter) {
   var lower    = (filter || '').toLowerCase();
-  var filtered = PROFS_DATA.filter(function(p) { return p.nom.toLowerCase().includes(lower); });
-  profDropdown.innerHTML = '';
+  var filtered = B2C_PROFS.filter(function(p) { return p.nom.toLowerCase().includes(lower); });
+  bpfDrop.innerHTML = '';
   var empty = document.createElement('div');
-  empty.className = 'prof-option'; empty.textContent = '— Aucun professeur —';
+  empty.className = 'bpf-opt'; empty.textContent = '— Aucun professeur —';
   empty.dataset.value = ''; empty.dataset.nom = '';
-  profDropdown.appendChild(empty);
+  bpfDrop.appendChild(empty);
   filtered.forEach(function(p) {
     var opt = document.createElement('div');
-    opt.className = 'prof-option' + (String(p.id) === profHidden.value ? ' selected' : '');
+    opt.className = 'bpf-opt' + (String(p.id) === bpfHid.value ? ' selected' : '');
     opt.textContent = p.nom; opt.dataset.value = String(p.id); opt.dataset.nom = p.nom;
-    profDropdown.appendChild(opt);
+    bpfDrop.appendChild(opt);
   });
-  profDropdown.querySelectorAll('.prof-option').forEach(function(opt) {
+  bpfDrop.querySelectorAll('.bpf-opt').forEach(function(opt) {
     opt.addEventListener('mousedown', function(e) {
       e.preventDefault();
-      profHidden.value = opt.dataset.value;
-      profSearch.value = opt.dataset.nom || '';
-      profDropdown.classList.remove('open');
+      bpfHid.value = opt.dataset.value;
+      bpfInp.value = opt.dataset.nom || '';
+      bpfDrop.classList.remove('open');
     });
   });
 }
-profSearch.addEventListener('focus', function() { renderProfOptions(profSearch.value); profDropdown.classList.add('open'); });
-profSearch.addEventListener('input', function() { renderProfOptions(profSearch.value); profDropdown.classList.add('open'); profHidden.value = ''; });
-profSearch.addEventListener('blur',  function() { setTimeout(function() { profDropdown.classList.remove('open'); }, 150); });
+bpfInp.addEventListener('focus', function() { renderB2CProfs(bpfInp.value); bpfDrop.classList.add('open'); });
+bpfInp.addEventListener('input', function() { renderB2CProfs(bpfInp.value); bpfDrop.classList.add('open'); bpfHid.value = ''; });
+bpfInp.addEventListener('blur',  function() { setTimeout(function() { bpfDrop.classList.remove('open'); }, 150); });
 
-/* ── Toggle card ── */
-function toggleCard(header) {
-  var body = header.nextElementSibling;
-  var icon = header.querySelector('.toggle-icon');
-  if (body.style.display === 'none') {
-    body.style.display = ''; if (icon) icon.style.transform = 'rotate(0deg)';
-  } else {
-    body.style.display = 'none'; if (icon) icon.style.transform = 'rotate(-90deg)';
+var b2cBackdrop = document.getElementById('b2cModalBackdrop');
+
+function openB2CAddModal(respId) {
+  document.getElementById('b2cModalTitle').textContent = 'Ajouter une séance B2C';
+  document.getElementById('b2cForm').action = "{{ url_for('suivi_b2c_ajouter') }}";
+  document.getElementById('b2cSubmitBtn').innerHTML = '💾 Ajouter';
+  document.getElementById('b2cForm').reset();
+  bpfHid.value = ''; bpfInp.value = '';
+  darMsClear();
+  document.getElementById('b2cDate').value   = new Date().toISOString().slice(0, 10);
+  document.getElementById('b2cHeures').value = '2';
+  if (respId) document.getElementById('b2cResp').value = String(respId);
+  b2cBackdrop.classList.add('show');
+}
+
+function openB2CEditModal(id) {
+  var s = B2C_SEANCES[id];
+  if (!s) { console.warn('Séance B2C introuvable:', id); return; }
+  document.getElementById('b2cModalTitle').textContent = 'Modifier la séance B2C';
+  document.getElementById('b2cForm').action = '/suivi_b2c/modifier/' + id;
+  document.getElementById('b2cSubmitBtn').innerHTML = '💾 Enregistrer';
+  document.getElementById('b2cResp').value     = s.responsable_id || '';
+  document.getElementById('b2cDate').value     = s.date           || '';
+  document.getElementById('b2cHeure').value    = s.heure          || '';
+  document.getElementById('b2cHeures').value   = s.nb_heures      || 2;
+  document.getElementById('b2cMatiere').value  = s.matiere        || '';
+  document.getElementById('b2cNiveau').value   = s.niveau         || '';
+  document.getElementById('b2cNote').value     = s.note           || '';
+  document.getElementById('b2cRemarque').value = s.remarque       || '';
+  if (s.statut) setB2CStatut(s.statut);
+  document.getElementById('b2cBtotal').value     = s.effectif_b2c_total         || '';
+  document.getElementById('b2cBpres').value      = s.effectif_b2c_presents      || '';
+  document.getElementById('b2cFostotal').value   = s.effectif_fos_total         || '';
+  document.getElementById('b2cFospres').value    = s.effectif_fos_presents      || '';
+  document.getElementById('b2cFretotal').value   = s.effectif_free_total        || '';
+  document.getElementById('b2cFrepres').value    = s.effectif_free_presents     || '';
+  document.getElementById('b2cFagritotal').value = s.effectif_fos_agri_total    || '';
+  document.getElementById('b2cFagripres').value  = s.effectif_fos_agri_presents || '';
+  document.getElementById('b2cIpsetotal').value  = s.effectif_ipse_total        || '';
+  document.getElementById('b2cIpsepres').value   = s.effectif_ipse_presents     || '';
+
+  // Charger les effectifs par dar depuis le JSON
+  darEffectifData = {};
+  (s.dar_effectifs || []).forEach(function(de) {
+    darEffectifData[String(de.dour_id)] = {
+      total:    de.total    !== '' ? de.total    : '',
+      presents: de.presents !== '' ? de.presents : ''
+    };
+  });
+  darMsSetSelected(s.dar_ids || []);
+
+  bpfHid.value = s.professeur_id ? String(s.professeur_id) : '';
+  bpfInp.value = s.prof || '';
+  b2cBackdrop.classList.add('show');
+}
+
+function closeB2CModal() { b2cBackdrop.classList.remove('show'); }
+b2cBackdrop.addEventListener('click', function(e) { if (e.target === b2cBackdrop) closeB2CModal(); });
+
+var b2cDelBackdrop = document.getElementById('b2cDelBackdrop');
+function openB2CDelModal(action, redirectUrl) {
+  document.getElementById('b2cDelForm').action    = action;
+  document.getElementById('b2cDelRedirect').value = redirectUrl;
+  b2cDelBackdrop.classList.add('show');
+}
+function closeB2CDelModal() { b2cDelBackdrop.classList.remove('show'); }
+b2cDelBackdrop.addEventListener('click', function(e) { if (e.target === b2cDelBackdrop) closeB2CDelModal(); });
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') { closeB2CModal(); closeB2CDelModal(); }
+});
+
+
+/* ══ DAR MULTI-SELECT + EFFECTIFS PAR DAR ══ */
+(function() {
+  var ALL_DARS = [];
+  document.querySelectorAll('#darMsDrop .dar-ms-opt').forEach(function(el) {
+    ALL_DARS.push({
+      id:    el.dataset.id,
+      nom:   el.dataset.nom,
+      type:  el.dataset.type,
+      label: el.textContent.trim()
+    });
+  });
+
+  var selected = [];   // [{id, nom, label}]
+
+  // Effectifs par dar : { dar_id: { total, presents } }
+  // Exposé globalement pour que openB2CEditModal puisse le remplir
+  window.darEffectifData = {};
+
+  var box      = document.getElementById('darMsBox');
+  var inp      = document.getElementById('darMsInput');
+  var drop     = document.getElementById('darMsDrop');
+  var hidden   = document.getElementById('darHiddenInputs');
+  var countBdg = document.getElementById('darSelCount');
+  var placeholder = document.getElementById('darSubRowsPlaceholder');
+
+  /* ── Rend les tags dans la box ── */
+  function renderTags() {
+    box.querySelectorAll('.dar-ms-tag').forEach(function(t) { t.remove(); });
+    selected.forEach(function(s) {
+      var tag = document.createElement('span');
+      tag.className = 'dar-ms-tag';
+      tag.innerHTML = '🏠 ' + s.nom + '<button type="button" class="dar-ms-tag-x" data-id="' + s.id + '">×</button>';
+      tag.querySelector('.dar-ms-tag-x').addEventListener('click', function(e) {
+        e.stopPropagation();
+        darMsDeselect(s.id);
+      });
+      box.insertBefore(tag, inp);
+    });
+    // hidden dar_ids[]
+    hidden.innerHTML = '';
+    selected.forEach(function(s) {
+      var h = document.createElement('input');
+      h.type = 'hidden'; h.name = 'dar_ids[]'; h.value = s.id;
+      hidden.appendChild(h);
+    });
+    // badge compteur
+    if (selected.length > 0) {
+      countBdg.textContent = selected.length + ' sélectionnée' + (selected.length > 1 ? 's' : '');
+      countBdg.style.display = 'inline-block';
+    } else {
+      countBdg.style.display = 'none';
+    }
   }
-}
 
-/* ── Modal ajouter ── */
-var backdrop = document.getElementById('spModalBackdrop');
+  /* ── Rend les sous-lignes effectifs par dar DANS le tableau ── */
+  function renderDarSubRows() {
+    // Supprimer les anciennes sous-lignes
+    var existing = document.querySelectorAll('.dar-sub-row');
+    existing.forEach(function(r) { r.remove(); });
 
-function openAddModal(respId) {
-  document.getElementById('spModalTitle').textContent = 'Ajouter une séance B2C';
-  document.getElementById('spForm').action = "{{ url_for('suivi_b2c_ajouter') }}";
-  document.getElementById('spSubmitBtn').innerHTML = '💾 Ajouter';
-  document.getElementById('spForm').reset();
-  profHidden.value = ''; profSearch.value = '';
-  document.getElementById('spElevesTotal').value = '';
-  document.getElementById('spDate').value = new Date().toISOString().slice(0,10);
-  document.getElementById('spHeures').value = '2';
-  if (respId) document.getElementById('spResp').value = respId;
-  backdrop.classList.add('show');
-}
+    if (selected.length === 0) return;
 
-function openEditModal(id) {
-  var s = SEANCES_DATA[id];
-  if (!s) return;
-  document.getElementById('spModalTitle').textContent = 'Modifier la séance B2C';
-  document.getElementById('spForm').action = '/suivi_b2c/modifier/' + id;
-  document.getElementById('spSubmitBtn').innerHTML = '💾 Enregistrer';
-  document.getElementById('spResp').value          = s.responsable_id || '';
-  document.getElementById('spDate').value          = s.date     || '';
-  document.getElementById('spHeure').value         = s.heure    || '';
-  document.getElementById('spHeures').value        = s.nb_heures || 2;
-  document.getElementById('spMatiere').value       = s.matiere  || '';
-  document.getElementById('spNiveau').value        = s.niveau   || '';
-  document.getElementById('spEleves').value        = s.nb_eleves || '';
-  document.getElementById('spElevesTotal').value   = s.nb_eleves_total || '';
-  document.getElementById('spNote').value          = s.note     || '';
-  document.getElementById('spRemarque').value      = s.remarque || '';
-  if (s.statut) setStatut(s.statut);
-  profHidden.value = s.professeur_id ? String(s.professeur_id) : '';
-  profSearch.value = s.prof || '';
-  backdrop.classList.add('show');
-}
+    // Insérer une ligne par dar après le placeholder
+    var ref = placeholder;
+    selected.forEach(function(s) {
+      var tr = document.createElement('tr');
+      tr.className = 'dar-sub-row';
+      var prevTotal    = (darEffectifData[String(s.id)] && darEffectifData[String(s.id)].total    !== '') ? darEffectifData[String(s.id)].total    : '';
+      var prevPresents = (darEffectifData[String(s.id)] && darEffectifData[String(s.id)].presents !== '') ? darEffectifData[String(s.id)].presents : '';
+      tr.innerHTML =
+        '<td class="dar-sub-name">🏠 ' + s.nom + '</td>' +
+        '<td><div class="b2c-fg"><input type="number" ' +
+          'name="effectif_dar_total_' + s.id + '" ' +
+          'id="darTotal_' + s.id + '" ' +
+          'min="0" placeholder="0" value="' + prevTotal + '"></div></td>' +
+        '<td><div class="b2c-fg"><input type="number" ' +
+          'name="effectif_dar_presents_' + s.id + '" ' +
+          'id="darPres_' + s.id + '" ' +
+          'min="0" placeholder="0" value="' + prevPresents + '"></div></td>';
+      ref.parentNode.insertBefore(tr, ref.nextSibling);
+      ref = tr;
+    });
+  }
 
-function closeModal() { backdrop.classList.remove('show'); }
-backdrop.addEventListener('click', function(e) { if (e.target === backdrop) closeModal(); });
+  /* ── Dropdown options ── */
+  function renderDrop(filter) {
+    var lower = (filter || '').toLowerCase();
+    drop.innerHTML = '';
+    var found = 0;
+    ALL_DARS.forEach(function(d) {
+      if (lower && !d.label.toLowerCase().includes(lower)) return;
+      found++;
+      var opt = document.createElement('div');
+      var isSel = !!selected.find(function(s){ return s.id === d.id; });
+      opt.className = 'dar-ms-opt' + (isSel ? ' selected' : '');
+      opt.dataset.id = d.id;
+      opt.textContent = d.label;
+      if (isSel) {
+        var ck = document.createElement('span');
+        ck.style.cssText = 'margin-left:auto;color:#d97706;font-weight:800;';
+        ck.textContent = '✓';
+        opt.appendChild(ck);
+      }
+      opt.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        darMsToggle(d.id, d.nom, d.label);
+      });
+      drop.appendChild(opt);
+    });
+    if (found === 0) {
+      var em = document.createElement('div');
+      em.className = 'dar-ms-empty';
+      em.textContent = 'Aucune Dar Talib trouvée';
+      drop.appendChild(em);
+    }
+  }
 
-/* ── Modal supprimer ── */
-var delBackdrop = document.getElementById('spDelBackdrop');
-function openDelModal(action, redirectUrl) {
-  document.getElementById('spDelForm').action    = action;
-  document.getElementById('spDelRedirect').value = redirectUrl;
-  delBackdrop.classList.add('show');
-}
-function closeDelModal() { delBackdrop.classList.remove('show'); }
-delBackdrop.addEventListener('click', function(e) { if (e.target === delBackdrop) closeDelModal(); });
-document.addEventListener('keydown', function(e) { if (e.key==='Escape') { closeModal(); closeDelModal(); } });
+  function darMsToggle(id, nom, label) {
+    var idx = selected.findIndex(function(s) { return s.id === String(id); });
+    if (idx >= 0) {
+      // Désélectionner : sauvegarder les valeurs actuelles avant de supprimer la ligne
+      var tEl = document.getElementById('darTotal_'   + id);
+      var pEl = document.getElementById('darPres_'    + id);
+      if (tEl || pEl) {
+        darEffectifData[String(id)] = {
+          total:    tEl ? tEl.value : '',
+          presents: pEl ? pEl.value : ''
+        };
+      }
+      selected.splice(idx, 1);
+    } else {
+      selected.push({ id: String(id), nom: nom, label: label });
+    }
+    inp.value = '';
+    renderTags();
+    renderDarSubRows();
+    renderDrop('');
+  }
+
+  function darMsDeselect(id) {
+    // Sauvegarder les valeurs avant suppression
+    var tEl = document.getElementById('darTotal_'   + id);
+    var pEl = document.getElementById('darPres_'    + id);
+    if (tEl || pEl) {
+      darEffectifData[String(id)] = {
+        total:    tEl ? tEl.value : '',
+        presents: pEl ? pEl.value : ''
+      };
+    }
+    selected = selected.filter(function(s) { return s.id !== String(id); });
+    renderTags();
+    renderDarSubRows();
+    renderDrop(inp.value);
+  }
+
+  /* ── API publiques ── */
+  window.darMsSetSelected = function(ids) {
+    // Sauvegarder les valeurs des lignes actuelles avant de reset
+    selected.forEach(function(s) {
+      var tEl = document.getElementById('darTotal_'   + s.id);
+      var pEl = document.getElementById('darPres_'    + s.id);
+      if (tEl || pEl) {
+        darEffectifData[String(s.id)] = {
+          total:    tEl ? tEl.value : '',
+          presents: pEl ? pEl.value : ''
+        };
+      }
+    });
+    selected = [];
+    (ids || []).forEach(function(id) {
+      var d = ALL_DARS.find(function(x) { return String(x.id) === String(id); });
+      if (d) selected.push({ id: String(d.id), nom: d.nom, label: d.label });
+    });
+    renderTags();
+    renderDarSubRows();
+  };
+
+  window.darMsClear = function() {
+    selected = [];
+    inp.value = '';
+    window.darEffectifData = {};
+    renderTags();
+    renderDarSubRows();
+    renderDrop('');
+  };
+
+  box.addEventListener('click', function() { inp.focus(); });
+
+  inp.addEventListener('focus', function() {
+    box.classList.add('focused');
+    renderDrop(inp.value);
+    drop.classList.add('open');
+  });
+
+  inp.addEventListener('input', function() {
+    renderDrop(inp.value);
+    drop.classList.add('open');
+  });
+
+  inp.addEventListener('blur', function() {
+    setTimeout(function() {
+      drop.classList.remove('open');
+      box.classList.remove('focused');
+    }, 160);
+  });
+
+  renderTags();
+  renderDarSubRows();
+})();
+
 </script>
 {% endblock %}

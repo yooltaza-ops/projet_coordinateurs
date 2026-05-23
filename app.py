@@ -93,7 +93,7 @@ def not_found(e):
 @app.errorhandler(429)
 def ratelimit_handler(e):
     logger.warning(f"Rate limit exceeded: {request.remote_addr}")
-    return "Trop de requêtes. Veuillez réessayer plus tard.", 429
+    return render_template('errors/429.html'), 429
 
 @app.errorhandler(500)
 def internal_error(e):

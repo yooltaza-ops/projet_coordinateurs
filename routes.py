@@ -3,7 +3,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from extensions import limiter
 from app import app
 from models import (
-    db, Responsable, Coordinateur, Dour, User, Seance, SeanceB2C, Professeur,
+    db, Responsable, Coordinateur, Dour, User, Seance, SeanceB2C, SeanceB2CDarEffectif, Professeur,
     MATIERES, NIVEAUX, STATUTS_SEANCE, sanitize_text, validate_email
 )
 from functools import wraps
@@ -306,24 +306,6 @@ def index():
         resp = current_user.responsable
         responsables_select = [resp] if resp else []
  
-    # ── Stats B2C du mois ─────────────────────────────────────────────────────
-    if current_user.is_admin:
-        b2c_seances_mois = SeanceB2C.query.filter_by(mois=mois, annee=annee).all()
-    else:
-        resp = current_user.responsable
-        if resp:
-            b2c_seances_mois = SeanceB2C.query.filter_by(
-                mois=mois, annee=annee, responsable_id=resp.id
-            ).all()
-        else:
-            b2c_seances_mois = []
- 
-    total_b2c_mois      = len(b2c_seances_mois)
-    total_b2c_passees   = sum(1 for s in b2c_seances_mois if s.statut == 'passee')
-    total_b2c_annulees  = sum(1 for s in b2c_seances_mois if s.statut == 'annulee')
-    total_b2c_rattrapages = sum(1 for s in b2c_seances_mois if s.statut == 'rattrapage')
-    total_b2c_heures    = sum(s.nb_heures for s in b2c_seances_mois if s.statut == 'passee')
- 
     return render_template('index.html',
                         data=data,
                         responsables=responsables_select,
@@ -338,12 +320,7 @@ def index():
                         admins=admins,
                         nb_admins=nb_admins,
                         nb_responsables=nb_responsables,
-                        total_b2c_mois=total_b2c_mois,
-                        total_b2c_passees=total_b2c_passees,
-                        total_b2c_annulees=total_b2c_annulees,
-                        total_b2c_rattrapages=total_b2c_rattrapages,
-                        total_b2c_heures=total_b2c_heures,
-                        b2c_seances_mois=b2c_seances_mois)
+                        )
 
 
 # ─── Pages dédiées ────────────────────────────────────────────────────────────
@@ -1294,6 +1271,7 @@ def forbidden(e):
 # ─── Stats Coordinateurs ──────────────────────────────────────────────────────
 @app.route('/stats_coordinateurs')
 @login_required
+@admin_required
 def stats_coordinateurs():
     now   = datetime.now()
     mois  = request.args.get('mois',  now.month,  type=int)
@@ -1747,160 +1725,189 @@ def api_statut_user(user_id):
     )
 
 
-# ─── Helper : seance_b2c → dict ───────────────────────────────────────────────
-def seance_b2c_to_dict(s):
-    return {
-        'id':             s.id,
-        'date':           s.date.isoformat() if s.date else '',
-        'heure':          s.heure or '',
-        'statut':         s.statut or '',
-        'matiere':        s.matiere or '',
-        'niveau':         s.niveau or '',
-        'prof':           s.prof_nom or '',
-        'professeur_id':  s.professeur_id or '',
-        'responsable_id': s.responsable_id,
-        'nb_heures':      s.nb_heures or 0,
-        'nb_eleves':      s.nb_eleves or 0,
-        'nb_eleves_total':s.nb_eleves_total or 0,
-        'remarque':       s.remarque or '',
-        'note':           s.note or '',
-    }
-
-
 # ─── Suivi B2C ────────────────────────────────────────────────────────────────
+
 @app.route('/suivi_b2c')
 @login_required
+@admin_required
 def suivi_b2c():
     from collections import defaultdict
- 
+
     now   = datetime.now()
-    mois  = safe_int(request.args.get('mois',  now.month),  min_val=1, max_val=12) or now.month
-    annee = safe_int(request.args.get('annee', now.year),   min_val=2000, max_val=2100) or now.year
- 
-    filtre_niveau  = request.args.get('filtre_niveau',  '').strip()
-    filtre_statut  = request.args.get('filtre_statut',  '').strip()
-    filtre_matiere = request.args.get('filtre_matiere', '').strip()
-    filtre_resp    = request.args.get('filtre_resp',    '').strip()
- 
+    mois  = request.args.get('mois',  now.month,  type=int)
+    annee = request.args.get('annee', now.year,   type=int)
+
+    filtre_resp   = request.args.get('filtre_resp',   '').strip()
+    filtre_statut = request.args.get('filtre_statut', '').strip()
+    filtre_prof   = request.args.get('filtre_prof',   '').strip()
+
     mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin',
-                 'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
- 
+                'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
+
     if current_user.is_admin:
         all_resp = Responsable.query.all()
         responsables = [r for r in all_resp if r.user and r.user.role == 'responsable']
     else:
         resp = current_user.responsable
         responsables = [resp] if resp else []
- 
+
     resp_ids = [r.id for r in responsables]
- 
+
+    dours_all   = Dour.query.order_by(Dour.nom).all()
     professeurs = Professeur.query.filter_by(actif=True).order_by(Professeur.nom).all()
- 
-    # Toutes les séances du mois (sans filtres) — pour KPIs et seances_json
-    all_seances = SeanceB2C.query.filter(
-        SeanceB2C.mois == mois,
-        SeanceB2C.annee == annee,
-        SeanceB2C.responsable_id.in_(resp_ids)
-    ).order_by(SeanceB2C.date.desc()).all()
- 
-    # Séances filtrées — pour les blocs
+
     q = SeanceB2C.query.filter(
         SeanceB2C.mois == mois,
         SeanceB2C.annee == annee,
         SeanceB2C.responsable_id.in_(resp_ids)
     )
-    if filtre_niveau:
-        q = q.filter(SeanceB2C.niveau == filtre_niveau)
-    if filtre_statut:
-        q = q.filter(SeanceB2C.statut == filtre_statut)
-    if filtre_matiere:
-        q = q.filter(SeanceB2C.matiere == filtre_matiere)
     if filtre_resp:
         try:
             q = q.filter(SeanceB2C.responsable_id == int(filtre_resp))
         except ValueError:
             pass
- 
-    seances_filtrees = q.order_by(SeanceB2C.date.desc()).all()
-    seances_json = [seance_b2c_to_dict(s) for s in all_seances]
- 
-    # ── Blocs par Responsable ──────────────────────────────────────────────────
-    par_resp = defaultdict(list)
-    for s in seances_filtrees:
-        par_resp[s.responsable_id].append(s)
- 
+    if filtre_statut:
+        q = q.filter(SeanceB2C.statut == filtre_statut)
+    if filtre_prof:
+        try:
+            q = q.filter(SeanceB2C.professeur_id == int(filtre_prof))
+        except ValueError:
+            pass
+
+    seances = q.order_by(SeanceB2C.date.desc()).all()
+
+    q_global = SeanceB2C.query.filter(
+        SeanceB2C.mois == mois,
+        SeanceB2C.annee == annee,
+        SeanceB2C.responsable_id.in_(resp_ids)
+    )
+    if filtre_resp:
+        try:
+            q_global = q_global.filter(SeanceB2C.responsable_id == int(filtre_resp))
+        except ValueError:
+            pass
+
+    all_seances_mois = q_global.all()
+
+    total_passees    = sum(1 for s in all_seances_mois if s.statut == 'passee')
+    total_annulees   = sum(1 for s in all_seances_mois if s.statut == 'annulee')
+    total_rattrapage = sum(1 for s in all_seances_mois if s.statut == 'rattrapage')
+    total_heures     = sum(s.nb_heures for s in all_seances_mois if s.statut == 'passee')
+    total_presents   = sum(s.total_presents for s in all_seances_mois if s.statut != 'annulee')
+
     blocs_resp = []
     for resp in responsables:
         if filtre_resp and str(resp.id) != filtre_resp:
             continue
-        seances_r = par_resp.get(resp.id, [])
-        valeurs_total = [s.nb_eleves_total for s in seances_r if s.nb_eleves_total]
+
+        s_resp = [s for s in seances if s.responsable_id == resp.id]
+
+        if not s_resp:
+            s_resp_all = [s for s in all_seances_mois if s.responsable_id == resp.id]
+            if not s_resp_all:
+                continue
+            if not filtre_statut and not filtre_prof:
+                s_resp = s_resp_all
+
         blocs_resp.append({
             'responsable':    resp,
-            'seances':        seances_r,
-            'nb_passees':     sum(1 for s in seances_r if s.statut == 'passee'),
-            'nb_annulees':    sum(1 for s in seances_r if s.statut == 'annulee'),
-            'nb_rattrapage':  sum(1 for s in seances_r if s.statut == 'rattrapage'),
-            'total_heures':   sum(s.nb_heures for s in seances_r if s.statut == 'passee'),
-            'total_eleves':   sum(s.nb_eleves for s in seances_r if s.nb_eleves and s.statut != 'annulee'),
-            'effectif_total': max(valeurs_total) if valeurs_total else None,
+            'seances':        s_resp,
+            'nb_passees':     sum(1 for s in s_resp if s.statut == 'passee'),
+            'nb_annulees':    sum(1 for s in s_resp if s.statut == 'annulee'),
+            'nb_ratt':        sum(1 for s in s_resp if s.statut == 'rattrapage'),
+            'total_heures':   sum(s.nb_heures for s in s_resp if s.statut == 'passee'),
+            'total_presents': sum(s.total_presents for s in s_resp if s.statut != 'annulee'),
         })
- 
-    # ── Blocs par Niveau ──────────────────────────────────────────────────────
-    par_niveau = defaultdict(list)
-    for s in seances_filtrees:
-        key = s.niveau or '— Non défini —'
-        par_niveau[key].append(s)
- 
-    blocs_niveau = []
-    for niv, seances_n in sorted(par_niveau.items()):
-        valeurs_total = [s.nb_eleves_total for s in seances_n if s.nb_eleves_total]
-        effectif_total = max(valeurs_total) if valeurs_total else None
-        blocs_niveau.append({
-            'niveau':         niv,
-            'seances':        seances_n,
-            'nb_passees':     sum(1 for s in seances_n if s.statut == 'passee'),
-            'nb_annulees':    sum(1 for s in seances_n if s.statut == 'annulee'),
-            'nb_rattrapage':  sum(1 for s in seances_n if s.statut == 'rattrapage'),
-            'total_heures':   sum(s.nb_heures for s in seances_n if s.statut == 'passee'),
-            'total_eleves':   sum(s.nb_eleves for s in seances_n if s.nb_eleves and s.statut != 'annulee'),
-            'effectif_total': effectif_total,
+
+    seances_pour_recap = all_seances_mois
+    if filtre_prof:
+        try:
+            seances_pour_recap = [
+                s for s in all_seances_mois
+                if s.professeur_id == int(filtre_prof)
+            ]
+        except ValueError:
+            pass
+
+    heures_prof = defaultdict(lambda: defaultdict(float))
+    for s in seances_pour_recap:
+        if s.statut == 'passee' and s.professeur_id:
+            heures_prof[s.responsable_id][s.professeur_id] += s.nb_heures
+
+    recap_prof = []
+    resp_visibles = [r for r in responsables if not filtre_resp or str(r.id) == filtre_resp]
+    for resp in resp_visibles:
+        for prof_id, heures in heures_prof[resp.id].items():
+            p = Professeur.query.get(prof_id)
+            if p:
+                recap_prof.append({
+                    'responsable': resp,
+                    'professeur':  p,
+                    'heures':      heures,
+                })
+    recap_prof.sort(key=lambda x: x['heures'], reverse=True)
+
+    seances_json = []
+    for s in all_seances_mois:
+        seances_json.append({
+            'id':                         s.id,
+            'responsable_id':             s.responsable_id,
+            'date':                       s.date.isoformat() if s.date else '',
+            'heure':                      s.heure or '',
+            'nb_heures':                  s.nb_heures,
+            'statut':                     s.statut or '',
+            'professeur_id':              s.professeur_id or '',
+            'prof':                       s.prof_nom or '',
+            'matiere':                    s.matiere or '',
+            'niveau':                     s.niveau or '',
+            'remarque':                   s.remarque or '',
+            'note':                       s.note or '',
+            'dar_ids':                    s.dar_ids,
+            'effectif_b2c_total':         s.effectif_b2c_total or '',
+            'effectif_b2c_presents':      s.effectif_b2c_presents or '',
+            'effectif_fos_total':         s.effectif_fos_total or '',
+            'effectif_fos_presents':      s.effectif_fos_presents or '',
+            'effectif_free_total':        s.effectif_free_total or '',
+            'effectif_free_presents':     s.effectif_free_presents or '',
+            'effectif_fos_agri_total':    s.effectif_fos_agri_total or '',
+            'effectif_fos_agri_presents': s.effectif_fos_agri_presents or '',
+            'effectif_ipse_total':        s.effectif_ipse_total or '',
+            'effectif_ipse_presents':     s.effectif_ipse_presents or '',
+            'dar_effectifs': [
+                {
+                    'dour_id':  de.dour_id,
+                    'total':    de.total   if de.total   is not None else '',
+                    'presents': de.presents if de.presents is not None else '',
+                }
+                for de in s.dar_effectifs
+            ],
         })
- 
-    # ── KPIs globaux ──────────────────────────────────────────────────────────
-    total_seances        = len(all_seances)
-    total_passees        = sum(1 for s in all_seances if s.statut == 'passee')
-    total_annulees       = sum(1 for s in all_seances if s.statut == 'annulee')
-    total_rattrapage     = sum(1 for s in all_seances if s.statut == 'rattrapage')
-    total_passees_heures = sum(s.nb_heures for s in all_seances if s.statut == 'passee')
-    total_eleves         = sum(s.nb_eleves for s in all_seances if s.nb_eleves and s.statut != 'annulee')
- 
+
     return render_template('suivi_b2c.html',
         blocs_resp=blocs_resp,
-        blocs_niveau=blocs_niveau,       # ← NOUVEAU
-        seances_json=seances_json,
         responsables=responsables,
         professeurs=professeurs,
+        dours_all=dours_all,
+        seances_json=seances_json,
         mois=mois, annee=annee,
         mois_noms=mois_noms,
         annees=list(range(now.year - 2, now.year + 2)),
-        filtre_niveau=filtre_niveau,
-        filtre_statut=filtre_statut,
-        filtre_matiere=filtre_matiere,
         filtre_resp=filtre_resp,
+        filtre_statut=filtre_statut,
+        filtre_prof=filtre_prof,
         matieres=MATIERES,
         niveaux=NIVEAUX,
         statuts=STATUTS_SEANCE,
-        total_seances=total_seances,
         total_passees=total_passees,
         total_annulees=total_annulees,
         total_rattrapage=total_rattrapage,
-        total_passees_heures=total_passees_heures,
-        total_eleves=total_eleves,
+        total_heures=total_heures,
+        total_presents=total_presents,
+        total_seances=len(all_seances_mois),
+        recap_prof=recap_prof,
     )
 
 
-# ─── Ajouter séance B2C ───────────────────────────────────────────────────────
 @app.route('/suivi_b2c/ajouter', methods=['POST'])
 @login_required
 @password_required
@@ -1920,40 +1927,63 @@ def suivi_b2c_ajouter():
         if not date_str:
             flash('Date requise.', 'error')
             return redirect_back()
-
         date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
-        if date_obj.year < 2000 or date_obj.year > 2100:
-            flash('Date invalide.', 'error')
-            return redirect_back()
 
         nb_heures = safe_float(request.form.get('nb_heures'), min_val=0.5, max_val=12)
         if nb_heures is None:
             flash('Heures invalides (0.5 - 12).', 'error')
             return redirect_back()
 
+        statut        = normalise_statut(request.form.get('statut', ''))
         professeur_id = parse_professeur_id(request.form)
         if professeur_id:
             p = Professeur.query.get(professeur_id)
             if not p:
                 professeur_id = None
 
+        def gi(field):
+            return safe_int(request.form.get(field), min_val=0, max_val=10000)
+
         s = SeanceB2C(
-            responsable_id  = resp_id,
-            date            = date_obj,
-            mois            = date_obj.month,
-            annee           = date_obj.year,
-            nb_heures       = nb_heures,
-            statut          = normalise_statut(request.form.get('statut', '')),
-            heure           = sanitize_text(request.form.get('heure', ''), max_length=5),
-            matiere         = sanitize_text(request.form.get('matiere', ''), max_length=100),
-            niveau          = sanitize_text(request.form.get('niveau', ''), max_length=100),
-            nb_eleves       = safe_int(request.form.get('nb_eleves'), min_val=0, max_val=10000),
-            nb_eleves_total = safe_int(request.form.get('nb_eleves_total'), min_val=0, max_val=10000),
-            note            = sanitize_text(request.form.get('note', ''), max_length=300),
-            remarque        = sanitize_text(request.form.get('remarque', ''), max_length=500),
-            professeur_id   = professeur_id,
+            responsable_id=resp_id,
+            date=date_obj,
+            mois=date_obj.month,
+            annee=date_obj.year,
+            heure=sanitize_text(request.form.get('heure', ''), max_length=5),
+            nb_heures=nb_heures,
+            statut=statut,
+            professeur_id=professeur_id,
+            matiere=sanitize_text(request.form.get('matiere', ''), max_length=100),
+            niveau=sanitize_text(request.form.get('niveau', ''), max_length=100),
+            note=sanitize_text(request.form.get('note', ''), max_length=300),
+            remarque=sanitize_text(request.form.get('remarque', ''), max_length=500),
+            effectif_b2c_total=gi('effectif_b2c_total'),
+            effectif_b2c_presents=gi('effectif_b2c_presents'),
+            effectif_fos_total=gi('effectif_fos_total'),
+            effectif_fos_presents=gi('effectif_fos_presents'),
+            effectif_free_total=gi('effectif_free_total'),
+            effectif_free_presents=gi('effectif_free_presents'),
+            effectif_fos_agri_total=gi('effectif_fos_agri_total'),
+            effectif_fos_agri_presents=gi('effectif_fos_agri_presents'),
+            effectif_ipse_total=gi('effectif_ipse_total'),
+            effectif_ipse_presents=gi('effectif_ipse_presents'),
         )
         db.session.add(s)
+        db.session.flush()
+
+        dar_ids_raw = request.form.getlist('dar_ids[]')
+        for did_str in dar_ids_raw:
+            did = safe_int(did_str)
+            if did:
+                d = Dour.query.get(did)
+                if d:
+                    if d not in s.dars:
+                        s.dars.append(d)
+                    t = safe_int(request.form.get(f'effectif_dar_total_{did}'),   min_val=0, max_val=10000)
+                    p = safe_int(request.form.get(f'effectif_dar_presents_{did}'), min_val=0, max_val=10000)
+                    eff = SeanceB2CDarEffectif(seance_b2c_id=s.id, dour_id=did, total=t, presents=p)
+                    db.session.add(eff)
+
         db.session.commit()
         flash(f'Séance B2C ajoutée pour {resp.prenom} {resp.nom}!', 'success')
 
@@ -1967,39 +1997,59 @@ def suivi_b2c_ajouter():
     return redirect(url_for('suivi_b2c', mois=date_obj.month, annee=date_obj.year))
 
 
-# ─── Modifier séance B2C ──────────────────────────────────────────────────────
 @app.route('/suivi_b2c/modifier/<int:id>', methods=['POST'])
 @login_required
 def suivi_b2c_modifier(id):
     s = SeanceB2C.query.get_or_404(id)
-
     if not current_user.is_admin:
         if not current_user.responsable or s.responsable_id != current_user.responsable.id:
             abort(403)
 
-    date_obj     = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
-    s.date       = date_obj
-    s.mois       = date_obj.month
-    s.annee      = date_obj.year
-    s.nb_heures  = safe_float(request.form.get('nb_heures'), min_val=0.5, max_val=12) or s.nb_heures
-    s.statut     = normalise_statut(request.form.get('statut', ''))
-    s.heure      = request.form.get('heure', '').strip() or None
-    s.matiere    = request.form.get('matiere', '').strip() or None
-    s.niveau     = request.form.get('niveau', '').strip() or None
-    s.note       = sanitize_text(request.form.get('note', ''), max_length=300)
-    s.remarque   = request.form.get('remarque', '').strip() or None
-
-    nb_el = request.form.get('nb_eleves', '').strip()
-    s.nb_eleves = int(nb_el) if nb_el.isdigit() else None
-
-    nb_el_t = request.form.get('nb_eleves_total', '').strip()
-    s.nb_eleves_total = int(nb_el_t) if nb_el_t.isdigit() else None
-
+    date_obj  = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
+    s.date    = date_obj
+    s.mois    = date_obj.month
+    s.annee   = date_obj.year
+    s.heure   = request.form.get('heure', '').strip() or None
+    nb_heures = safe_float(request.form.get('nb_heures'), min_val=0.5, max_val=12)
+    if nb_heures is not None:
+        s.nb_heures = nb_heures
+    s.statut        = normalise_statut(request.form.get('statut', ''))
     s.professeur_id = parse_professeur_id(request.form)
-    if s.professeur_id:
-        p = Professeur.query.get(s.professeur_id)
-        if not p:
-            s.professeur_id = None
+    s.matiere  = request.form.get('matiere', '').strip() or None
+    s.niveau   = request.form.get('niveau',  '').strip() or None
+    s.note     = sanitize_text(request.form.get('note', ''), max_length=300)
+    s.remarque = sanitize_text(request.form.get('remarque', ''), max_length=500)
+
+    def gi(field):
+        return safe_int(request.form.get(field), min_val=0, max_val=10000)
+
+    s.effectif_b2c_total          = gi('effectif_b2c_total')
+    s.effectif_b2c_presents       = gi('effectif_b2c_presents')
+    s.effectif_fos_total          = gi('effectif_fos_total')
+    s.effectif_fos_presents       = gi('effectif_fos_presents')
+    s.effectif_free_total         = gi('effectif_free_total')
+    s.effectif_free_presents      = gi('effectif_free_presents')
+    s.effectif_fos_agri_total     = gi('effectif_fos_agri_total')
+    s.effectif_fos_agri_presents  = gi('effectif_fos_agri_presents')
+    s.effectif_ipse_total         = gi('effectif_ipse_total')
+    s.effectif_ipse_presents      = gi('effectif_ipse_presents')
+
+    s.dars = []
+    SeanceB2CDarEffectif.query.filter_by(seance_b2c_id=s.id).delete()
+    db.session.flush()
+
+    dar_ids_raw = request.form.getlist('dar_ids[]')
+    for did_str in dar_ids_raw:
+        did = safe_int(did_str)
+        if did:
+            d = Dour.query.get(did)
+            if d:
+                if d not in s.dars:
+                    s.dars.append(d)
+                t = safe_int(request.form.get(f'effectif_dar_total_{did}'),   min_val=0, max_val=10000)
+                p = safe_int(request.form.get(f'effectif_dar_presents_{did}'), min_val=0, max_val=10000)
+                eff = SeanceB2CDarEffectif(seance_b2c_id=s.id, dour_id=did, total=t, presents=p)
+                db.session.add(eff)
 
     db.session.commit()
     flash('Séance B2C modifiée!', 'success')
@@ -2010,40 +2060,306 @@ def suivi_b2c_modifier(id):
     return redirect(url_for('suivi_b2c', mois=s.mois, annee=s.annee))
 
 
-# ─── Supprimer séance B2C ─────────────────────────────────────────────────────
 @app.route('/suivi_b2c/supprimer/<int:id>', methods=['POST'])
 @login_required
 def suivi_b2c_supprimer(id):
     s = SeanceB2C.query.get_or_404(id)
-
     if not current_user.is_admin:
         if not current_user.responsable or s.responsable_id != current_user.responsable.id:
             abort(403)
-
-    mois, annee = s.mois, s.annee
+    mois, annee  = s.mois, s.annee
+    redirect_url = request.form.get('redirect_url', '').strip()
     db.session.delete(s)
     db.session.commit()
     flash('Séance B2C supprimée!', 'success')
-
-    redirect_url = request.form.get('redirect_url', '').strip()
     if redirect_url:
         return redirect(redirect_url)
     return redirect(url_for('suivi_b2c', mois=mois, annee=annee))
 
-# Ajouter ces routes dans routes.py
- 
-@app.route('/calendrier_b2c')
+
+# ─── Heures Professeurs ───────────────────────────────────────────────────────
+@app.route('/heures_profs')
 @login_required
-def calendrier_b2c():
+@admin_required
+def heures_profs():
+    from collections import defaultdict
+
+    now   = datetime.now()
+    mois  = request.args.get('mois',  now.month,  type=int)
+    annee = request.args.get('annee', now.year,   type=int)
+
+    filtre_resp = request.args.get('filtre_resp', '').strip()
+    filtre_prof = request.args.get('filtre_prof', '').strip()
+
+    mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin',
+                 'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
+
+    # ── Périmètre responsables visibles ──────────────────────────────────────
+    if current_user.is_admin:
+        all_resp = Responsable.query.all()
+        responsables = [r for r in all_resp if r.user and r.user.role == 'responsable']
+    else:
+        resp = current_user.responsable
+        responsables = [resp] if resp else []
+
+    resp_ids = [r.id for r in responsables]
+    if filtre_resp:
+        try:
+            resp_ids_filtres = [int(filtre_resp)]
+        except ValueError:
+            resp_ids_filtres = resp_ids
+    else:
+        resp_ids_filtres = resp_ids
+
+    professeurs = Professeur.query.filter_by(actif=True).order_by(Professeur.nom).all()
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # SOURCE 1 — SeanceB2C
+    # ══════════════════════════════════════════════════════════════════════════
+    q_b2c = SeanceB2C.query.filter(
+        SeanceB2C.mois == mois,
+        SeanceB2C.annee == annee,
+        SeanceB2C.statut == 'passee',
+        SeanceB2C.professeur_id != None,
+        SeanceB2C.responsable_id.in_(resp_ids_filtres)
+    )
+    if filtre_prof:
+        try:
+            q_b2c = q_b2c.filter(SeanceB2C.professeur_id == int(filtre_prof))
+        except ValueError:
+            pass
+    seances_b2c = q_b2c.all()
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # SOURCE 2 — Seance coordinateurs
+    # ══════════════════════════════════════════════════════════════════════════
+    if current_user.is_admin:
+        all_coords = Coordinateur.query.all()
+    else:
+        resp = current_user.responsable
+        all_coords = resp.coordinateurs if resp else []
+
+    coords_visibles = [
+        c for c in all_coords
+        if c.responsable_id in resp_ids_filtres
+    ]
+    coord_ids_visibles = [c.id for c in coords_visibles]
+
+    q_std = Seance.query.filter(
+        Seance.mois == mois,
+        Seance.annee == annee,
+        Seance.statut == 'passee',
+        Seance.professeur_id != None,
+        Seance.coordinateur_id.in_(coord_ids_visibles)
+    )
+    if filtre_prof:
+        try:
+            q_std = q_std.filter(Seance.professeur_id == int(filtre_prof))
+        except ValueError:
+            pass
+    seances_std = q_std.all()
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # AGRÉGATION avec structures de données
+    # ══════════════════════════════════════════════════════════════════════════
+    prof_map  = {p.id: p for p in professeurs}
+    resp_map  = {r.id: r for r in responsables}
+    coord_map = {c.id: c for c in all_coords}
+
+    data_by_prof_resp  = defaultdict(lambda: defaultdict(lambda: {'heures': 0.0, 'nb_seances': 0}))
+    data_by_prof_coord = defaultdict(lambda: defaultdict(lambda: {'heures': 0.0, 'nb_seances': 0}))
+    data_by_resp       = defaultdict(lambda: defaultdict(lambda: {'heures': 0.0, 'nb_seances': 0, 'par_coord': defaultdict(lambda: {'heures': 0.0, 'nb_seances': 0})}))
+    data_by_coord      = defaultdict(lambda: defaultdict(lambda: {'heures': 0.0, 'nb_seances': 0}))
+
+    # --- Séances B2C : pas de créneau partagé possible, on agrège directement ---
+    for s in seances_b2c:
+        pid = s.professeur_id
+        rid = s.responsable_id
+        h   = s.nb_heures or 0
+        data_by_prof_resp[pid][rid]['heures']     += h
+        data_by_prof_resp[pid][rid]['nb_seances'] += 1
+        data_by_resp[rid][pid]['heures']           += h
+        data_by_resp[rid][pid]['nb_seances']       += 1
+
+    # --- Séances coordinateurs avec DÉDUPLICATION des créneaux partagés ---
+    # Si le même prof donne une séance à plusieurs coords en même temps
+    # (même date + même heure + mêmes nb_heures), on ne compte les heures
+    # QU'UNE SEULE FOIS par responsable, mais on garde le lien par coord
+    # pour l'affichage détaillé.
+    groupes_std = defaultdict(list)
+    for s in seances_std:
+        # Clé d'unicité : même prof, même jour, même heure, même durée
+        cle = (s.professeur_id, s.date, s.heure or '', s.nb_heures or 0, s.matiere or '', s.niveau or '')
+
+        groupes_std[cle].append(s)
+
+    for cle, groupe in groupes_std.items():
+        pid = groupe[0].professeur_id
+        h   = groupe[0].nb_heures or 0
+
+        # On ne compte les heures au niveau resp qu'une seule fois par resp
+        rids_comptabilises = set()
+        
+        for s in groupe:
+            cid   = s.coordinateur_id
+            coord = coord_map.get(cid)
+            if not coord:
+                continue
+            rid = coord.responsable_id
+
+            # Heures globales prof→resp : une seule fois par resp pour ce créneau
+            if rid not in rids_comptabilises:
+                data_by_prof_resp[pid][rid]['heures']     += h
+                data_by_prof_resp[pid][rid]['nb_seances'] += 1
+                data_by_resp[rid][pid]['heures']           += h
+                data_by_resp[rid][pid]['nb_seances']       += 1
+                rids_comptabilises.add(rid)
+
+            # Par coordinateur
+            data_by_prof_coord[pid][cid]['heures']     += h
+            data_by_prof_coord[pid][cid]['nb_seances'] += 1
+            data_by_coord[cid][pid]['heures']           += h
+            data_by_coord[cid][pid]['nb_seances']       += 1
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # BLOCS PAR RESPONSABLE
+    # ══════════════════════════════════════════════════════════════════════════
+    blocs_resp = []
+    for resp in responsables:
+        if filtre_resp and str(resp.id) != filtre_resp:
+            continue
+        rid = resp.id
+        prof_data = data_by_resp.get(rid, {})
+        if not prof_data:
+            continue
+
+        profs_list = []
+        for pid, pdata in sorted(prof_data.items(), key=lambda x: x[1]['heures'], reverse=True):
+            prof = prof_map.get(pid)
+            if not prof:
+                continue
+            par_coord_list = []
+            for cid, cdata in sorted(pdata['par_coord'].items(), key=lambda x: x[1]['heures'], reverse=True):
+                coord = coord_map.get(cid)
+                if coord:
+                    par_coord_list.append({
+                        'coord':      coord,
+                        'heures':     cdata['heures'],
+                        'nb_seances': cdata['nb_seances'],
+                    })
+            profs_list.append({
+                'prof':       prof,
+                'heures':     pdata['heures'],
+                'nb_seances': pdata['nb_seances'],
+                'par_coord':  par_coord_list,
+            })
+
+        nb_coords = len({
+            c.id for c in coords_visibles
+            if c.responsable_id == rid
+        })
+
+        blocs_resp.append({
+            'responsable':   resp,
+            'profs':         profs_list,
+            'total_heures':  sum(p['heures']     for p in profs_list),
+            'total_seances': sum(p['nb_seances'] for p in profs_list),
+            'nb_coords':     nb_coords,
+        })
+    blocs_resp.sort(key=lambda x: x['total_heures'], reverse=True)
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # TABLEAU GLOBAL (classement par prof)
+    # ══════════════════════════════════════════════════════════════════════════
+    tableau_global = []
+    all_prof_ids = set(data_by_prof_resp.keys()) | set(data_by_prof_coord.keys())
+    for pid in all_prof_ids:
+        prof = prof_map.get(pid)
+        if not prof:
+            continue
+        total_h = sum(v['heures']     for v in data_by_prof_resp[pid].values())
+        total_s = sum(v['nb_seances'] for v in data_by_prof_resp[pid].values())
+        resp_names  = [resp_map[rid].prenom + ' ' + resp_map[rid].nom for rid in data_by_prof_resp[pid] if rid in resp_map]
+        coord_names = [coord_map[cid].prenom + ' ' + coord_map[cid].nom for cid in data_by_prof_coord[pid] if cid in coord_map]
+        tableau_global.append({
+            'prof':         prof,
+            'heures':       total_h,
+            'nb_seances':   total_s,
+            'responsables': resp_names,
+            'coordinateurs': coord_names,
+        })
+    tableau_global.sort(key=lambda x: x['heures'], reverse=True)
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # BLOCS PAR COORDINATEUR
+    # ══════════════════════════════════════════════════════════════════════════
+    blocs_coord = []
+    for coord in coords_visibles:
+        prof_data = data_by_coord.get(coord.id, {})
+        if not prof_data:
+            continue
+        profs_list = []
+        for pid, pdata in sorted(prof_data.items(), key=lambda x: x[1]['heures'], reverse=True):
+            prof = prof_map.get(pid)
+            if prof:
+                profs_list.append({
+                    'prof':       prof,
+                    'heures':     pdata['heures'],
+                    'nb_seances': pdata['nb_seances'],
+                })
+        blocs_coord.append({
+            'coord':         coord,
+            'profs':         profs_list,
+            'total_heures':  sum(p['heures']     for p in profs_list),
+            'total_seances': sum(p['nb_seances'] for p in profs_list),
+        })
+    blocs_coord.sort(key=lambda x: x['total_heures'], reverse=True)
+
+    # ── KPIs globaux ─────────────────────────────────────────────────────────
+    total_heures  = sum(item['heures']     for item in tableau_global)
+    total_seances = sum(item['nb_seances'] for item in tableau_global)
+    total_profs   = len(tableau_global)
+    total_resps   = len(blocs_resp)
+    total_coords  = len(blocs_coord)
+
+    return render_template('heures_profs.html',
+        blocs_resp=blocs_resp,
+        blocs_coord=blocs_coord,
+        tableau_global=tableau_global,
+        responsables=responsables,
+        professeurs=professeurs,
+        mois=mois, annee=annee,
+        mois_noms=mois_noms,
+        annees=list(range(now.year - 2, now.year + 2)),
+        filtre_resp=filtre_resp,
+        filtre_prof=filtre_prof,
+        total_heures=total_heures,
+        total_seances=total_seances,
+        total_profs=total_profs,
+        total_resps=total_resps,
+        total_coords=total_coords,
+    )
+
+# ─── Impression B2C ───────────────────────────────────────────────────────────
+ 
+@app.route('/impression_b2c')
+@login_required
+@admin_required
+def impression_b2c():
     from collections import defaultdict
  
     now   = datetime.now()
-    mois  = safe_int(request.args.get('mois',  now.month),  min_val=1, max_val=12) or now.month
-    annee = safe_int(request.args.get('annee', now.year),   min_val=2000, max_val=2100) or now.year
+    mois  = request.args.get('mois',  now.month,  type=int)
+    annee = request.args.get('annee', now.year,   type=int)
+ 
+    filtre_resp   = request.args.get('filtre_resp',   '').strip()
+    filtre_prof   = request.args.get('filtre_prof',   '').strip()
+    filtre_statut = request.args.get('filtre_statut', '').strip()
  
     mois_noms = ['','Janvier','Février','Mars','Avril','Mai','Juin',
                  'Juillet','Août','Septembre','Octobre','Novembre','Décembre']
  
+    # ── Responsables visibles ──────────────────────────────────────────────────
     if current_user.is_admin:
         all_resp = Responsable.query.all()
         responsables = [r for r in all_resp if r.user and r.user.role == 'responsable']
@@ -2052,148 +2368,209 @@ def calendrier_b2c():
         responsables = [resp] if resp else []
  
     resp_ids = [r.id for r in responsables]
- 
     professeurs = Professeur.query.filter_by(actif=True).order_by(Professeur.nom).all()
  
-    # Charger toutes les séances B2C du mois pour tous les responsables
-    all_seances = SeanceB2C.query.filter(
+    # ── Requête principale SeanceB2C ───────────────────────────────────────────
+    q = SeanceB2C.query.filter(
         SeanceB2C.mois == mois,
         SeanceB2C.annee == annee,
         SeanceB2C.responsable_id.in_(resp_ids)
-    ).order_by(SeanceB2C.date).all()
+    )
+    if filtre_resp:
+        try:
+            q = q.filter(SeanceB2C.responsable_id == int(filtre_resp))
+        except ValueError:
+            pass
+    if filtre_prof:
+        try:
+            q = q.filter(SeanceB2C.professeur_id == int(filtre_prof))
+        except ValueError:
+            pass
+    if filtre_statut:
+        q = q.filter(SeanceB2C.statut == filtre_statut)
  
-    # Grouper par responsable
-    par_resp = defaultdict(list)
-    for s in all_seances:
-        par_resp[s.responsable_id].append(s)
+    seances = q.order_by(SeanceB2C.date.desc()).all()
  
-    blocs = []
-    for resp in responsables:
-        seances_r = par_resp.get(resp.id, [])
-        mats = sorted({s.matiere for s in seances_r if s.matiere})
-        nivs = sorted({s.niveau  for s in seances_r if s.niveau})
-        blocs.append({
-            'responsable':   resp,
-            'seances':       seances_r,
-            'nb_seances':    len(seances_r),
-            'nb_passees':    sum(1 for s in seances_r if s.statut == 'passee'),
-            'nb_annulees':   sum(1 for s in seances_r if s.statut == 'annulee'),
-            'nb_rattrapage': sum(1 for s in seances_r if s.statut == 'rattrapage'),
-            'total_heures':  sum(s.nb_heures for s in seances_r if s.statut == 'passee'),
-            'total_eleves':  sum(s.nb_eleves for s in seances_r if s.nb_eleves and s.statut != 'annulee'),
-            'matieres_uniq': mats,
-            'niveaux_uniq':  nivs,
+    # ── Séances coordinateurs (source heures_profs) ───────────────────────────
+    if current_user.is_admin:
+        all_coords = Coordinateur.query.all()
+    else:
+        resp_obj = current_user.responsable
+        all_coords = resp_obj.coordinateurs if resp_obj else []
+ 
+    resp_ids_filtres = [int(filtre_resp)] if filtre_resp else resp_ids
+ 
+    coords_visibles = [
+        c for c in all_coords
+        if c.responsable_id in resp_ids_filtres
+    ]
+    coord_ids_visibles = [c.id for c in coords_visibles]
+ 
+    q_std = Seance.query.filter(
+        Seance.mois == mois,
+        Seance.annee == annee,
+        Seance.professeur_id != None,
+        Seance.coordinateur_id.in_(coord_ids_visibles)
+    )
+    if filtre_prof:
+        try:
+            q_std = q_std.filter(Seance.professeur_id == int(filtre_prof))
+        except ValueError:
+            pass
+    seances_std = q_std.all()
+ 
+    coord_map = {c.id: c for c in all_coords}
+ 
+    # Déduplication créneaux partagés (même logique que heures_profs)
+    groupes_std = defaultdict(list)
+    for s in seances_std:
+        cle = (s.professeur_id, s.date, s.heure or '', s.nb_heures or 0, s.matiere or '', s.niveau or '')
+        groupes_std[cle].append(s)
+ 
+    heures_std_par_prof   = defaultdict(float)   # prof_id -> heures totales
+    seances_std_par_prof  = defaultdict(list)    # prof_id -> liste séances représentatives
+ 
+    for cle, groupe in groupes_std.items():
+        pid = groupe[0].professeur_id
+        h   = groupe[0].nb_heures or 0
+        rids_vus = set()
+
+        # الstatut الأهم: passee > rattrapage > annulee
+        def statut_priority(s):
+            return {'passee': 0, 'rattrapage': 1, 'annulee': 2}.get(s.statut or '', 3)
+        
+        seance_representative = min(groupe, key=statut_priority)
+
+        for s in groupe:
+            coord = coord_map.get(s.coordinateur_id)
+            if not coord:
+                continue
+            rid = coord.responsable_id
+            if s.statut == 'passee' and rid not in rids_vus:
+                heures_std_par_prof[pid] += h
+                rids_vus.add(rid)
+        
+        seances_std_par_prof[pid].append(seance_representative)
+ 
+    # ── KPIs globaux ───────────────────────────────────────────────────────────
+    total_seances    = len(seances)
+    total_passees    = sum(1 for s in seances if s.statut == 'passee')
+    total_annulees   = sum(1 for s in seances if s.statut == 'annulee')
+    total_rattrapage = sum(1 for s in seances if s.statut == 'rattrapage')
+    total_heures_b2c = sum(s.nb_heures for s in seances if s.statut == 'passee')
+    total_heures_std = sum(heures_std_par_prof.values())
+    total_heures     = total_heures_b2c + total_heures_std
+    total_presents   = sum(s.total_presents for s in seances if s.statut != 'annulee')
+ 
+    # ══════════════════════════════════════════════════════════════════════════
+    # BLOCS PAR RESPONSABLE
+    # ══════════════════════════════════════════════════════════════════════════
+    resp_map   = {r.id: r for r in responsables}
+    blocs_resp = []
+ 
+    for resp_r in responsables:
+        if resp_r.id not in resp_ids_filtres:
+            continue
+        s_resp = [s for s in seances if s.responsable_id == resp_r.id]
+        if not s_resp:
+            continue
+        blocs_resp.append({
+            'responsable':    resp_r,
+            'seances':        sorted(s_resp, key=lambda x: x.date, reverse=True),
+            'nb_passees':     sum(1 for s in s_resp if s.statut == 'passee'),
+            'nb_annulees':    sum(1 for s in s_resp if s.statut == 'annulee'),
+            'nb_ratt':        sum(1 for s in s_resp if s.statut == 'rattrapage'),
+            'total_heures':   sum(s.nb_heures for s in s_resp if s.statut == 'passee'),
+            'total_presents': sum(s.total_presents for s in s_resp if s.statut != 'annulee'),
         })
  
-    return render_template('calendrier_b2c.html',
-        blocs=blocs,
-        all_responsables=responsables,
+    # ══════════════════════════════════════════════════════════════════════════
+    # BLOCS PAR PROFESSEUR (fusion B2C + Coordinateurs)
+    # ══════════════════════════════════════════════════════════════════════════
+    par_prof = defaultdict(list)
+    for s in seances:
+        if s.professeur_id:
+            par_prof[s.professeur_id].append(s)
+ 
+    prof_map = {p.id: p for p in professeurs}
+    blocs_prof = []
+ 
+    # Union des deux sources
+    all_prof_ids_imp = set(par_prof.keys()) | set(heures_std_par_prof.keys())
+ 
+    for prof_id in all_prof_ids_imp:
+        prof = prof_map.get(prof_id)
+        if not prof:
+            continue
+        s_b2c = par_prof.get(prof_id, [])
+        s_std  = seances_std_par_prof.get(prof_id, [])
+        h_b2c  = sum(s.nb_heures for s in s_b2c if s.statut == 'passee')
+        h_std  = heures_std_par_prof.get(prof_id, 0.0)
+        blocs_prof.append({
+            'professeur':       prof,
+            'seances':          sorted(s_b2c, key=lambda x: x.date, reverse=True),
+            'seances_std':      sorted(s_std, key=lambda x: x.date, reverse=True),
+            'nb_passees':       sum(1 for s in s_b2c if s.statut == 'passee'),
+            'nb_annulees':      sum(1 for s in s_b2c if s.statut == 'annulee'),
+            'nb_ratt':          sum(1 for s in s_b2c if s.statut == 'rattrapage'),
+            'nb_std':           len(s_std),
+            'total_heures':     h_b2c + h_std,
+            'total_heures_b2c': h_b2c,
+            'total_heures_std': h_std,
+            'total_presents':   sum(s.total_presents for s in s_b2c if s.statut != 'annulee'),
+        })
+ 
+    blocs_prof.sort(key=lambda x: x['total_heures'], reverse=True)
+ 
+    # ── Récap global professeurs (tableau synthèse) ───────────────────────────
+    recap_prof_global = []
+    for bloc in blocs_prof:
+        resp_names = sorted({
+            resp_map[s.responsable_id].prenom + ' ' + resp_map[s.responsable_id].nom
+            for s in bloc['seances']
+            if s.responsable_id in resp_map
+        })
+        # Ajouter aussi les responsables des séances coordinateurs
+        for s in bloc['seances_std']:
+            coord = coord_map.get(s.coordinateur_id)
+            if coord and coord.responsable_id in resp_map:
+                rname = resp_map[coord.responsable_id].prenom + ' ' + resp_map[coord.responsable_id].nom
+                if rname not in resp_names:
+                    resp_names.append(rname)
+        resp_names = sorted(resp_names)
+        recap_prof_global.append({
+            'professeur':       bloc['professeur'],
+            'total_heures':     bloc['total_heures'],
+            'total_heures_b2c': bloc['total_heures_b2c'],
+            'total_heures_std': bloc['total_heures_std'],
+            'total_seances':    len(bloc['seances']) + bloc['nb_std'],
+            'responsables':     resp_names,
+        })
+ 
+    nb_profs = len(blocs_prof)
+    generated_at = now.strftime('%d/%m/%Y à %H:%M')
+ 
+    return render_template('impression_b2c.html',
+        blocs_resp=blocs_resp,
+        blocs_prof=blocs_prof,
+        recap_prof_global=recap_prof_global,
+        responsables=responsables,
         professeurs=professeurs,
+        statuts=STATUTS_SEANCE,
         mois=mois, annee=annee,
         mois_noms=mois_noms,
         annees=list(range(now.year - 2, now.year + 2)),
-        matieres=MATIERES,
-        niveaux=NIVEAUX,
-        statuts=STATUTS_SEANCE,
+        filtre_resp=filtre_resp,
+        filtre_prof=filtre_prof,
+        filtre_statut=filtre_statut,
+        total_seances=total_seances,
+        total_passees=total_passees,
+        total_annulees=total_annulees,
+        total_rattrapage=total_rattrapage,
+        total_heures=total_heures,
+        total_heures_b2c=total_heures_b2c,
+        total_heures_std=total_heures_std,
+        total_presents=total_presents,
+        nb_profs=nb_profs,
+        generated_at=generated_at,
     )
- 
- 
-@app.route('/calendrier_b2c/ajouter_multiple', methods=['POST'])
-@login_required
-@password_required
-def calendrier_b2c_ajouter_multiple():
-    resp_id      = safe_int(request.form.get('responsable_id'))
-    redirect_url = request.form.get('redirect_url', '').strip()
- 
-    if not resp_id:
-        flash('Responsable manquant.', 'error')
-        return redirect(redirect_url or url_for('calendrier_b2c'))
- 
-    if not current_user.is_admin:
-        if not current_user.responsable or current_user.responsable.id != resp_id:
-            abort(403)
- 
-    resp = Responsable.query.get_or_404(resp_id)
- 
-    sessions = {}
-    for key, value in request.form.items():
-        if key.startswith('seances['):
-            try:
-                idx   = key.split('[')[1].split(']')[0]
-                field = key.split('[')[2].split(']')[0]
-                if idx not in sessions:
-                    sessions[idx] = {}
-                sessions[idx][field] = value
-            except (IndexError, ValueError):
-                continue
- 
-    added  = 0
-    errors = []
- 
-    for idx, data in sessions.items():
-        date_str  = data.get('date',      '').strip()
-        nb_heures = data.get('nb_heures', '').strip()
-        matiere   = data.get('matiere',   '').strip() or None
-        niveau    = data.get('niveau',    '').strip() or None
-        note      = data.get('note',      '').strip() or None
-        heure     = data.get('heure',     '').strip() or None
-        remarque  = data.get('remarque',  '').strip() or None
-        statut    = normalise_statut(data.get('statut', ''))
- 
-        prof_id_str   = data.get('professeur_id', '').strip()
-        professeur_id = int(prof_id_str) if prof_id_str.isdigit() else None
- 
-        nb_eleves_str = data.get('nb_eleves', '').strip()
-        nb_eleves = int(nb_eleves_str) if nb_eleves_str.isdigit() else None
- 
-        nb_eleves_total_str = data.get('nb_eleves_total', '').strip()
-        nb_eleves_total = int(nb_eleves_total_str) if nb_eleves_total_str.isdigit() else None
- 
-        if not date_str or not nb_heures:
-            errors.append(f'Séance {idx}: date ou heures manquantes.')
-            continue
- 
-        try:
-            date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
-            nb_h     = float(nb_heures)
-            if nb_h <= 0:
-                raise ValueError('Heures must be positive')
-        except ValueError as e:
-            errors.append(f'Séance {idx}: valeur invalide ({e}).')
-            continue
- 
-        if professeur_id:
-            p = Professeur.query.get(professeur_id)
-            if not p:
-                professeur_id = None
- 
-        s = SeanceB2C(
-            responsable_id  = resp_id,
-            date            = date_obj,
-            mois            = date_obj.month,
-            annee           = date_obj.year,
-            nb_heures       = nb_h,
-            matiere         = matiere,
-            niveau          = niveau,
-            note            = note,
-            statut          = statut,
-            heure           = heure,
-            professeur_id   = professeur_id,
-            nb_eleves       = nb_eleves,
-            nb_eleves_total = nb_eleves_total,
-            remarque        = remarque,
-        )
-        db.session.add(s)
-        added += 1
- 
-    if added > 0:
-        db.session.commit()
-        label = 'séance B2C' if added == 1 else 'séances B2C'
-        flash(f'✅ {added} {label} ajoutée{"s" if added > 1 else ""} pour {resp.prenom} {resp.nom}!', 'success')
- 
-    for err in errors:
-        flash(err, 'error')
- 
-    if redirect_url:
-        return redirect(redirect_url)
-    return redirect(url_for('calendrier_b2c'))

@@ -1,0 +1,514 @@
+/* ═══════════════════════════════════════════════
+   coordinateurs.css — Gérer Coordinateurs
+   ═══════════════════════════════════════════════ */
+
+.main-content {
+    flex: 1;
+    padding: 28px;
+    overflow-x: hidden;
+}
+
+.page-title {
+    font-size: 21px;
+    font-weight: 700;
+    color: #1a3a6b;
+    margin-bottom: 22px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+
+/* ── Alerts ── */
+
+.alert {
+    padding: 13px 18px;
+    background: #27ae60;
+    color: white;
+    border-radius: 10px;
+    margin-bottom: 18px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 12px rgba(39, 174, 96, 0.25);
+}
+
+.alert-error {
+    background: #e74c3c;
+}
+
+
+/* ── Card ── */
+
+.card {
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.07);
+    overflow: hidden;
+    margin-bottom: 22px;
+}
+
+
+/* ── Overlay & Panel ── */
+
+.overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(26, 58, 107, 0.45);
+    z-index: 100;
+    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(3px);
+}
+
+.overlay.active {
+    display: block;
+}
+
+.panel {
+    position: fixed;
+    top: 0;
+    right: -480px;
+    width: 440px;
+    height: 100%;
+    background: white;
+    z-index: 200;
+    box-shadow: -8px 0 30px rgba(0, 0, 0, 0.15);
+    transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+}
+
+.panel.active {
+    right: 0;
+}
+
+.panel-top {
+    background: #1a3a6b;
+    padding: 22px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.panel-top h2 {
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.close-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-btn:hover {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+.panel-body {
+    padding: 22px 28px;
+}
+
+.panel label {
+    display: block;
+    margin-bottom: 5px;
+    color: #1a3a6b;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.panel input,
+.panel select {
+    width: 100%;
+    padding: 10px 13px;
+    border: 2px solid #e8edf5;
+    border-radius: 10px;
+    margin-bottom: 14px;
+    font-size: 13px;
+    font-family: 'Poppins', sans-serif;
+    transition: border 0.2s;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.panel input:focus,
+.panel select:focus {
+    border-color: #f5a623;
+}
+
+.multi-select {
+    height: auto !important;
+    padding: 5px !important;
+}
+
+.multi-select option {
+    padding: 7px 9px;
+    margin: 2px;
+    border-radius: 5px;
+}
+
+.multi-select option:checked {
+    background: #1a3a6b;
+    color: white;
+}
+
+.hint {
+    font-size: 11px;
+    color: #aaa;
+    margin-top: -11px;
+    margin-bottom: 14px;
+}
+
+.submit-btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 25px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    color: white;
+    font-family: 'Poppins', sans-serif;
+    transition: all 0.2s;
+}
+
+.submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+
+/* ── Confirm Modal ── */
+
+.confirm-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+}
+
+.confirm-overlay.open {
+    display: flex;
+}
+
+.confirm-box {
+    background: white;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 380px;
+    margin: 16px;
+    box-shadow: 0 28px 70px rgba(0, 0, 0, 0.22);
+    overflow: hidden;
+    animation: confirmIn .28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes confirmIn {
+    from {
+        opacity: 0;
+        transform: scale(0.88) translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.confirm-icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 28px 20px 16px;
+}
+
+.confirm-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    background: #fdecea;
+}
+
+.confirm-content {
+    padding: 0 26px 22px;
+    text-align: center;
+}
+
+.confirm-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1a3a6b;
+    margin-bottom: 8px;
+}
+
+.confirm-msg {
+    font-size: 13px;
+    color: #64748b;
+    line-height: 1.6;
+}
+
+.confirm-name-box {
+    margin-top: 14px;
+    background: #f0f4f8;
+    border-radius: 10px;
+    padding: 9px 14px;
+    border: 1.5px solid #e8edf5;
+}
+
+.confirm-name-label {
+    font-size: 12px;
+    color: #888;
+    display: block;
+    margin-bottom: 3px;
+}
+
+.confirm-name-value {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1a3a6b;
+}
+
+.confirm-warn {
+    margin-top: 12px;
+    background: #fff8ee;
+    border: 1.5px solid #fce8c3;
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    text-align: left;
+}
+
+.confirm-warn-text {
+    font-size: 11px;
+    color: #b8740a;
+    line-height: 1.5;
+}
+
+.confirm-actions {
+    display: flex;
+    gap: 10px;
+    padding: 16px 22px 22px;
+}
+
+.confirm-btn-cancel {
+    flex: 1;
+    padding: 11px;
+    background: #f1f5f9;
+    color: #64748b;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    transition: all 0.2s;
+}
+
+.confirm-btn-cancel:hover {
+    background: #e2e8f0;
+}
+
+.confirm-btn-ok {
+    flex: 1;
+    padding: 11px;
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    transition: all 0.2s;
+    box-shadow: 0 4px 14px rgba(231, 76, 60, 0.3);
+}
+
+.confirm-btn-ok:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.45);
+}
+
+
+/* ── Desktop table ── */
+
+.coord-desktop {
+    display: block;
+    overflow-x: auto;
+}
+
+.coord-mobile {
+    display: none;
+}
+
+
+/* ── Mobile cards ── */
+
+@media (max-width:768px) {
+    .main-content {
+        padding: 14px;
+    }
+    .page-title {
+        font-size: 17px;
+        margin-bottom: 14px;
+    }
+    .panel {
+        width: 100%;
+        right: -100%;
+    }
+    .coord-desktop {
+        display: none;
+    }
+    .coord-mobile {
+        display: block;
+        padding: 10px;
+    }
+    .coord-mob-card {
+        background: white;
+        border-radius: 13px;
+        border: 1.5px solid #e8edf5;
+        overflow: hidden;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    .coord-mob-header {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 13px 14px;
+        background: #f8fafc;
+        border-bottom: 1px solid #e8edf5;
+    }
+    .coord-mob-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: 700;
+        color: white;
+        flex-shrink: 0;
+    }
+    .coord-mob-avatar.homme {
+        background: #1a3a6b;
+        box-shadow: 0 3px 8px rgba(26, 58, 107, 0.3);
+    }
+    .coord-mob-avatar.femme {
+        background: #e91e8c;
+        box-shadow: 0 3px 8px rgba(233, 30, 140, 0.3);
+    }
+    .coord-mob-name {
+        font-weight: 700;
+        color: #1a3a6b;
+        font-size: 13px;
+    }
+    .coord-mob-resp {
+        font-size: 11px;
+        color: #999;
+        margin-top: 2px;
+    }
+    .coord-mob-badge {
+        margin-left: auto;
+        padding: 4px 11px;
+        border-radius: 20px;
+        font-size: 10px;
+        font-weight: 700;
+        color: white;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .coord-mob-badge.homme {
+        background: #1a3a6b;
+    }
+    .coord-mob-badge.femme {
+        background: #e91e8c;
+    }
+    .coord-mob-dours {
+        padding: 10px 14px;
+        border-bottom: 1px solid #f0f4f8;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        align-items: center;
+        min-height: 38px;
+    }
+    .dour-tag {
+        display: inline-block;
+        padding: 3px 9px;
+        border-radius: 10px;
+        font-size: 10px;
+        color: white;
+        font-weight: 500;
+    }
+    .dour-tag.talib {
+        background: #1a3a6b;
+    }
+    .dour-tag.taliba {
+        background: #e91e8c;
+    }
+    .dour-tag.fatat {
+        background: #f5a623;
+    }
+    .coord-mob-actions {
+        display: flex;
+        gap: 8px;
+        padding: 10px 14px;
+    }
+    .coord-mob-edit {
+        flex: 1;
+        background: #f5a623;
+        color: white;
+        font-size: 11px;
+        padding: 8px 0;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        font-family: 'Poppins', sans-serif;
+        text-align: center;
+        transition: background 0.2s;
+    }
+    .coord-mob-edit:hover {
+        background: #e8941a;
+    }
+    .coord-mob-del-btn {
+        flex: 1;
+        background: #e74c3c;
+        color: white;
+        font-size: 11px;
+        padding: 8px 0;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        font-family: 'Poppins', sans-serif;
+        text-align: center;
+        transition: background 0.2s;
+    }
+    .coord-mob-del-btn:hover {
+        background: #c0392b;
+    }
+}

@@ -1,0 +1,571 @@
+{% extends "base.html" %}
+{% block title %}Heures Professeurs{% endblock %}
+
+{% block extra_css %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --hp-navy:    #0c1e3e;
+    --hp-blue:    #1d3f8a;
+    --hp-blue2:   #3b82f6;
+    --hp-teal:    #0e7490;
+    --hp-gold:    #e8920a;
+    --hp-green:   #047857;
+    --hp-red:     #be123c;
+    --hp-purple:  #6d28d9;
+    --hp-surface: #f0f4f8;
+    --hp-border:  #dde3ed;
+    --hp-text:    #0c1e3e;
+    --hp-muted:   #5e6e8a;
+    --hp-radius:  14px;
+    --hp-shadow:  0 2px 12px rgba(12,30,62,.08), 0 1px 3px rgba(12,30,62,.05);
+    --hp-shadow-md: 0 8px 28px rgba(12,30,62,.12);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  body, input, select, button { font-family: 'Sora', sans-serif; }
+
+  /* ── HEADER ── */
+  .hp-header {
+    background: linear-gradient(140deg, #0c1e3e 0%, #1d3f8a 45%, #6d28d9 100%);
+    border-radius: 20px; padding: 30px 36px; margin-bottom: 24px;
+    position: relative; overflow: hidden; color: #fff;
+    box-shadow: 0 12px 40px rgba(12,30,62,.22);
+  }
+  .hp-header::before {
+    content: ''; position: absolute; top: -80px; right: -80px;
+    width: 300px; height: 300px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,.07) 0%, transparent 70%);
+  }
+  .hp-header::after {
+    content: ''; position: absolute; bottom: -50px; left: 25%;
+    width: 200px; height: 200px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(232,146,10,.12) 0%, transparent 70%);
+  }
+  .hp-header-inner { position: relative; z-index: 1; }
+  .hp-header h2 { font-size: 24px; font-weight: 800; margin: 0 0 5px; letter-spacing: -.5px; }
+  .hp-header p  { margin: 0; opacity: .7; font-size: 13px; font-weight: 500; }
+  .hp-header-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(109,40,217,.25); border: 1px solid rgba(167,139,250,.4);
+    color: #c4b5fd; border-radius: 20px; padding: 5px 14px;
+    font-size: 11px; font-weight: 700; margin-top: 12px; letter-spacing: .06em;
+  }
+
+  /* ── KPI ── */
+  .hp-kpi-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 22px; }
+  .hp-kpi {
+    flex: 1; min-width: 130px; background: #fff;
+    border: 1.5px solid var(--hp-border); border-radius: var(--hp-radius);
+    padding: 18px 20px; display: flex; align-items: center; gap: 14px;
+    box-shadow: var(--hp-shadow); transition: transform .15s, box-shadow .15s;
+  }
+  .hp-kpi:hover { transform: translateY(-2px); box-shadow: var(--hp-shadow-md); }
+  .hp-kpi-icon { width: 46px; height: 46px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 21px; }
+  .hki-purple { background: linear-gradient(135deg, #ede9fe, #ddd6fe); }
+  .hki-blue   { background: linear-gradient(135deg, #dbeafe, #bfdbfe); }
+  .hki-green  { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
+  .hki-amber  { background: linear-gradient(135deg, #fef3c7, #fde68a); }
+  .hki-navy   { background: linear-gradient(135deg, #e8eef7, #d4dff0); }
+  .hp-kpi-val { font-size: 27px; font-weight: 800; line-height: 1; color: var(--hp-navy); letter-spacing: -.5px; }
+  .hp-kpi-lbl { font-size: 10.5px; color: var(--hp-muted); margin-top: 3px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+
+  /* ── FILTERS ── */
+  .hp-filters {
+    background: #fff; border: 1.5px solid var(--hp-border); border-radius: var(--hp-radius);
+    padding: 18px 22px; margin-bottom: 22px;
+    display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;
+    box-shadow: var(--hp-shadow);
+  }
+  .hp-filters .fg { display: flex; flex-direction: column; gap: 5px; }
+  .hp-filters label { font-size: 10px; font-weight: 700; color: var(--hp-muted); text-transform: uppercase; letter-spacing: .08em; }
+  .hp-filters select {
+    border: 2px solid var(--hp-border); border-radius: 10px;
+    padding: 8px 32px 8px 12px; font-size: 13px; font-family: inherit;
+    background: var(--hp-surface);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235e6e8a' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center;
+    appearance: none; color: var(--hp-text); min-width: 140px; outline: none; cursor: pointer;
+    transition: border .2s, box-shadow .2s;
+  }
+  .hp-filters select:focus { border-color: var(--hp-gold); box-shadow: 0 0 0 3px rgba(232,146,10,.12); background-color: #fff; }
+  .btn-hpfilter {
+    background: #e8920a !important; color: #fff !important; border: none !important;
+    border-radius: 25px !important; padding: 9px 22px !important; font-size: 13px !important;
+    font-weight: 700 !important; cursor: pointer !important; font-family: inherit !important;
+    align-self: flex-end; box-shadow: 0 4px 14px rgba(232,146,10,.3) !important;
+    transition: all .2s !important;
+  }
+  .btn-hpfilter:hover { background: #c47c08 !important; transform: translateY(-1px); }
+  .btn-hpclear {
+    background: transparent; color: var(--hp-muted); border: 1.5px solid var(--hp-border);
+    border-radius: 25px; padding: 9px 16px; font-size: 13px; font-weight: 600;
+    cursor: pointer; font-family: inherit; align-self: flex-end; transition: all .2s;
+  }
+  .btn-hpclear:hover { background: var(--hp-surface); color: var(--hp-navy); }
+
+  /* ── TABS ── */
+  .hp-tabs-bar { display: flex; gap: 4px; background: var(--hp-surface); border-radius: 12px; padding: 4px; margin-bottom: 22px; width: fit-content; }
+  .hp-tab {
+    padding: 8px 18px; font-size: 12.5px; font-weight: 700; border: none;
+    background: transparent; border-radius: 9px; cursor: pointer; color: var(--hp-muted);
+    font-family: inherit; transition: all .18s;
+  }
+  .hp-tab.active { background: #fff; color: var(--hp-navy); box-shadow: 0 2px 8px rgba(15,37,68,.12); }
+
+  /* ══ VUE RESPONSABLES ══ */
+  .hp-resp-section {
+    background: #fff; border: 1.5px solid var(--hp-border); border-radius: 16px;
+    margin-bottom: 20px; overflow: hidden; box-shadow: var(--hp-shadow);
+  }
+  .hp-resp-head {
+    display: flex; align-items: center; gap: 14px; padding: 14px 20px;
+    background: linear-gradient(135deg, #0f2544 0%, #1e40af 100%); color: #fff;
+    cursor: pointer; transition: opacity .15s;
+  }
+  .hp-resp-head:hover { opacity: .92; }
+  .hp-resp-avatar {
+    width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+    background: rgba(255,255,255,.18); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 800;
+  }
+  .hp-resp-name { font-weight: 800; font-size: 15px; }
+  .hp-resp-sub  { font-size: 11px; opacity: .7; margin-top: 2px; font-weight: 500; }
+  .hp-resp-pills { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .hp-pill { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+  .hpill-hrs   { background: rgba(255,255,255,.18); color: #fff; border: 1px solid rgba(255,255,255,.25); }
+  .hpill-seq   { background: rgba(255,255,255,.12); color: rgba(255,255,255,.85); border: 1px solid rgba(255,255,255,.18); }
+  .tog-ico { transition: transform .2s; color: rgba(255,255,255,.7); font-size: 12px; }
+
+  /* ── PROF CARDS GRID ── */
+  .hp-resp-body { padding: 16px 20px; }
+  .hp-prof-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+
+  .hp-prof-card {
+    background: var(--hp-surface); border: 1.5px solid var(--hp-border); border-radius: 12px;
+    padding: 14px 16px; transition: all .15s; overflow: hidden;
+  }
+  .hp-prof-card:hover { border-color: #a78bfa; box-shadow: 0 4px 12px rgba(109,40,217,.12); transform: translateY(-1px); }
+
+  .hp-prof-card-top { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .hp-prof-av {
+    width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+    background: linear-gradient(135deg, #6d28d9, #4c1d95);
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 800;
+  }
+  .hp-prof-name { font-size: 13px; font-weight: 800; color: var(--hp-navy); }
+  .hp-prof-hrs  {
+    margin-left: auto; background: #ede9fe; color: #5b21b6;
+    border-radius: 10px; padding: 5px 12px; font-size: 15px; font-weight: 800; flex-shrink: 0;
+  }
+
+  /* Barre de progression coordinateurs */
+  .hp-coord-list { display: flex; flex-direction: column; gap: 7px; }
+  .hp-coord-row { display: flex; align-items: center; gap: 8px; }
+  .hp-coord-lbl { font-size: 11px; font-weight: 700; color: var(--hp-muted); white-space: nowrap; min-width: 100px; overflow: hidden; text-overflow: ellipsis; }
+  .hp-bar-wrap { flex: 1; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
+  .hp-bar-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #6d28d9, #a78bfa); transition: width .5s ease; }
+  .hp-coord-val { font-size: 11px; font-weight: 800; color: var(--hp-purple); white-space: nowrap; min-width: 34px; text-align: right; }
+  .hp-coord-seq { font-size: 10px; color: var(--hp-muted); white-space: nowrap; }
+
+  /* ══ VUE TABLEAU GLOBAL ══ */
+  .hp-table-card {
+    background: #fff; border: 1.5px solid var(--hp-border); border-radius: 16px;
+    overflow: hidden; box-shadow: var(--hp-shadow); margin-bottom: 20px;
+  }
+  .hp-table-head {
+    display: flex; align-items: center; gap: 10px; padding: 14px 20px;
+    background: linear-gradient(135deg, #4c1d95 0%, #6d28d9 100%); color: #fff;
+  }
+  .hp-table-head h3 { font-size: 14px; font-weight: 800; margin: 0; }
+  .hp-table-wrap { overflow-x: auto; }
+  .hp-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .hp-table th {
+    text-align: left; padding: 10px 14px;
+    font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .05em; color: var(--hp-muted);
+    border-bottom: 2px solid var(--hp-border); background: var(--hp-surface);
+    white-space: nowrap;
+  }
+  .hp-table td { padding: 10px 14px; border-bottom: 1px solid var(--hp-border); color: var(--hp-text); vertical-align: middle; }
+  .hp-table tr:last-child td { border-bottom: none; }
+  .hp-table tr:hover td { background: #f8fafc; }
+
+  .rank-badge { width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; }
+  .rank-1 { background: #fef3c7; color: #b45309; }
+  .rank-2 { background: #f1f5f9; color: #475569; }
+  .rank-3 { background: #fef3c7; color: #b45309; }
+  .rank-n { background: #f1f5f9; color: #94a3b8; }
+
+  .bar-cell { display: flex; align-items: center; gap: 8px; }
+  .bar-mini { width: 80px; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; flex-shrink: 0; }
+  .bar-mini-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #6d28d9, #a78bfa); }
+
+  /* ══ VUE COORDINATEURS ══ */
+  .hp-coord-section {
+    background: #fff; border: 1.5px solid var(--hp-border); border-radius: 16px;
+    margin-bottom: 20px; overflow: hidden; box-shadow: var(--hp-shadow);
+  }
+  .hp-coord-head {
+    display: flex; align-items: center; gap: 12px; padding: 13px 20px;
+    background: var(--hp-surface); border-bottom: 1.5px solid var(--hp-border);
+    cursor: pointer; transition: background .15s;
+  }
+  .hp-coord-head:hover { background: #e8eef7; }
+  .hp-coord-av2 {
+    width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+    background: linear-gradient(135deg, #0e7490, #0284c7);
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 800;
+  }
+  .hp-coord-head-name { font-weight: 800; font-size: 13.5px; color: var(--hp-navy); }
+  .hp-coord-head-sub  { font-size: 11px; color: var(--hp-muted); margin-top: 1px; }
+  .hp-coord-head-pills { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .hcpill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .hcpill-hrs  { background: #ede9fe; color: #5b21b6; }
+  .hcpill-seq  { background: #dbeafe; color: #1e3a8a; }
+
+  .hp-coord-profs { padding: 14px 20px; display: flex; flex-direction: column; gap: 8px; }
+  .hp-cprof-row {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+    background: var(--hp-surface); border-radius: 10px; border: 1px solid var(--hp-border);
+    transition: all .15s;
+  }
+  .hp-cprof-row:hover { border-color: #a78bfa; background: #faf8ff; }
+  .hp-cprof-av {
+    width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
+    background: linear-gradient(135deg, #6d28d9, #4c1d95);
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 800;
+  }
+  .hp-cprof-name { font-size: 12.5px; font-weight: 700; color: var(--hp-navy); }
+  .hp-cprof-hrs  { margin-left: auto; font-size: 14px; font-weight: 800; color: #5b21b6; }
+  .hp-cprof-seq  { font-size: 11px; color: var(--hp-muted); margin-left: 4px; }
+
+  /* ── EMPTY ── */
+  .hp-empty { text-align: center; padding: 52px 16px; color: var(--hp-muted); }
+  .hp-empty .ei { font-size: 44px; margin-bottom: 12px; opacity: .35; }
+
+  @media (max-width: 640px) {
+    .hp-prof-grid { grid-template-columns: 1fr; }
+    .hp-kpi { min-width: 110px; }
+    .hp-kpi-val { font-size: 20px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="padding: 24px;">
+
+  <!-- HEADER -->
+  <div class="hp-header">
+    <div class="hp-header-inner">
+      <h2>🎓 Heures Professeurs</h2>
+      <p>{{ mois_noms[mois] }} {{ annee }} — Suivi des heures et séances par professeur</p>
+      <div class="hp-header-badge">📊 Par Prof · Par Responsable · Par Coordinateur</div>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="hp-kpi-row">
+    <div class="hp-kpi">
+      <div class="hp-kpi-icon hki-purple">🎓</div>
+      <div><div class="hp-kpi-val">{{ total_profs }}</div><div class="hp-kpi-lbl">Professeurs actifs</div></div>
+    </div>
+    <div class="hp-kpi">
+      <div class="hp-kpi-icon hki-blue">⏱️</div>
+      <div><div class="hp-kpi-val">{{ "%.1f"|format(total_heures) }}h</div><div class="hp-kpi-lbl">Heures totales</div></div>
+    </div>
+    <div class="hp-kpi">
+      <div class="hp-kpi-icon hki-green">✅</div>
+      <div><div class="hp-kpi-val">{{ total_seances }}</div><div class="hp-kpi-lbl">Séances passées</div></div>
+    </div>
+    <div class="hp-kpi">
+      <div class="hp-kpi-icon hki-amber">👥</div>
+      <div><div class="hp-kpi-val">{{ total_resps }}</div><div class="hp-kpi-lbl">Responsables</div></div>
+    </div>
+    <div class="hp-kpi">
+      <div class="hp-kpi-icon hki-navy">📋</div>
+      <div><div class="hp-kpi-val">{{ total_coords }}</div><div class="hp-kpi-lbl">Coordinateurs</div></div>
+    </div>
+  </div>
+
+  <!-- FILTERS -->
+  <form method="GET" action="{{ url_for('heures_profs') }}" class="hp-filters">
+    <div class="fg">
+      <label>Mois</label>
+      <select name="mois">
+        {% for i in range(1,13) %}
+          <option value="{{ i }}" {{ 'selected' if i==mois }}>{{ mois_noms[i] }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="fg">
+      <label>Année</label>
+      <select name="annee">
+        {% for a in annees %}
+          <option value="{{ a }}" {{ 'selected' if a==annee }}>{{ a }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% if current_user.is_admin %}
+    <div class="fg">
+      <label>Responsable</label>
+      <select name="filtre_resp">
+        <option value="">Tous</option>
+        {% for r in responsables %}
+          <option value="{{ r.id }}" {{ 'selected' if filtre_resp==r.id|string }}>{{ r.prenom }} {{ r.nom }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endif %}
+    <div class="fg">
+      <label>Professeur</label>
+      <select name="filtre_prof">
+        <option value="">Tous</option>
+        {% for p in professeurs %}
+          <option value="{{ p.id }}" {{ 'selected' if filtre_prof==p.id|string }}>{{ p.nom }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="btn-hpfilter">🔍 Filtrer</button>
+    <a href="{{ url_for('heures_profs') }}" class="btn-hpclear">↺ Réinitialiser</a>
+  </form>
+
+  <!-- TABS -->
+  <div class="hp-tabs-bar" id="hpTabs">
+    <button class="hp-tab active" onclick="switchHPTab('responsables', this)">👤 Par Responsable</button>
+    <button class="hp-tab" onclick="switchHPTab('tableau', this)">📊 Tableau Global</button>
+    <button class="hp-tab" onclick="switchHPTab('coordinateurs', this)">📋 Par Coordinateur</button>
+  </div>
+
+
+  <!-- ══ VUE PAR RESPONSABLE ══ -->
+  <div id="view-responsables">
+    {% if blocs_resp %}
+      {% for bloc in blocs_resp %}
+      <div class="hp-resp-section">
+        <div class="hp-resp-head" onclick="toggleHPCard(this)">
+          <div class="hp-resp-avatar">
+            {{ (bloc.responsable.prenom[0] + bloc.responsable.nom[0])|upper }}
+          </div>
+          <div>
+            <div class="hp-resp-name">{{ bloc.responsable.prenom }} {{ bloc.responsable.nom }}</div>
+            <div class="hp-resp-sub">
+              {{ bloc.profs|length }} professeur{{ 's' if bloc.profs|length != 1 }} ·
+              {{ bloc.nb_coords }} coordinateur{{ 's' if bloc.nb_coords != 1 }}
+            </div>
+          </div>
+          <div class="hp-resp-pills">
+            <span class="hp-pill hpill-hrs">⏱️ {{ "%.1f"|format(bloc.total_heures) }}h</span>
+            <span class="hp-pill hpill-seq">✅ {{ bloc.total_seances }} séance{{ 's' if bloc.total_seances != 1 }}</span>
+            <span class="tog-ico">▾</span>
+          </div>
+        </div>
+        <div class="hp-resp-body">
+          {% if bloc.profs %}
+          <div class="hp-prof-grid">
+            {% for item in bloc.profs %}
+            <div class="hp-prof-card">
+              <div class="hp-prof-card-top">
+                <div class="hp-prof-av">{{ item.prof.nom[0]|upper }}</div>
+                <div>
+                  <div class="hp-prof-name">{{ item.prof.nom }}</div>
+                  <div style="font-size:10.5px;color:var(--hp-muted);margin-top:2px;">
+                    {{ item.nb_seances }} séance{{ 's' if item.nb_seances != 1 }}
+                  </div>
+                </div>
+                <div class="hp-prof-hrs">{{ "%.1f"|format(item.heures) }}h</div>
+              </div>
+
+              {# Barre par coordinateur #}
+              {% if item.par_coord %}
+              <div class="hp-coord-list">
+                {% set max_h = item.par_coord | map(attribute='heures') | max %}
+                {% for coord_item in item.par_coord %}
+                <div class="hp-coord-row">
+                  <span class="hp-coord-lbl" title="{{ coord_item.coord.prenom }} {{ coord_item.coord.nom }}">
+                    {{ coord_item.coord.prenom }} {{ coord_item.coord.nom }}
+                  </span>
+                  <div class="hp-bar-wrap">
+                    <div class="hp-bar-fill" style="width: {{ ((coord_item.heures / max_h) * 100)|round|int }}%"></div>
+                  </div>
+                  <span class="hp-coord-val">{{ "%.1f"|format(coord_item.heures) }}h</span>
+                  <span class="hp-coord-seq">{{ coord_item.nb_seances }}×</span>
+                </div>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+            <div style="color:#bbb;font-size:13px;font-style:italic;padding:8px 0;">
+              Aucun professeur pour ce responsable ce mois.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="hp-empty">
+        <div class="ei">🎓</div>
+        <p style="font-size:14px;font-weight:600;">Aucune heure de professeur enregistrée pour ce mois.</p>
+      </div>
+    {% endif %}
+  </div>
+
+
+  <!-- ══ VUE TABLEAU GLOBAL ══ -->
+  <div id="view-tableau" style="display:none">
+    {% if tableau_global %}
+    <div class="hp-table-card">
+      <div class="hp-table-head">
+        <span style="font-size:20px;">📊</span>
+        <h3>Classement global — {{ mois_noms[mois] }} {{ annee }}</h3>
+      </div>
+      <div class="hp-table-wrap">
+        <table class="hp-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Professeur</th>
+              <th>Responsable</th>
+              <th>Coordinateurs</th>
+              <th>Séances</th>
+              <th>Heures</th>
+              <th>Progression</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% set max_h = tableau_global | map(attribute='heures') | max if tableau_global else 1 %}
+            {% for item in tableau_global %}
+            <tr>
+              <td>
+                <span class="rank-badge {{ 'rank-1' if loop.index == 1 else 'rank-2' if loop.index == 2 else 'rank-3' if loop.index == 3 else 'rank-n' }}">
+                  {{ '🥇' if loop.index == 1 else '🥈' if loop.index == 2 else '🥉' if loop.index == 3 else loop.index }}
+                </span>
+              </td>
+              <td>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div class="hp-prof-av" style="width:32px;height:32px;font-size:13px;">{{ item.prof.nom[0]|upper }}</div>
+                  <span style="font-weight:700;">{{ item.prof.nom }}</span>
+                </div>
+              </td>
+              <td style="font-size:12px;color:var(--hp-muted);">
+                {% for rname in item.responsables %}
+                  <span style="white-space:nowrap;">{{ rname }}</span>{% if not loop.last %}, {% endif %}
+                {% endfor %}
+              </td>
+              <td style="font-size:12px;">
+                {% for cname in item.coordinateurs %}
+                  <span style="background:#e0f2fe;color:#0369a1;padding:1px 7px;border-radius:8px;font-size:10.5px;font-weight:700;display:inline-block;margin:1px;">{{ cname }}</span>
+                {% endfor %}
+              </td>
+              <td>
+                <strong style="color:var(--hp-blue);">{{ item.nb_seances }}</strong>
+              </td>
+              <td>
+                <strong style="font-size:15px;color:#5b21b6;">{{ "%.1f"|format(item.heures) }}h</strong>
+              </td>
+              <td>
+                <div class="bar-cell">
+                  <div class="bar-mini">
+                    <div class="bar-mini-fill" style="width:{{ ((item.heures / max_h) * 100)|round|int }}%"></div>
+                  </div>
+                  <span style="font-size:11px;color:var(--hp-muted);">{{ ((item.heures / max_h) * 100)|round|int }}%</span>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% else %}
+      <div class="hp-empty">
+        <div class="ei">📊</div>
+        <p style="font-size:14px;font-weight:600;">Aucune donnée pour ce mois.</p>
+      </div>
+    {% endif %}
+  </div>
+
+
+  <!-- ══ VUE PAR COORDINATEUR ══ -->
+  <div id="view-coordinateurs" style="display:none">
+    {% if blocs_coord %}
+      {% for bloc in blocs_coord %}
+      <div class="hp-coord-section">
+        <div class="hp-coord-head" onclick="toggleHPCard(this)">
+          <div class="hp-coord-av2">
+            {{ (bloc.coord.prenom[0] + bloc.coord.nom[0])|upper }}
+          </div>
+          <div>
+            <div class="hp-coord-head-name">{{ bloc.coord.prenom }} {{ bloc.coord.nom }}</div>
+            <div class="hp-coord-head-sub">
+              Responsable : {{ bloc.coord.responsable.prenom }} {{ bloc.coord.responsable.nom }}
+              · {{ bloc.profs|length }} prof{{ 's' if bloc.profs|length != 1 }}
+            </div>
+          </div>
+          <div class="hp-coord-head-pills">
+            <span class="hcpill hcpill-hrs">⏱️ {{ "%.1f"|format(bloc.total_heures) }}h</span>
+            <span class="hcpill hcpill-seq">✅ {{ bloc.total_seances }} séance{{ 's' if bloc.total_seances != 1 }}</span>
+            <span class="tog-ico" style="color:var(--hp-muted);">▾</span>
+          </div>
+        </div>
+        <div class="hp-coord-profs">
+          {% if bloc.profs %}
+            {% for item in bloc.profs %}
+            <div class="hp-cprof-row">
+              <div class="hp-cprof-av">{{ item.prof.nom[0]|upper }}</div>
+              <div>
+                <div class="hp-cprof-name">{{ item.prof.nom }}</div>
+              </div>
+              <div class="hp-cprof-hrs">{{ "%.1f"|format(item.heures) }}h</div>
+              <div class="hp-cprof-seq">{{ item.nb_seances }} séance{{ 's' if item.nb_seances != 1 }}</div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div style="color:#bbb;font-size:13px;font-style:italic;">Aucun professeur ce mois.</div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="hp-empty">
+        <div class="ei">📋</div>
+        <p style="font-size:14px;font-weight:600;">Aucune donnée par coordinateur pour ce mois.</p>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function switchHPTab(tab, btn) {
+  document.getElementById('view-responsables').style.display  = tab === 'responsables'  ? '' : 'none';
+  document.getElementById('view-tableau').style.display       = tab === 'tableau'        ? '' : 'none';
+  document.getElementById('view-coordinateurs').style.display = tab === 'coordinateurs' ? '' : 'none';
+  document.querySelectorAll('.hp-tab').forEach(function(t) { t.classList.remove('active'); });
+  btn.classList.add('active');
+}
+
+function toggleHPCard(header) {
+  var body = header.nextElementSibling;
+  var icon = header.querySelector('.tog-ico');
+  if (!body) return;
+  if (body.style.display === 'none') {
+    body.style.display = '';
+    if (icon) icon.style.transform = 'rotate(0deg)';
+  } else {
+    body.style.display = 'none';
+    if (icon) icon.style.transform = 'rotate(-90deg)';
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,534 @@
+{% extends "base.html" %}
+{% block title %}Rapport Suivi Horaire Profs (B2C/B2B) — {{ mois_noms[mois] }} {{ annee }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/impression_b2c.css') }}">
+<style>
+@media print {
+  .no-print-view { display: none !important; }
+}
+.s-table tbody tr.row-annulee { background: #fff5f5 !important; }
+.s-table tbody tr.row-rattrapage { background: #fffbeb !important; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ip-screen">
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+    <div style="padding:11px 16px;border-radius:10px;margin-bottom:14px;font-size:13px;display:flex;align-items:center;gap:8px;background:{% if cat=='error' %}#dc2626{% else %}#16a34a{% endif %};color:white;font-family:'DM Sans',sans-serif;">
+      {% if cat=='error' %}⚠️{% else %}✅{% endif %} {{ msg }}
+    </div>
+    {% endfor %}
+  {% endwith %}
+
+  <!-- TOOLBAR -->
+  <div class="toolbar no-print">
+
+    <div class="tb-row1">
+      <div class="tb-row1-left">
+        <div class="toolbar-title">🖨️ Impression — Rapport B2C</div>
+      </div>
+      <div class="tb-row1-right">
+        <a href="{{ url_for('suivi_b2c') }}" class="back-btn">← Retour</a>
+        <button class="print-btn" onclick="window.print()">🖨️ Imprimer</button>
+      </div>
+    </div>
+
+    <div class="tb-row2">
+      <form method="GET" action="{{ url_for('impression_b2c') }}"
+            class="tb-row2-inner" style="width:100%;">
+
+        <span class="tb-icon">📅</span>
+        <select name="mois" class="tb-select">
+          {% for i in range(1,13) %}
+          <option value="{{ i }}" {{ 'selected' if i==mois }}>{{ mois_noms[i] }}</option>
+          {% endfor %}
+        </select>
+
+        <select name="annee" class="tb-select" style="min-width:75px;max-width:85px;">
+          {% for y in annees %}
+          <option value="{{ y }}" {{ 'selected' if y==annee }}>{{ y }}</option>
+          {% endfor %}
+        </select>
+
+        {% if current_user.is_admin %}
+        <span class="tb-icon">👤</span>
+        <select name="filtre_resp" class="tb-select">
+          <option value="">Tous responsables</option>
+          {% for r in responsables %}
+          <option value="{{ r.id }}" {{ 'selected' if filtre_resp==r.id|string }}>{{ r.prenom }} {{ r.nom }}</option>
+          {% endfor %}
+        </select>
+        {% endif %}
+
+        <span class="tb-icon">🎓</span>
+        <select name="filtre_prof" class="tb-select">
+          <option value="">Tous profs</option>
+          {% for p in professeurs %}
+          <option value="{{ p.id }}" {{ 'selected' if filtre_prof==p.id|string }}>{{ p.nom }}</option>
+          {% endfor %}
+        </select>
+
+        <span class="tb-icon">📊</span>
+        <select name="filtre_statut" class="tb-select">
+          <option value="">Tous statuts</option>
+          {% for val, lbl in statuts %}
+          <option value="{{ val }}" {{ 'selected' if filtre_statut==val }}>{{ lbl }}</option>
+          {% endfor %}
+        </select>
+
+        <button type="submit" class="filter-btn">🔍 Actualiser</button>
+
+        {% if filtre_resp or filtre_prof or filtre_statut %}
+        <a href="{{ url_for('impression_b2c', mois=mois, annee=annee) }}" class="reset-btn">✖ Reset</a>
+        {% endif %}
+
+      </form>
+    </div>
+
+  </div>
+
+  <!-- TABS -->
+  <div class="tab-bar no-print">
+    <button id="tab-btn-resp" class="tab-btn" onclick="switchTab('resp',this)">👤 Par Responsable</button>
+    <button id="tab-btn-prof" class="tab-btn" onclick="switchTab('prof',this)">🎓 Par Professeur</button>
+  </div>
+
+  <!-- ══ DOCUMENT ══ -->
+  <div class="print-doc">
+
+    <!-- DOC HEADER -->
+    <div class="doc-header">
+      <div class="doc-org">Yool · Système de gestion</div>
+      <div class="doc-title">Rapport Suivi Horaire Profs (B2C/B2B)</div>
+      <div class="doc-subtitle">
+        {% if filtre_resp %}
+          {% for r in responsables %}{% if r.id|string == filtre_resp %}👤 {{ r.prenom }} {{ r.nom }}{% endif %}{% endfor %}
+        {% elif filtre_prof %}
+          {% for p in professeurs %}{% if p.id|string == filtre_prof %}🎓 Prof : {{ p.nom }}{% endif %}{% endfor %}
+        {% else %}
+          B2C · FOS · Free · IPSE · Dar Talib — Détail par responsable & professeur
+        {% endif %}
+      </div>
+      <div class="doc-meta">
+        <div class="doc-meta-item"><div class="dmi-val">{{ total_seances }}</div><div class="dmi-lbl">Séances B2C</div></div>
+        <div class="doc-meta-item"><div class="dmi-val">{{ "%.1f"|format(total_heures_b2c) }}h</div><div class="dmi-lbl">Heures B2C</div></div>
+        <div class="doc-meta-item"><div class="dmi-val">{{ "%.1f"|format(total_heures_std) }}h</div><div class="dmi-lbl">Heures B2B</div></div>
+        <div class="doc-meta-item"><div class="dmi-val">{{ "%.1f"|format(total_heures) }}h</div><div class="dmi-lbl">Total Heures</div></div>
+        <div class="doc-meta-item"><div class="dmi-val">{{ nb_profs }}</div><div class="dmi-lbl">Professeurs</div></div>
+        <div class="doc-meta-item"><div class="dmi-val">{{ generated_at }}</div><div class="dmi-lbl">Généré le</div></div>
+      </div>
+    </div>
+
+    <!-- PERIOD BAND -->
+    <div class="period-band">
+      📅 Période : {{ mois_noms[mois] }} {{ annee }}
+      {% if filtre_resp %} · 👤 {% for r in responsables %}{% if r.id|string == filtre_resp %}{{ r.prenom }} {{ r.nom }}{% endif %}{% endfor %}{% endif %}
+      {% if filtre_prof %} · 🎓 {% for p in professeurs %}{% if p.id|string == filtre_prof %}{{ p.nom }}{% endif %}{% endfor %}{% endif %}
+      {% if filtre_statut %} · 📊 {{ filtre_statut|capitalize }}{% endif %}
+    </div>
+
+    <!-- SUMMARY KPIs -->
+    <div class="summary-section">
+      <div class="sum-boxes">
+        <div class="sum-box b1"><div class="sb-val">{{ total_seances }}</div><div class="sb-lbl">📅 Séances B2C</div><div class="sb-icon">📅</div></div>
+        <div class="sum-box b2"><div class="sb-val">{{ "%.1f"|format(total_heures_b2c) }}h</div><div class="sb-lbl">⏱️ Heures B2C</div><div class="sb-icon">⏱️</div></div>
+        <div class="sum-box b3"><div class="sb-val">{{ "%.1f"|format(total_heures_std) }}h</div><div class="sb-lbl">📚 Heures Coord.</div><div class="sb-icon">📚</div></div>
+        <div class="sum-box b2" style="border-top-color:#0f766e;"><div class="sb-val">{{ "%.1f"|format(total_heures) }}h</div><div class="sb-lbl">🔢 Total Heures</div><div class="sb-icon">🔢</div></div>
+        <div class="sum-box b4"><div class="sb-val">{{ total_passees }}</div><div class="sb-lbl">✅ Passées</div><div class="sb-icon">✅</div></div>
+        <div class="sum-box b5"><div class="sb-val">{{ total_annulees }}</div><div class="sb-lbl">❌ Annulées</div><div class="sb-icon">❌</div></div>
+        <div class="sum-box b6"><div class="sb-val">{{ nb_profs }}</div><div class="sb-lbl">🎓 Professeurs</div><div class="sb-icon">🎓</div></div>
+        <div class="sum-box b7"><div class="sb-val">{{ blocs_resp|length }}</div><div class="sb-lbl">👤 Responsables</div><div class="sb-icon">👤</div></div>
+      </div>
+    </div>
+
+    <!-- ══ VUE RESPONSABLE ══ -->
+    <div id="view-resp" class="bloc-section">
+      <div class="section-title">
+        👤 Détail par Responsable
+        <span>{{ mois_noms[mois] }} {{ annee }}</span>
+      </div>
+
+      {% if blocs_resp %}
+        {% for bloc in blocs_resp %}
+        <div class="bloc-card">
+          <div class="bloc-header resp-hd" onclick="toggleCard(this)">
+            <div class="bloc-av av-resp">
+              {{ (bloc.responsable.prenom[0] + bloc.responsable.nom[0])|upper }}
+            </div>
+            <div class="bloc-info">
+              <div class="bloc-name">{{ bloc.responsable.prenom }} {{ bloc.responsable.nom }}</div>
+              <div class="bloc-sub">{{ bloc.seances|length }} séance{{ 's' if bloc.seances|length != 1 }}</div>
+              <div class="stat-pills">
+                {% if bloc.nb_passees > 0 %}<span class="sp p">✅ {{ bloc.nb_passees }} passées</span>{% endif %}
+                {% if bloc.nb_annulees > 0 %}<span class="sp a">❌ {{ bloc.nb_annulees }} annulées</span>{% endif %}
+                {% if bloc.nb_ratt > 0 %}<span class="sp r">🔄 {{ bloc.nb_ratt }} rattrapages</span>{% endif %}
+              </div>
+            </div>
+            <div class="bloc-stats">
+              <div><div class="bs-val" style="color:var(--purple);">{{ bloc.seances|length }}</div><div class="bs-lbl">séances</div></div>
+              <div><div class="bs-val" style="color:var(--teal);">{{ "%.1f"|format(bloc.total_heures) }}h</div><div class="bs-lbl">heures</div></div>
+            </div>
+            <span class="tog-ico no-print">▾</span>
+          </div>
+
+          <div class="bloc-body">
+            {% if bloc.seances %}
+            <div class="s-table-wrap"><table class="s-table">
+              <thead>
+                <tr>
+                  <th>📅 Date</th>
+                  <th>🕐 Heure</th>
+                  <th>🎓 Professeur</th>
+                  <th>🔬 Matière</th>
+                  <th>📊 Statut</th>
+                  <th>⏱️ Durée</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for s in bloc.seances %}
+                <tr class="{% if s.statut == 'annulee' %}row-annulee{% elif s.statut == 'rattrapage' %}row-rattrapage{% endif %}">
+                  <td style="font-family:'DM Mono',monospace;white-space:nowrap;">
+                    <strong>{{ s.date.strftime('%d/%m/%Y') }}</strong>
+                  </td>
+                  <td style="color:var(--grey);">{{ s.heure or '—' }}</td>
+                  <td style="font-weight:700;color:var(--blue);white-space:nowrap;">{{ s.prof_nom or '—' }}</td>
+                  <td>{% if s.matiere %}<span class="mat-chip">{{ s.matiere }}</span>{% else %}<span style="color:#cbd5e1;">—</span>{% endif %}</td>
+                  <td>
+                    {% if s.statut == 'passee' %}<span class="st-badge passee">✅ Passée</span>
+                    {% elif s.statut == 'annulee' %}<span class="st-badge annulee">❌ Annulée</span>
+                    {% elif s.statut == 'rattrapage' %}<span class="st-badge rattrapage">🔄 Rattrapage</span>
+                    {% else %}<span style="color:#94a3b8;font-size:11px;">—</span>{% endif %}
+                  </td>
+                  <td><span class="h-chip">{{ s.nb_heures }}h</span></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table></div>
+            <div class="s-total">
+              <span>🔢 {{ bloc.seances|length }} séance{{ 's' if bloc.seances|length != 1 }}</span>
+              <div class="s-total-pills">
+                {% if bloc.nb_passees > 0 %}<span class="sp p">✅ {{ bloc.nb_passees }}</span>{% endif %}
+                {% if bloc.nb_annulees > 0 %}<span class="sp a">❌ {{ bloc.nb_annulees }}</span>{% endif %}
+                {% if bloc.nb_ratt > 0 %}<span class="sp r">🔄 {{ bloc.nb_ratt }}</span>{% endif %}
+                <span class="s-total-h">{{ "%.1f"|format(bloc.total_heures) }}h</span>
+              </div>
+            </div>
+            {% else %}
+            <div class="no-data">📭 Aucune séance pour ce responsable ce mois.</div>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div style="padding:50px;text-align:center;color:#cbd5e1;">
+          <div style="font-size:48px;margin-bottom:12px;opacity:.4;">📭</div>
+          <p>Aucune donnée pour {{ mois_noms[mois] }} {{ annee }}</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- ══ VUE PROFESSEUR ══ -->
+    <div id="view-prof" class="bloc-section">
+      <div class="section-title">
+        🎓 Récapitulatif par Professeur
+        <span>{{ mois_noms[mois] }} {{ annee }}</span>
+      </div>
+
+      {% if recap_prof_global %}
+      <div class="bloc-card" style="margin-bottom:24px;">
+        <div class="bloc-header" style="background:linear-gradient(135deg,#f0f5ff,#e8eef7);cursor:default;">
+          <span style="font-size:22px;">📊</span>
+          <div class="bloc-info">
+            <div class="bloc-name">Synthèse globale — Heures par professeur</div>
+            <div class="bloc-sub">{{ mois_noms[mois] }} {{ annee }} · {{ nb_profs }} professeur{{ 's' if nb_profs != 1 }} · B2C + B2B</div>
+          </div>
+          <div class="bloc-stats">
+            <div><div class="bs-val" style="color:var(--teal);">{{ "%.1f"|format(total_heures) }}h</div><div class="bs-lbl">total</div></div>
+          </div>
+        </div>
+        <div class="s-table-wrap">
+          <table class="recap-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Professeur</th>
+                <th>Total Heures</th>
+                <th>Seance B2C</th>
+                <th>Seance B2B</th>
+                <th>Séances</th>
+                <th>Responsables</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in recap_prof_global %}
+              <tr>
+                <td><span class="rank-num">{{ loop.index }}</span></td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#92400e,#d97706);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;">
+                      {{ item.professeur.nom[0]|upper }}
+                    </div>
+                    <strong style="font-size:13px;">{{ item.professeur.nom }}</strong>
+                  </div>
+                </td>
+                <td><span class="h-big">{{ "%.1f"|format(item.total_heures) }}h</span></td>
+                <td>
+                  {% if item.total_heures_b2c > 0 %}
+                  <span style="background:#dbeafe;color:#1d4ed8;padding:3px 10px;border-radius:8px;font-size:12px;font-weight:700;">{{ "%.1f"|format(item.total_heures_b2c) }}h</span>
+                  {% else %}<span style="color:#cbd5e1;">—</span>{% endif %}
+                </td>
+                <td>
+                  {% if item.total_heures_std > 0 %}
+                  <span style="background:#ede9fe;color:#6d28d9;padding:3px 10px;border-radius:8px;font-size:12px;font-weight:700;">{{ "%.1f"|format(item.total_heures_std) }}h</span>
+                  {% else %}<span style="color:#cbd5e1;">—</span>{% endif %}
+                </td>
+                <td><span style="background:#e0f2fe;color:#0369a1;padding:3px 10px;border-radius:8px;font-size:12px;font-weight:700;">{{ item.total_seances }}</span></td>
+                <td>
+                  <div style="display:flex;flex-wrap:wrap;gap:4px;">
+                    {% for rname in item.responsables %}
+                    <span style="background:#e8eef7;color:#1e3a8a;padding:2px 8px;border-radius:8px;font-size:10.5px;font-weight:700;">{{ rname }}</span>
+                    {% endfor %}
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+
+      {% for bloc in blocs_prof %}
+      <div class="bloc-card">
+        <div class="bloc-header prof-hd" onclick="toggleCard(this)">
+          <div class="bloc-av av-prof">{{ bloc.professeur.nom[0]|upper }}</div>
+          <div class="bloc-info">
+            <div class="bloc-name">{{ bloc.professeur.nom }}</div>
+            <div class="bloc-sub">
+              Total : <strong>{{ "%.1f"|format(bloc.total_heures) }}h</strong>
+              {% if bloc.total_heures_b2c > 0 %} · B2C : {{ "%.1f"|format(bloc.total_heures_b2c) }}h{% endif %}
+              {% if bloc.total_heures_std > 0 %}
+                {% set std_p = bloc.seances_std | selectattr('statut','equalto','passee') | list | length %}
+                · Coord. : {{ std_p }} passée{{ 's' if std_p > 1 }} / {{ bloc.nb_std }} · {{ "%.1f"|format(bloc.total_heures_std) }}h
+{% endif %}
+            </div>
+            <div class="stat-pills">
+              {% if bloc.nb_passees > 0 %}<span class="sp p">✅ {{ bloc.nb_passees }}</span>{% endif %}
+              {% if bloc.nb_annulees > 0 %}<span class="sp a">❌ {{ bloc.nb_annulees }}</span>{% endif %}
+              {% if bloc.nb_ratt > 0 %}<span class="sp r">🔄 {{ bloc.nb_ratt }}</span>{% endif %}
+              {% set std_passees  = bloc.seances_std | selectattr('statut','equalto','passee')     | list | length %}
+              {% set std_annulees = bloc.seances_std | selectattr('statut','equalto','annulee')    | list | length %}
+              {% set std_ratt     = bloc.seances_std | selectattr('statut','equalto','rattrapage') | list | length %}
+              {% if std_passees  > 0 %}<span class="sp p">✅ {{ std_passees }}</span>{% endif %}
+              {% if std_annulees > 0 %}<span class="sp a">❌ {{ std_annulees }}</span>{% endif %}
+              {% if std_ratt     > 0 %}<span class="sp r">🔄 {{ std_ratt }}</span>{% endif %}
+              {% if bloc.nb_std  > 0 %}<span class="sp" style="background:#ede9fe;color:#6d28d9;">📚 {{ bloc.nb_std }} séance{{ 's' if bloc.nb_std > 1 }}</span>{% endif %}
+            </div>
+          </div>
+          <div class="bloc-stats">
+            <div><div class="bs-val" style="color:var(--teal);">{{ "%.1f"|format(bloc.total_heures) }}h</div><div class="bs-lbl">total</div></div>
+          </div>
+          <span class="tog-ico no-print">▾</span>
+        </div>
+
+        <div class="bloc-body">
+
+          {% if bloc.seances %}
+          <div style="font-size:12px;font-weight:700;color:#1d4ed8;margin-bottom:8px;padding:0 4px;">
+            🏫 Séances B2C — {{ bloc.seances|length }} séance{{ 's' if bloc.seances|length != 1 }}
+            · <span style="color:var(--teal);">{{ "%.1f"|format(bloc.total_heures_b2c) }}h</span>
+          </div>
+          <div class="s-table-wrap"><table class="s-table">
+            <thead>
+              <tr>
+                <th>📅 Date</th>
+                <th>🕐 Heure</th>
+                <th>👤 Responsable</th>
+                <th>🔬 Matière</th>
+                <th>📊 Statut</th>
+                <th>⏱️ Durée</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for s in bloc.seances %}
+              <tr class="{% if s.statut == 'annulee' %}row-annulee{% elif s.statut == 'rattrapage' %}row-rattrapage{% endif %}">
+                <td style="font-family:'DM Mono',monospace;white-space:nowrap;">
+                  <strong>{{ s.date.strftime('%d/%m/%Y') }}</strong>
+                </td>
+                <td style="color:var(--grey);">{{ s.heure or '—' }}</td>
+                <td style="font-weight:700;color:var(--blue);white-space:nowrap;">
+                  {% if s.responsable %}{{ s.responsable.prenom }} {{ s.responsable.nom }}{% else %}—{% endif %}
+                </td>
+                <td>{% if s.matiere %}<span class="mat-chip">{{ s.matiere }}</span>{% else %}<span style="color:#cbd5e1;">—</span>{% endif %}</td>
+                <td>
+                  {% if s.statut == 'passee' %}<span class="st-badge passee">✅ Passée</span>
+                  {% elif s.statut == 'annulee' %}<span class="st-badge annulee">❌ Annulée</span>
+                  {% elif s.statut == 'rattrapage' %}<span class="st-badge rattrapage">🔄 Rattrapage</span>
+                  {% else %}<span style="color:#94a3b8;font-size:11px;">—</span>{% endif %}
+                </td>
+                <td><span class="h-chip">{{ s.nb_heures }}h</span></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table></div>
+          <div class="s-total" style="margin-bottom:16px;">
+            <span>B2C : {{ bloc.seances|length }} séance{{ 's' if bloc.seances|length != 1 }}</span>
+            <div class="s-total-pills">
+              {% if bloc.nb_passees > 0 %}<span class="sp p">✅ {{ bloc.nb_passees }}</span>{% endif %}
+              {% if bloc.nb_annulees > 0 %}<span class="sp a">❌ {{ bloc.nb_annulees }}</span>{% endif %}
+              {% if bloc.nb_ratt > 0 %}<span class="sp r">🔄 {{ bloc.nb_ratt }}</span>{% endif %}
+              <span class="s-total-h">{{ "%.1f"|format(bloc.total_heures_b2c) }}h</span>
+            </div>
+          </div>
+          {% endif %}
+
+          {% if bloc.seances_std %}
+          <div style="margin-top:{% if bloc.seances %}14px{% else %}0{% endif %};">
+            <div style="font-size:12px;font-weight:700;color:#7c3aed;margin-bottom:8px;padding:0 4px;">
+              📚 Séances B2B — {% set std_passees_count = bloc.seances_std | selectattr('statut','equalto','passee') | list | length %}
+                {{ std_passees_count }} passée{{ 's' if std_passees_count > 1 }} / {{ bloc.nb_std }} séances{{ 'x' if bloc.nb_std > 1 }}
+                · <span style="color:var(--teal);">{{ "%.1f"|format(bloc.total_heures_std) }}h</span>
+            </div>
+            <div class="s-table-wrap"><table class="s-table">
+              <thead>
+                <tr>
+                  <th>📅 Date</th>
+                  <th>🕐 Heure</th>
+                  <th>👤 Responsable</th>
+                  <th>🔬 Matière</th>
+                  <th>📚 Niveau</th>
+                  <th>📊 Statut</th>
+                  <th>⏱️ Durée</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for s in bloc.seances_std %}
+                <tr class="{% if s.statut == 'annulee' %}row-annulee{% elif s.statut == 'rattrapage' %}row-rattrapage{% endif %}">
+                  <td style="font-family:'DM Mono',monospace;white-space:nowrap;">
+                    <strong>{{ s.date.strftime('%d/%m/%Y') }}</strong>
+                  </td>
+                  <td style="color:var(--grey);">{{ s.heure or '—' }}</td>
+                  <td style="font-weight:700;color:var(--blue);white-space:nowrap;">
+                    {% if s.coordinateur and s.coordinateur.responsable %}
+                      {{ s.coordinateur.responsable.prenom }} {{ s.coordinateur.responsable.nom }}
+                    {% else %}—{% endif %}
+                  </td>
+                  <td>{% if s.matiere %}<span class="mat-chip">{{ s.matiere }}</span>{% else %}<span style="color:#cbd5e1;">—</span>{% endif %}</td>
+                  <td>
+                    {% if s.niveau %}<span style="background:#f3e8ff;color:#6d28d9;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;">{{ s.niveau }}</span>{% else %}<span style="color:#cbd5e1;">—</span>{% endif %}
+                  </td>
+                  <td>
+                    {% if s.statut == 'passee' %}<span class="st-badge passee">✅ Passée</span>
+                    {% elif s.statut == 'annulee' %}<span class="st-badge annulee">❌ Annulée</span>
+                    {% elif s.statut == 'rattrapage' %}<span class="st-badge rattrapage">🔄 Rattrapage</span>
+                    {% else %}<span style="color:#94a3b8;font-size:11px;">—</span>{% endif %}
+                  </td>
+                  <td><span class="h-chip">{{ s.nb_heures }}h</span></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table></div>
+            <div class="s-total">
+              <span>📚 Coordinateurs : {{ bloc.nb_std }} séance{{ 's' if bloc.nb_std > 1 }}</span>
+              <div class="s-total-pills">
+                {% set std_passees   = bloc.seances_std | selectattr('statut','equalto','passee')    | list | length %}
+                {% set std_annulees  = bloc.seances_std | selectattr('statut','equalto','annulee')   | list | length %}
+                {% set std_ratt      = bloc.seances_std | selectattr('statut','equalto','rattrapage') | list | length %}
+                {% if std_passees  > 0 %}<span class="sp p">✅ {{ std_passees }}</span>{% endif %}
+                {% if std_annulees > 0 %}<span class="sp a">❌ {{ std_annulees }}</span>{% endif %}
+                {% if std_ratt     > 0 %}<span class="sp r">🔄 {{ std_ratt }}</span>{% endif %}
+                <span class="s-total-h">{{ "%.1f"|format(bloc.total_heures_std) }}h</span>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+
+          {% if not bloc.seances and not bloc.seances_std %}
+          <div class="no-data">📭 Aucune séance pour ce professeur ce mois.</div>
+          {% endif %}
+
+          {% if bloc.seances and bloc.seances_std %}
+          <div style="margin-top:12px;padding:10px 16px;background:linear-gradient(135deg,#f0fdf4,#ecfdf5);border-radius:10px;border:1.5px solid #6ee7b7;display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;font-weight:700;color:#065f46;">🔢 Total combiné (B2C + Coordinateurs)</span>
+            <span style="font-size:18px;font-weight:800;color:#0f766e;">{{ "%.1f"|format(bloc.total_heures) }}h</span>
+          </div>
+          {% endif %}
+
+        </div>
+      </div>
+      {% else %}
+      {% if not blocs_prof %}
+        <div style="padding:50px;text-align:center;color:#cbd5e1;">
+          <div style="font-size:48px;margin-bottom:12px;opacity:.4;">🎓</div>
+          <p>Aucune séance avec professeur enregistrée pour cette période.</p>
+        </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+
+    <!-- DOC FOOTER -->
+    <div class="doc-footer">
+      <span>🏢 Yool — Système de gestion</span>
+      <span>📊 Suivi B2C · {{ mois_noms[mois] }} {{ annee }}</span>
+      <span>Généré le {{ generated_at }}</span>
+    </div>
+
+  </div><!-- /print-doc -->
+</div><!-- /ip-screen -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // 1 = filtre_resp actif (Jinja)
+  var FILTRE_RESP_ACTIF = {{ 'true' if filtre_resp else 'false' }};
+
+  var elResp = document.getElementById('view-resp');
+  var elProf = document.getElementById('view-prof');
+  var btnResp = document.getElementById('tab-btn-resp');
+  var btnProf = document.getElementById('tab-btn-prof');
+
+  function showResp() {
+    elResp.style.display = '';
+    elProf.style.display = 'none';
+    elResp.classList.remove('no-print-view');
+    elProf.classList.add('no-print-view');
+    btnResp.classList.add('active');
+    btnProf.classList.remove('active');
+  }
+
+  function showProf() {
+    elResp.style.display = 'none';
+    elProf.style.display = '';
+    elResp.classList.add('no-print-view');
+    elProf.classList.remove('no-print-view');
+    btnResp.classList.remove('active');
+    btnProf.classList.add('active');
+  }
+
+  function switchTab(tab, btn) {
+    if (tab === 'resp') { showResp(); } else { showProf(); }
+  }
+
+  // Au chargement : si filtre_resp actif → vue prof
+  if (FILTRE_RESP_ACTIF) {
+    showProf();
+  } else {
+    showResp();
+  }
+
+  function toggleCard(header) {
+    var body = header.nextElementSibling;
+    var icon = header.querySelector('.tog-ico');
+    if (body.style.display === 'none') {
+      body.style.display = '';
+      if (icon) icon.style.transform = 'rotate(0deg)';
+    } else {
+      body.style.display = 'none';
+      if (icon) icon.style.transform = 'rotate(-90deg)';
+    }
+  }
+</script>
+{% endblock %}

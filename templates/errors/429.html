@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>500 — Erreur Serveur | Yool</title>
+    <title>429 — Trop de requêtes | Yool</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -36,9 +36,9 @@
 </head>
 <body>
     <div class="box">
-        <div class="icon">⚙️</div>
-        <h1>Erreur Serveur Interne</h1>
-        <p>Une erreur inattendue s'est produite côté serveur. Veuillez réessayer plus tard ou contacter l'administrateur.</p>
+        <div class="icon">⏳</div>
+        <h1>Trop de requêtes</h1>
+        <p>Vous avez effectué trop de requêtes en peu de temps. Veuillez patienter quelques instants avant de réessayer.</p>
         <a href="{{ url_for('index') }}">⬅️ Retour au Dashboard</a>
     </div>
 </body>

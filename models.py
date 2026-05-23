@@ -6,6 +6,7 @@ import bleach
 import re
 
 
+
 db = SQLAlchemy()
 
 # ── Allowed HTML tags for sanitization ─────────────────────────────────────
@@ -117,7 +118,6 @@ def sanitize_text(text, max_length=500):
     text = str(text).strip()
     if len(text) > max_length:
         text = text[:max_length]
-    # Remove potentially dangerous characters but keep basic formatting
     text = bleach.clean(text, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES, strip=True)
     return text
 
@@ -146,10 +146,10 @@ class User(db.Model, UserMixin):
     website        = db.Column(db.String(300), nullable=True)
 
     # Security fields
-    last_seen      = db.Column(db.DateTime, nullable=True)
+    last_seen           = db.Column(db.DateTime, nullable=True)
     must_change_password = db.Column(db.Boolean, default=False)
-    login_attempts = db.Column(db.Integer, default=0)
-    locked_until   = db.Column(db.DateTime, nullable=True)
+    login_attempts      = db.Column(db.Integer, default=0)
+    locked_until        = db.Column(db.DateTime, nullable=True)
     password_changed_at = db.Column(db.DateTime, nullable=True)
 
     def set_password(self, pwd):
@@ -178,7 +178,6 @@ class User(db.Model, UserMixin):
     def is_admin(self):
         return self.role == 'admin'
 
-    # ── NOUVEAU : en ligne si actif dans les 5 dernières minutes ─────────
     @property
     def is_online(self):
         if not self.last_seen:
@@ -217,8 +216,6 @@ class Responsable(db.Model):
 
     def count_coordinatrices(self):
         return sum(1 for c in self.coordinateurs if c.genre == 'F')
-
-
 
 class Dour(db.Model):
     __tablename__ = 'dour'
@@ -335,38 +332,115 @@ class Professeur(db.Model):
         return sum(s.nb_heures for s in self.seances)
 
 
-# ─── À AJOUTER DANS models.py ────────────────────────────────────────────────
-# Copie ce bloc dans models.py, après la classe Seance
+seance_b2c_dar = db.Table('seance_b2c_dar',
+    db.Column('seance_b2c_id', db.Integer, db.ForeignKey('seance_b2c.id', ondelete='CASCADE')),
+    db.Column('dour_id',       db.Integer, db.ForeignKey('dour.id',       ondelete='CASCADE'))
+)
+
 
 class SeanceB2C(db.Model):
     __tablename__ = 'seance_b2c'
-    id              = db.Column(db.Integer, primary_key=True)
-    responsable_id  = db.Column(db.Integer, db.ForeignKey('responsable.id'), nullable=False)
-    date            = db.Column(db.Date,    nullable=False)
-    mois            = db.Column(db.Integer, nullable=False)
-    annee           = db.Column(db.Integer, nullable=False)
-    nb_heures       = db.Column(db.Float,   nullable=False, default=0)
-    statut          = db.Column(db.String(20),  nullable=True, default=None)
-    heure           = db.Column(db.String(5),   nullable=True)
-    matiere         = db.Column(db.String(100), nullable=True)
-    niveau          = db.Column(db.String(100), nullable=True)
-    nb_eleves       = db.Column(db.Integer,     nullable=True)
-    nb_eleves_total = db.Column(db.Integer,     nullable=True)
-    note            = db.Column(db.String(300), nullable=True)
-    remarque        = db.Column(db.String(500), nullable=True)
-    created_at      = db.Column(db.DateTime,    default=datetime.utcnow)
+    id               = db.Column(db.Integer, primary_key=True)
+    responsable_id   = db.Column(db.Integer, db.ForeignKey('responsable.id'), nullable=False)
+    responsable      = db.relationship('Responsable', foreign_keys=[responsable_id],
+                                       backref=db.backref('seances_b2c', lazy=True))
+    date             = db.Column(db.Date, nullable=False)
+    mois             = db.Column(db.Integer, nullable=False)
+    annee            = db.Column(db.Integer, nullable=False)
+    heure            = db.Column(db.String(5), nullable=True)
+    nb_heures        = db.Column(db.Float, nullable=False, default=0)
+    statut           = db.Column(db.String(20), nullable=True, default=None)
+    professeur_id    = db.Column(db.Integer, db.ForeignKey('professeur.id'), nullable=True)
+    professeur       = db.relationship('Professeur', foreign_keys=[professeur_id],
+                                       backref=db.backref('seances_b2c', lazy=True))
+    matiere          = db.Column(db.String(100), nullable=True)
+    niveau           = db.Column(db.String(100), nullable=True)
+    remarque         = db.Column(db.String(500), nullable=True)
+    note             = db.Column(db.String(300), nullable=True)
+    created_at       = db.Column(db.DateTime, default=datetime.utcnow)
 
-    professeur_id = db.Column(db.Integer, db.ForeignKey('professeur.id'), nullable=True)
-    professeur    = db.relationship('Professeur', foreign_keys=[professeur_id])
+    # ── Effectifs par segment ──────────────────────────────────────────────
+    effectif_b2c_total         = db.Column(db.Integer, nullable=True)
+    effectif_b2c_presents      = db.Column(db.Integer, nullable=True)
+    effectif_fos_total         = db.Column(db.Integer, nullable=True)
+    effectif_fos_presents      = db.Column(db.Integer, nullable=True)
+    effectif_free_total        = db.Column(db.Integer, nullable=True)
+    effectif_free_presents     = db.Column(db.Integer, nullable=True)
+    effectif_fos_agri_total    = db.Column(db.Integer, nullable=True)
+    effectif_fos_agri_presents = db.Column(db.Integer, nullable=True)
+    effectif_ipse_total        = db.Column(db.Integer, nullable=True)
+    effectif_ipse_presents     = db.Column(db.Integer, nullable=True)
 
-    responsable   = db.relationship('Responsable', foreign_keys=[responsable_id],
-                                    backref=db.backref('seances_b2c', lazy=True))
+    # ── Dar Talib — MULTI (Many-to-Many) ──────────────────────────────────
+    dars = db.relationship('Dour', secondary='seance_b2c_dar', lazy=True)
+
+    # ── Effectifs par Dar — relation vers SeanceB2CDarEffectif ────────────
+    # (définie via backref dans SeanceB2CDarEffectif)
+
+    @property
+    def dar(self):
+        """Compat : retourne la première dar sélectionnée (ou None)"""
+        return self.dars[0] if self.dars else None
+
+    @property
+    def dar_id(self):
+        """Compat legacy : premier ID"""
+        return self.dars[0].id if self.dars else None
+
+    @property
+    def dar_ids(self):
+        return [d.id for d in self.dars]
+
+    @property
+    def total_presents(self):
+        vals = [
+            self.effectif_b2c_presents,
+            self.effectif_fos_presents,
+            self.effectif_free_presents,
+            self.effectif_fos_agri_presents,
+            self.effectif_ipse_presents,
+        ]
+        total = sum(v for v in vals if v)
+        # Ajouter les présents par dar individuellement
+        for de in self.dar_effectifs:
+            if de.presents:
+                total += de.presents
+        return total
+
+    @property
+    def total_effectif(self):
+        vals = [
+            self.effectif_b2c_total,
+            self.effectif_fos_total,
+            self.effectif_free_total,
+            self.effectif_fos_agri_total,
+            self.effectif_ipse_total,
+        ]
+        total = sum(v for v in vals if v)
+        for de in self.dar_effectifs:
+            if de.total:
+                total += de.total
+        return total
 
     @property
     def prof_nom(self):
-        return self.professeur.nom if self.professeur else None
+        if self.professeur:
+            return self.professeur.nom
+        return None
 
-    @property
-    def statut_label(self):
-        mapping = {'passee': 'Passée', 'annulee': 'Annulée', 'rattrapage': 'Rattrapage'}
-        return mapping.get(self.statut, '—')
+
+class SeanceB2CDarEffectif(db.Model):
+    """Effectifs par Dar Talib pour une séance B2C — un enregistrement par dar sélectionnée"""
+    __tablename__ = 'seance_b2c_dar_effectif'
+    id            = db.Column(db.Integer, primary_key=True)
+    seance_b2c_id = db.Column(db.Integer, db.ForeignKey('seance_b2c.id', ondelete='CASCADE'), nullable=False)
+    dour_id       = db.Column(db.Integer, db.ForeignKey('dour.id',       ondelete='CASCADE'), nullable=False)
+    total         = db.Column(db.Integer, nullable=True)    # inscrits
+    presents      = db.Column(db.Integer, nullable=True)    # présents
+
+    seance = db.relationship('SeanceB2C', backref=db.backref('dar_effectifs', lazy=True, cascade='all, delete-orphan'))
+    dour   = db.relationship('Dour')
+
+    __table_args__ = (
+        db.UniqueConstraint('seance_b2c_id', 'dour_id', name='uq_seance_dar'),
+    )

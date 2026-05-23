@@ -2,30 +2,7 @@
 {% block title %}Paramètres — Yool{% endblock %}
 
 {% block extra_css %}
-        .main-content { flex:1; padding:28px; overflow-x:hidden; }
-        .page-title { font-size:21px; font-weight:700; color:#1a3a6b; margin-bottom:22px; display:flex; align-items:center; gap:10px; }
-        .alert { padding:13px 18px; background:#27ae60; color:white; border-radius:10px; margin-bottom:18px; font-size:13px; display:flex; align-items:center; gap:10px; box-shadow:0 4px 12px rgba(39,174,96,0.25); }
-        .alert-error { background:#e74c3c; }
-        .param-grid { display:grid; grid-template-columns:1fr 1fr; gap:22px; }
-        @media (max-width:900px) { .param-grid { grid-template-columns:1fr; } }
-        .param-card { background:white; border-radius:16px; box-shadow:0 4px 15px rgba(0,0,0,0.07); overflow:hidden; }
-        .param-card.full-width { grid-column:1 / -1; }
-        .param-card-header { padding:16px 24px; display:flex; align-items:center; gap:10px; border-bottom:1.5px solid #f0f4f8; }
-        .param-card-header h3 { font-size:14px; font-weight:700; color:#1a3a6b; }
-        .param-card-body { padding:22px 24px; }
-        .param-card-body label { display:block; margin-bottom:5px; color:#1a3a6b; font-size:12px; font-weight:600; }
-        .param-card-body input { width:100%; padding:10px 13px; border:2px solid #e8edf5; border-radius:10px; margin-bottom:14px; font-size:13px; font-family:'Poppins',sans-serif; transition:border 0.2s; outline:none; box-sizing:border-box; }
-        .param-card-body input:focus { border-color:#f5a623; }
-        .submit-btn { width:100%; padding:12px; border:none; border-radius:25px; font-size:13px; font-weight:600; cursor:pointer; color:white; font-family:'Poppins',sans-serif; transition:all 0.2s; }
-        .submit-btn:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.15); }
-        .avatar-preview { width:80px; height:80px; border-radius:50%; background:#1a3a6b; border:3px solid #f5a623; overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:28px; color:white; font-weight:700; margin:0 auto 16px; box-shadow:0 4px 16px rgba(245,166,35,0.25); }
-        .avatar-preview img { width:100%; height:100%; object-fit:cover; }
-        .social-grid { display:grid; grid-template-columns:1fr 1fr; gap:0 20px; }
-        @media (max-width:600px) { .social-grid { grid-template-columns:1fr; } }
-        .social-input-wrap { position:relative; }
-        .social-input-wrap .social-icon { position:absolute; left:12px; top:50%; transform:translateY(-70%); font-size:15px; pointer-events:none; }
-        .social-input-wrap input { padding-left:36px !important; }
-        @media (max-width:768px) { .main-content { padding:14px; } }
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/parametres.css') }}">
 {% endblock %}
 
 {% block content %}

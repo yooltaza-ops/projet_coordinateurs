@@ -9,7 +9,7 @@
     <title>{% block title %}Yool{% endblock %}</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <style>{% block extra_css %}{% endblock %}</style>
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
 
@@ -64,7 +64,6 @@
                 </div>
                 <a href="{{ url_for('index') }}" ><span style="font-size:16px;" >🏠</span> Tableau de bord</a>
                 <a href="{{ url_for('suivi_partenariat') }}" ><span class="nav-icon">📊</span><span>Suivi Partenariat</span></a>
-                <a href="{{ url_for('suivi_b2c') }}" ><span class="nav-icon">🏢</span><span>Suivi B2C</span></a>
                 <a href="{{ url_for('parametres') }}"><span style="font-size:16px;">⚙️</span> Paramètres</a>
                 <div class="dropdown-divider"></div>
                 <a href="{{ url_for('logout') }}" class="red"><span style="font-size:16px;">🚪</span> Déconnexion</a>
@@ -165,18 +164,18 @@
                 <span class="nav-icon">📊</span><span class="nav-label">Suivi Partenariat</span>
             </a>
             {% if current_user.is_admin %}
-            <a href="{{ url_for('suivi_b2c') }}" class="nav-item {% if request.endpoint == 'suivi_b2c' %}active{% endif %}">
-                <span class="nav-icon">🏢</span><span class="nav-label">Suivi B2C</span>
-            </a>
             <a href="{{ url_for('heures') }}" class="nav-item {% if request.endpoint == 'heures' %}active{% endif %}">
                 <span class="nav-icon">⏱️</span><span class="nav-label">Séances</span>
             </a>
-            <a href="{{ url_for('calendrier_coordinateurs') }}" class="nav-item {% if request.endpoint == 'calendrier_coordinateurs' %}active{% endif %}">
-                <span class="nav-icon">📅</span><span class="nav-label">Calendrier</span>
+            <a href="{{ url_for('heures_profs') }}" class="nav-item {% if request.endpoint == 'heures_profs' %}active{% endif %}">
+                <span class="nav-icon">🎓</span><span class="nav-label">Heures Profs</span>
+            </a>
+            <a href="{{ url_for('suivi_b2c') }}" class="nav-item {% if request.endpoint == 'suivi_b2c' %}active{% endif %}">
+                <span class="nav-icon">🏢</span><span class="nav-label">Suivi B2C</span>
             </a>
             {% endif %}
-            <a href="{{ url_for('calendrier_b2c') }}" class="nav-item {% if request.endpoint == 'calendrier_b2c' %}active{% endif %}">
-                <span class="nav-icon">📅</span><span class="nav-label">Calendrier B2C</span>
+            <a href="{{ url_for('calendrier_coordinateurs') }}" class="nav-item {% if request.endpoint == 'calendrier_coordinateurs' %}active{% endif %}">
+                <span class="nav-icon">📅</span><span class="nav-label">Calendrier</span>
             </a>
             {% if current_user.is_admin %}
             <a href="{{ url_for('stats_coordinateurs') }}" class="nav-item {% if request.endpoint == 'stats_coordinateurs' %}active{% endif %}">
@@ -184,8 +183,13 @@
             </a>
             {% endif %}
             <a href="{{ url_for('impression_seances') }}" class="nav-item {% if request.endpoint == 'impression_seances' %}active{% endif %}">
-                <span class="nav-icon">🖨️</span><span class="nav-label">Impression</span>
+                <span class="nav-icon">🖨️</span><span class="nav-label">Impression B2B</span>
             </a>
+            {% if current_user.is_admin %}
+            <a href="{{ url_for('impression_b2c') }}" class="nav-item {% if request.endpoint == 'impression_b2c' %}active{% endif %}">
+                <span class="nav-icon">🖨️</span><span class="nav-label">Impression B2C</span>
+            </a>
+            {% endif %}
             <div class="nav-divider"></div>
             <div class="nav-section-label">Compte</div>
             <a href="{{ url_for('parametres') }}" class="nav-item {% if request.endpoint == 'parametres' %}active{% endif %}">
