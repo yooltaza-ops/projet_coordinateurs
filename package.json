@@ -1,0 +1,24 @@
+{
+  "name": "projet_coordinateurs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yooltaza-ops/projet_coordinateurs.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/yooltaza-ops/projet_coordinateurs/issues"
+  },
+  "homepage": "https://github.com/yooltaza-ops/projet_coordinateurs#readme",
+  "dependencies": {
+    "docx": "^9.7.0"
+  }
+}

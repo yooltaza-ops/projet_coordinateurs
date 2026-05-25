@@ -1,6 +1,6 @@
 from flask import Flask, request, g, render_template
 from flask_login import LoginManager, current_user
-from flask_talisman import Talisman  
+from flask_talisman import Talisman
 from extensions import csrf, limiter
 from models import db, User
 from config import Config

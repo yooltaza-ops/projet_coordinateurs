@@ -2543,7 +2543,7 @@ def impression_b2c():
             'total_heures':     bloc['total_heures'],
             'total_heures_b2c': bloc['total_heures_b2c'],
             'total_heures_std': bloc['total_heures_std'],
-            'total_seances':    len(bloc['seances']) + bloc['nb_std'],
+            'total_seances':    sum(1 for s in bloc['seances'] if s.statut == 'passee') + sum(1 for s in bloc['seances_std'] if s.statut == 'passee'),
             'responsables':     resp_names,
         })
  
