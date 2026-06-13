@@ -108,7 +108,7 @@ with app.app_context():
     new_ones = [nom for nom in PROFESSEURS_LISTE if nom not in existing]
     
     for nom in new_ones:
-    db.session.add(Professeur(nom=nom, actif=True))
+        db.session.add(Professeur(nom=nom, actif=True))
     
     db.session.commit()
     print(len(new_ones), new_ones)
