@@ -107,7 +107,8 @@ PROFESSEURS_LISTE = [
     "Laila Bouhouch", "ELMEHDI SALEH", "Taheri Hamid",
     "Nourdine Ahrouy", "Hicham Janih", "Khalid Morachik",
     "Ali Eladaoui", "Lhoucine Oubaadi", "Omar Habib",
-    "Ahmed Soussi", "Abdelaali Tifaout",
+    "Ahmed Soussi", "Abdelaali Tifaout", "Younes Boujenaoui",
+    "Hafid Rachidi", "Abdellah lmalyani",
 ]
 
 # ── Helper: Sanitize text input ────────────────────────────────────────────
