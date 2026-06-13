@@ -2,7 +2,7 @@ from flask import Flask, request, g, render_template
 from flask_login import LoginManager, current_user
 from flask_talisman import Talisman
 from extensions import csrf, limiter
-from models import db, User
+from models import db, User, Professeur, PROFESSEURS_LISTE
 from config import Config
 import os
 import logging
@@ -104,15 +104,16 @@ def internal_error(e):
 
 # ── Database Initialization ────────────────────────────────────────────────
 with app.app_context():
+    db.create_all()
+
+    # Sync professeurs
     existing = {p.nom for p in Professeur.query.all()}
     new_ones = [nom for nom in PROFESSEURS_LISTE if nom not in existing]
-    
     for nom in new_ones:
         db.session.add(Professeur(nom=nom, actif=True))
-    
     db.session.commit()
-    print(len(new_ones), new_ones)
-    db.create_all()
+    if new_ones:
+        print(f"✅ {len(new_ones)} professeurs ajoutés:", new_ones)
 
     # Create admin if not exists
     admin_email = 'admin@yool.ma'
