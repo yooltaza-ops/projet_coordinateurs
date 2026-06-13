@@ -104,6 +104,14 @@ def internal_error(e):
 
 # ── Database Initialization ────────────────────────────────────────────────
 with app.app_context():
+    existing = {p.nom for p in Professeur.query.all()}
+    new_ones = [nom for nom in PROFESSEURS_LISTE if nom not in existing]
+    
+    for nom in new_ones:
+    db.session.add(Professeur(nom=nom, actif=True))
+    
+    db.session.commit()
+    print(len(new_ones), new_ones)
     db.create_all()
 
     # Create admin if not exists
